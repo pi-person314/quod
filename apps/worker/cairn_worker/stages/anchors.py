@@ -1,21 +1,118 @@
-"""Stage 3 — Anchor detection (Phase A3, 75 min).
-
-Scan all text for reference surfaces: explicit ("Theorem 3.4", "Lemma 2.1(ii)"),
-soft ("the previous lemma", "as above"), and named ("the spectral theorem").
-Record each with its bbox so Session B can decorate it. Resolve explicit ones
-locally by label match against this document's nodes; leave soft and named
-ones with target_node_id=None for Session C's resolver.
-
-Accept: every anchor in the golden fixture is found, bboxes round-trip through
-the reader's coordinate transform within 2px, and explicit resolution accuracy
-exceeds 0.95.
-"""
+"""Stage 3 — Anchor detection: explicit / soft / named surfaces."""
 
 from __future__ import annotations
 
+import re
+from uuid import uuid4
+
+from cairn_worker import db
 from cairn_worker.models import Anchor, Node, Span
 from cairn_worker.pipeline import PipelineContext
 
+EXPLICIT_RE = re.compile(
+    r"\b(?P<kind>Definition|Theorem|Lemma|Proposition|Corollary|Example|Notation)\s+"
+    r"(?P<num>\d+(?:\.\d+)*)"
+    r"(?:\s*\((?P<clause>[ivx]+|\d+)\))?",
+    re.IGNORECASE,
+)
+BY_EXPLICIT_RE = re.compile(
+    r"\bBy\s+(?P<kind>Definition|Theorem|Lemma|Proposition|Corollary|Example|Notation)\s+"
+    r"(?P<num>\d+(?:\.\d+)*)",
+    re.IGNORECASE,
+)
+SOFT = [
+    (re.compile(r"\bthe previous lemma\b", re.IGNORECASE), "the previous lemma"),
+    (re.compile(r"\bas above\b", re.IGNORECASE), "as above"),
+]
+NAMED = [
+    (re.compile(r"\bthe spectral theorem\b", re.IGNORECASE), "the spectral theorem"),
+    (re.compile(r"\bRank-?Nullity\b", re.IGNORECASE), "Rank-Nullity"),
+]
+
+
+def _norm_label(kind: str, num: str) -> str:
+    return f"{kind[0].upper() + kind[1:].lower()} {num}"
+
+
+def _line_groups(spans: list[Span]) -> list[tuple[int, str, list[Span]]]:
+    groups: dict[tuple[int, int], list[Span]] = {}
+    for s in spans:
+        groups.setdefault((s.page, s.line), []).append(s)
+    out = []
+    for (page, _ln), ssp in sorted(groups.items(), key=lambda kv: (kv[0][0], min(x.bbox[1] for x in kv[1]))):
+        ssp.sort(key=lambda x: x.bbox[0])
+        out.append((page, "".join(x.text for x in ssp), ssp))
+    return out
+
+
+def _bbox_for_match(text: str, start: int, end: int, ssp: list[Span]) -> tuple[float, float, float, float]:
+    """Map a substring range onto span bboxes (best-effort)."""
+    pos = 0
+    used: list[Span] = []
+    for s in ssp:
+        nxt = pos + len(s.text)
+        if nxt > start and pos < end:
+            used.append(s)
+        pos = nxt
+    if not used:
+        used = ssp
+    return (
+        min(s.bbox[0] for s in used),
+        min(s.bbox[1] for s in used),
+        max(s.bbox[2] for s in used),
+        max(s.bbox[3] for s in used),
+    )
+
+
+def find_anchors(spans: list[Span], nodes: list[Node], doc_id) -> list[Anchor]:
+    by_label = {n.label.lower(): n for n in nodes if n.label}
+
+    found: list[Anchor] = []
+    seen: set[tuple[int, str, int, int]] = set()
+
+    def add(page: int, surface: str, bbox, explicit: bool) -> None:
+        key = (page, surface.lower(), int(bbox[1]), int(bbox[0]))
+        if key in seen:
+            return
+        seen.add(key)
+        target = None
+        if explicit:
+            # surface may be "By Theorem 3.4" or "Theorem 3.4" or with clause
+            m = EXPLICIT_RE.search(surface)
+            if m:
+                label = _norm_label(m.group("kind"), m.group("num"))
+                hit = by_label.get(label.lower())
+                target = hit.id if hit else None
+        found.append(
+            Anchor(
+                id=uuid4(),
+                doc_id=doc_id,
+                page=page,
+                bbox=bbox,
+                surface=surface,
+                target_node_id=target,
+                target_entity_id=None,
+                card_id=None,
+            )
+        )
+
+    for page, text, ssp in _line_groups(spans):
+        for m in BY_EXPLICIT_RE.finditer(text):
+            surface = m.group(0)
+            # Canonical "By Theorem 3.4" casing
+            surface = f"By {_norm_label(m.group('kind'), m.group('num'))}"
+            add(page, surface, _bbox_for_match(text, m.start(), m.end(), ssp), True)
+        for m in EXPLICIT_RE.finditer(text):
+            surface = _norm_label(m.group("kind"), m.group("num"))
+            add(page, surface, _bbox_for_match(text, m.start(), m.end(), ssp), True)
+        for cre, surface in SOFT + NAMED:
+            for m in cre.finditer(text):
+                add(page, surface, _bbox_for_match(text, m.start(), m.end(), ssp), False)
+    return found
+
 
 def detect_anchors(ctx: PipelineContext, spans: list[Span], nodes: list[Node]) -> list[Anchor]:
-    raise NotImplementedError("A3")
+    found = find_anchors(spans, nodes, ctx.doc_id)
+    for a in found:
+        db.insert_anchor(ctx.conn, a)
+    return found

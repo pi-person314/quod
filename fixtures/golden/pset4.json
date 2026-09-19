@@ -1,0 +1,169 @@
+{
+  "document": {
+    "id": "00000000-0000-4000-8000-000000000012",
+    "corpus_id": "00000000-0000-4000-8000-000000000001",
+    "title": "Problem Set 4",
+    "filename": "pset4.pdf",
+    "file_hash": null,
+    "page_count": 1,
+    "quality": 0.95,
+    "status": "ready"
+  },
+  "pdf": "pset4.pdf",
+  "nodes": [
+    {
+      "id": "00000000-0000-4000-8000-000000000501",
+      "doc_id": "00000000-0000-4000-8000-000000000012",
+      "kind": "theorem",
+      "label": "Problem 1",
+      "title": "the dimension theorem",
+      "statement_md": "Pset restatement of the dimension theorem.",
+      "clauses": [],
+      "symbols": [],
+      "page": 1,
+      "bbox": [
+        72.0,
+        88.17500305175781,
+        125.18498992919922,
+        103.28900146484375
+      ],
+      "entity_id": "00000000-0000-4000-8000-000000000102",
+      "confidence": 0.9
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000502",
+      "doc_id": "00000000-0000-4000-8000-000000000012",
+      "kind": "theorem",
+      "label": "Problem 2",
+      "title": "Rank-Nullity",
+      "statement_md": "Pset restatement of Rank-Nullity.",
+      "clauses": [],
+      "symbols": [],
+      "page": 1,
+      "bbox": [
+        72.0,
+        116.17500305175781,
+        125.18498992919922,
+        131.28900146484375
+      ],
+      "entity_id": "00000000-0000-4000-8000-000000000101",
+      "confidence": 0.9
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000503",
+      "doc_id": "00000000-0000-4000-8000-000000000012",
+      "kind": "theorem",
+      "label": "Problem 3",
+      "title": "spectral theorem",
+      "statement_md": "Pset restatement of spectral theorem.",
+      "clauses": [],
+      "symbols": [],
+      "page": 1,
+      "bbox": [
+        72.0,
+        144.1750030517578,
+        125.18498992919922,
+        159.28900146484375
+      ],
+      "entity_id": "00000000-0000-4000-8000-000000000103",
+      "confidence": 0.9
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000504",
+      "doc_id": "00000000-0000-4000-8000-000000000012",
+      "kind": "lemma",
+      "label": "Problem 4",
+      "title": null,
+      "statement_md": "Pset restatement of Problem 4.",
+      "clauses": [],
+      "symbols": [],
+      "page": 1,
+      "bbox": [
+        72.0,
+        172.1750030517578,
+        125.18498992919922,
+        187.28900146484375
+      ],
+      "entity_id": "00000000-0000-4000-8000-000000000101",
+      "confidence": 0.9
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000505",
+      "doc_id": "00000000-0000-4000-8000-000000000012",
+      "kind": "proposition",
+      "label": "Problem 5",
+      "title": null,
+      "statement_md": "Pset restatement of Problem 5.",
+      "clauses": [],
+      "symbols": [],
+      "page": 1,
+      "bbox": [
+        72.0,
+        200.1750030517578,
+        125.18498992919922,
+        215.28900146484375
+      ],
+      "entity_id": "00000000-0000-4000-8000-000000000103",
+      "confidence": 0.9
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000506",
+      "doc_id": "00000000-0000-4000-8000-000000000012",
+      "kind": "example",
+      "label": "Problem 6",
+      "title": "Theorem 3.22",
+      "statement_md": "Pset restatement of Theorem 3.22.",
+      "clauses": [],
+      "symbols": [],
+      "page": 1,
+      "bbox": [
+        72.0,
+        228.1750030517578,
+        125.18498992919922,
+        243.28900146484375
+      ],
+      "entity_id": "00000000-0000-4000-8000-000000000101",
+      "confidence": 0.9
+    }
+  ],
+  "edges": [
+    {
+      "src": "00000000-0000-4000-8000-000000000501",
+      "dst": "00000000-0000-4000-8000-000000000207",
+      "kind": "restates",
+      "extractor": "llm",
+      "confidence": 0.85
+    },
+    {
+      "src": "00000000-0000-4000-8000-000000000502",
+      "dst": "00000000-0000-4000-8000-000000000204",
+      "kind": "restates",
+      "extractor": "llm",
+      "confidence": 0.85
+    },
+    {
+      "src": "00000000-0000-4000-8000-000000000503",
+      "dst": "00000000-0000-4000-8000-000000000211",
+      "kind": "restates",
+      "extractor": "llm",
+      "confidence": 0.85
+    },
+    {
+      "src": "00000000-0000-4000-8000-000000000504",
+      "dst": "00000000-0000-4000-8000-000000000204",
+      "kind": "depends_on",
+      "extractor": "heuristic",
+      "confidence": 0.8
+    },
+    {
+      "src": "00000000-0000-4000-8000-000000000506",
+      "dst": "00000000-0000-4000-8000-000000000204",
+      "kind": "restates",
+      "extractor": "deterministic",
+      "confidence": 0.9
+    }
+  ],
+  "anchors": [],
+  "cards": [],
+  "entities": []
+}

@@ -29,7 +29,10 @@ class PipelineContext:
 
 def ensure_corpus(conn: psycopg.Connection, corpus_id: UUID | None, name: str) -> UUID:
     if corpus_id is None:
-        corpus_id = uuid4()
+        # Reuse the corpus of the same name, otherwise re-ingesting a file
+        # lands in a fresh corpus and the file-hash key never matches (A5).
+        row = conn.execute("SELECT id FROM corpora WHERE name = %s ORDER BY created_at LIMIT 1", (name,)).fetchone()
+        corpus_id = row[0] if row else uuid4()
     conn.execute(
         "INSERT INTO corpora (id, name) VALUES (%s, %s) ON CONFLICT (id) DO NOTHING",
         (corpus_id, name),
@@ -54,12 +57,21 @@ def register_document(conn: psycopg.Connection, corpus_id: UUID, pdf_path: Path)
     return doc_id
 
 
-def run_document(ctx: PipelineContext) -> None:
-    """Parse -> segment -> anchors -> edges -> resolve (C) -> bake (C)."""
+def run_document(ctx: PipelineContext, force: bool = False) -> None:
+    """Parse -> segment -> anchors -> edges -> resolve (C) -> bake (C).
+
+    Re-ingesting the same file is a no-op once the document is ready; pass
+    ``force`` to rebuild its graph in place (A5 idempotency).
+    """
     # Imported here so stage modules can import PipelineContext without a cycle.
     from cairn_worker.stages import anchors, edges, parse, remote, segment
 
     conn, doc_id = ctx.conn, ctx.doc_id
+    if not force and db.doc_status(conn, doc_id) == "ready":
+        log.info("%s already ingested; skipping (use --force to rebuild)", ctx.pdf_path.name)
+        return
+    # A second pass must replace the old graph, not stack a new one beside it.
+    db.clear_doc_graph(conn, doc_id)
     try:
         db.set_progress(conn, doc_id, "parse")
         spans, quality, page_count = parse.parse_pdf(ctx.pdf_path)

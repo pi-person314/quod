@@ -72,7 +72,7 @@ def estimate_cost_usd(model: str, u: LedgerUsage) -> float:
 
 
 def call_model(
-    conn: psycopg.Connection,
+    conn: psycopg.Connection | None,
     *,
     stage: str,
     input: str | ResponseInputParam,
@@ -105,8 +105,9 @@ def call_model(
     latency_ms = int((time.perf_counter() - started) * 1000)
 
     usage = to_ledger_usage(response)
-    log_call(conn, stage=stage, model=model, usage=usage, latency_ms=latency_ms,
-             cost_usd=estimate_cost_usd(model, usage), doc_id=doc_id, corpus_id=corpus_id, meta=meta)
+    if conn is not None:
+        log_call(conn, stage=stage, model=model, usage=usage, latency_ms=latency_ms,
+                 cost_usd=estimate_cost_usd(model, usage), doc_id=doc_id, corpus_id=corpus_id, meta=meta)
     return response.output_text, response
 
 

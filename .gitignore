@@ -25,3 +25,6 @@ apps/worker/.cache/
 # misc
 .DS_Store
 Thumbs.db
+
+# Nested Cursor checkout (not a submodule). Work in the repo root.
+/cairn/
