@@ -1,0 +1,26 @@
+{
+  "name": "@cairn/contracts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./db": "./db.ts"
+  },
+  "scripts": {
+    "test": "tsx test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.23.8",
+    "pg": "^8.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "@types/pg": "^8.11.10"
+  }
+}

@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+/* Dark-first. A judge's verdict forms in the first ten seconds of seeing the screen. */
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-neutral-950 text-neutral-100 antialiased;
+}

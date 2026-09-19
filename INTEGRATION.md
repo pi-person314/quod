@@ -1,0 +1,44 @@
+# INTEGRATION.md — cross-session issues and checkpoint log
+
+Append-only. When you need a change in a directory you do not own, add an
+issue here, stub around it locally, and keep moving. The owner picks it up at
+their next natural pause. Do not commit into another session's directory.
+
+## Issue format
+
+```
+### [open|done] <short title>   (from <A|B|C> -> for <A|B|C>, hour N)
+What I need, why, and what I stubbed in the meantime.
+```
+
+## Issues
+
+_(none yet)_
+
+## Additive contract extensions
+
+Optional fields added to API shapes in `packages/contracts/types.ts` by a route
+owner. One line each: field, route, who, why.
+
+_(none yet)_
+
+## Checkpoints
+
+### Checkpoint 1 (hour 6) — fixture-backed reader shows a real instantiated card
+- [ ] A: A1–A2 parse and segment
+- [ ] B: B0–B1 shell and coordinates
+- [ ] C: C0–C1 wrapper and instantiation
+- Result:
+
+### Checkpoint 2 (hour 12) — live parse of one real book renders end to end
+Hard gate: if this fails, cut to fixtures for the demo and say so in the write-up.
+- [ ] A: A3–A4 anchors and edges
+- [ ] B: B2–B3 cards and ingest UI
+- [ ] C: C2–C3 search and resolution
+- Result:
+
+### Checkpoint 3 (hour 17) — feature freeze
+- [ ] A: A5 hardening, `fixtures/demo.dump`
+- [ ] B: B4–B5 trace and map
+- [ ] C: C4–C5 endpoints and cost table
+- Result:

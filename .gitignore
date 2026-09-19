@@ -1,0 +1,27 @@
+# deps
+node_modules/
+.pnpm-store/
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# build
+.next/
+out/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# env
+.env
+.env.local
+.env.*.local
+
+# worker output
+apps/worker/parsed/
+apps/worker/.cache/
+
+# misc
+.DS_Store
+Thumbs.db
