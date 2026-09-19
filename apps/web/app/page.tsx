@@ -1,30 +1,90 @@
-import Link from "next/link";
-import { loadGoldenCorpus, fixturesEnabled } from "@/lib/fixtures";
-
-// Landing: one sentence and a demo-corpus button (B6 polishes this).
+﻿import Link from "next/link";
+import { corpora, dataset } from "@/lib/data";
+export const dynamic = "force-dynamic";
 export default async function Home() {
-  const docs = fixturesEnabled() ? loadGoldenCorpus().docs : [];
+  const [data, courses] = await Promise.all([dataset(), corpora()]);
+  const demo =
+    data.docs.find((d) => /problem|pset/i.test(d.title)) ?? data.docs[0];
   return (
-    <main className="mx-auto max-w-2xl px-6 py-24">
-      <h1 className="text-3xl font-semibold tracking-tight">Cairn</h1>
-      <p className="mt-3 text-neutral-400">
-        A textbook is a dependency graph flattened into a line. Cairn unflattens it.
-      </p>
-      <ul className="mt-10 space-y-2">
-        {docs.map((d) => (
-          <li key={d.id}>
-            <Link className="underline underline-offset-4 hover:text-white" href={`/read/${d.id}`}>
-              {d.title}
+    <main className="landing">
+      <header>
+        <Link href="/" className="wordmark">
+          cairn<span> / </span>
+        </Link>
+        <span className="eyebrow">A READER FOR CONNECTED THINKING</span>
+        <Link href="/upload">Add a corpus ↗</Link>
+      </header>
+      <section className="landing-intro">
+        <span className="eyebrow">THE REFERENCE IS A BEGINNING</span>
+        <h1>
+          Keep the proof in view.
+          <br />
+          <em>Bring its foundations closer.</em>
+        </h1>
+        <p>
+          Your textbook, notes, and problem sets — connected at the results they
+          share.
+        </p>
+        <div className="landing-actions">
+          {demo && (
+            <Link className="primary" href={`/read/${demo.id}`}>
+              Open the demo corpus <span>↗</span>
             </Link>
-            <span className="ml-2 text-xs text-neutral-500">{d.page_count} pages</span>
-          </li>
-        ))}
-        {docs.length === 0 && (
-          <li className="text-sm text-neutral-500">
-            No documents. Set USE_FIXTURES=1 once fixtures/golden has landed, or upload a corpus.
-          </li>
-        )}
-      </ul>
+          )}
+          <Link href="/upload">Start with your own PDFs</Link>
+        </div>
+        <div className="corpus-preview">
+          <span>Problem set 4</span>
+          <span className="connector">the dimension theorem ───↗</span>
+          <span>Textbook · Rank-Nullity</span>
+        </div>
+      </section>
+      <section className="corpora">
+        <div className="section-heading">
+          <span className="eyebrow">YOUR CORPORA</span>
+          <span>{courses.length.toString().padStart(2, "0")}</span>
+        </div>
+        {courses.map((c, i) => {
+          const docs = data.docs.filter((d) => d.corpus_id === c.id);
+          const first =
+            docs.find((d) => /problem|pset/i.test(d.title)) ?? docs[0];
+          return (
+            <Link
+              className="corpus-row"
+              key={c.id}
+              href={first ? `/read/${first.id}` : "/upload"}
+            >
+              <span className="corpus-index">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <div>
+                <h2>{c.name}</h2>
+                <p>
+                  {docs.length
+                    ? docs.map((d) => d.title.split(" · ")[0]).join(" · ")
+                    : "No documents yet — add your first PDF"}
+                </p>
+              </div>
+              <div className="corpus-stats">
+                <span>{docs.length} documents</span>
+                <span>
+                  {
+                    data.nodes.filter((n) =>
+                      docs.some((d) => d.id === n.doc_id),
+                    ).length
+                  }{" "}
+                  results
+                </span>
+              </div>
+              <span className="cross-link">↗</span>
+            </Link>
+          );
+        })}
+      </section>
+      <footer>
+        <span>Follow a reference. Find your footing.</span>
+        <span>Built for the way mathematics is read.</span>
+      </footer>
     </main>
   );
 }

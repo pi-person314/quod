@@ -1,11 +1,15 @@
-// GET /api/card/:anchor_id — owner B (B0). Baked card from Postgres. No model call, ever.
-import { fixturesEnabled } from "@/lib/fixtures";
-import { notImplemented } from "@/lib/http";
-
-export async function GET(_req: Request, { params }: { params: Promise<{ anchor_id: string }> }) {
+﻿import { CardResponse } from "@cairn/contracts";
+import { dataset } from "@/lib/data";
+import { jsonOf, notFound } from "@/lib/http";
+export async function GET(
+  _req: Request,
+  { params }: { params: Promise<{ anchor_id: string }> },
+) {
   const { anchor_id } = await params;
-  if (fixturesEnabled()) {
-    // B0: find loadGoldenCorpus().cards by anchor_id, return jsonOf(CardResponse, ...)
-  }
-  return notImplemented(`GET /api/card/${anchor_id}`, "B", "B0");
+  const card = (await dataset()).cards.find((c) => c.anchor_id === anchor_id);
+  return card
+    ? jsonOf(CardResponse, card, {
+        headers: { "Cache-Control": "private, max-age=3600" },
+      })
+    : notFound("Baked card");
 }
