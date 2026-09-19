@@ -13,7 +13,13 @@ What I need, why, and what I stubbed in the meantime.
 
 ## Issues
 
-_(none yet)_
+### [open] demo.dump holds two documents, not four   (from A -> for A, hour 0)
+`fixtures/demo.dump` snapshots the A0 golden pair (chapter + pset). The spec's
+four-document demo corpus needs lecture notes and slides; add them to
+`fixtures/golden/` (or ingest them live) and re-run `make demo-dump`.
+
+### [open] A0 demo PDFs are generated, not pre-vetted textbook chapter   (from A -> for A/B, hour 0)
+`fixtures/golden/analysis-ch3.pdf` and `pset4.pdf` were built by `apps/worker/scripts/build_a0_golden.py` so `pnpm test:contracts` and B1 can proceed without uploaded books. Replace with your LaTeX chapter/pset PDFs and regenerate or hand-edit JSON bboxes when ready.
 
 ## Additive contract extensions
 

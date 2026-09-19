@@ -18,10 +18,18 @@ Reads `.env` from the repo root (`DATABASE_URL`, `OPENAI_API_KEY`,
 ## Pipeline
 
 ```
-cairn-worker ingest <dir-or-pdf> [--corpus-id UUID] [--corpus-name NAME]
-cairn-worker parse  <pdf> --out parsed/          # A1 only: emit parsed/<doc_id>.jsonl
+cairn-worker ingest <dir-or-pdf> [--corpus-id UUID] [--corpus-name NAME] [--force]
+cairn-worker ingest --fixtures                    # A5: load fixtures/golden/*, no parsing
+cairn-worker parse  <pdf> --out parsed/           # A1 only: emit parsed/<doc_id>.jsonl
+cairn-worker load-fixtures                        # same as ingest --fixtures
+cairn-worker dump-demo [--out PATH]               # A5: write fixtures/demo.dump
 cairn-worker db-init                              # apply packages/contracts/schema.sql
 ```
+
+Re-ingest is idempotent: a document is keyed on `(corpus_id, sha256)` and a
+second run over the same file is a no-op once it is `ready`. `--force`
+rebuilds its graph in place instead of stacking a second copy beside it.
+Omitting `--corpus-id` reuses the corpus with the same `--corpus-name`.
 
 Stages (`cairn_worker/stages/`), each one a function `(ctx, ...) -> ...` that
 writes `ingest_progress` at its boundary:
@@ -46,3 +54,11 @@ field. If you change one, change the other in the same commit and run
 
 Coordinates: bboxes are PyMuPDF space (points, origin top-left, y down),
 pages are 1-indexed. See CONTRACTS.md.
+
+## Scripts (Session A)
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/bbox_helper.py` | Find bboxes for a substring on a PDF page (A0) |
+| `scripts/build_a0_golden.py` | Regenerate `fixtures/golden/*` demo corpus + PDFs |
+| `scripts/eval_golden.py` | A1–A4 gates vs `analysis-ch3.json` (`parse|segment|anchors|edges|all`) |

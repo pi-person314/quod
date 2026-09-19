@@ -1,0 +1,1366 @@
+{
+  "document": {
+    "id": "00000000-0000-4000-8000-000000000011",
+    "corpus_id": "00000000-0000-4000-8000-000000000001",
+    "title": "Analysis Chapter 3 (demo)",
+    "filename": "analysis-ch3.pdf",
+    "file_hash": null,
+    "page_count": 4,
+    "quality": 0.95,
+    "status": "ready"
+  },
+  "pdf": "analysis-ch3.pdf",
+  "nodes": [
+    {
+      "id": "00000000-0000-4000-8000-000000000201",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "kind": "definition",
+      "label": "Definition 3.1",
+      "title": "Linear map",
+      "statement_md": "Definition 3.1: standard statement for demo fixture.",
+      "clauses": [
+        {
+          "id": "i",
+          "text": "Definition 3.1: standard statement for demo fixture."
+        }
+      ],
+      "symbols": [
+        {
+          "sym": "T",
+          "role": "linear map"
+        }
+      ],
+      "page": 1,
+      "bbox": [
+        72.0,
+        84.17500305175781,
+        139.2539825439453,
+        99.28900146484375
+      ],
+      "entity_id": "00000000-0000-4000-8000-000000000101",
+      "confidence": 0.95
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000202",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "kind": "definition",
+      "label": "Definition 3.2",
+      "title": "Kernel",
+      "statement_md": "Definition 3.2: standard statement for demo fixture.",
+      "clauses": [
+        {
+          "id": "i",
+          "text": "Definition 3.2: standard statement for demo fixture."
+        }
+      ],
+      "symbols": [
+        {
+          "sym": "T",
+          "role": "linear map"
+        }
+      ],
+      "page": 1,
+      "bbox": [
+        72.0,
+        108.17500305175781,
+        139.2539825439453,
+        123.28900146484375
+      ],
+      "entity_id": null,
+      "confidence": 0.95
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000203",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "kind": "definition",
+      "label": "Definition 3.3",
+      "title": "Image",
+      "statement_md": "Definition 3.3: standard statement for demo fixture.",
+      "clauses": [
+        {
+          "id": "i",
+          "text": "Definition 3.3: standard statement for demo fixture."
+        }
+      ],
+      "symbols": [
+        {
+          "sym": "T",
+          "role": "linear map"
+        }
+      ],
+      "page": 1,
+      "bbox": [
+        72.0,
+        132.1750030517578,
+        139.2539825439453,
+        147.28900146484375
+      ],
+      "entity_id": null,
+      "confidence": 0.95
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000204",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "kind": "theorem",
+      "label": "Theorem 3.4",
+      "title": "Rank-Nullity",
+      "statement_md": "Let $T: V \\to W$ be linear, $\\dim V$ finite. Then $\\dim \\ker T + \\dim \\operatorname{im} T = \\dim V$.",
+      "clauses": [
+        {
+          "id": "i",
+          "text": "Let $T: V \\to W$ be linear, $\\dim V$ finite. Then $\\dim \\ker T + \\dim \\operatorname{im} T = \\dim V$."
+        }
+      ],
+      "symbols": [
+        {
+          "sym": "T",
+          "role": "linear map"
+        }
+      ],
+      "page": 1,
+      "bbox": [
+        72.0,
+        156.1750030517578,
+        207.07997131347656,
+        171.28900146484375
+      ],
+      "entity_id": "00000000-0000-4000-8000-000000000101",
+      "confidence": 0.95
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000205",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "kind": "lemma",
+      "label": "Lemma 3.5",
+      "title": null,
+      "statement_md": "Lemma 3.5: standard statement for demo fixture.",
+      "clauses": [
+        {
+          "id": "i",
+          "text": "Lemma 3.5: standard statement for demo fixture."
+        }
+      ],
+      "symbols": [
+        {
+          "sym": "T",
+          "role": "linear map"
+        }
+      ],
+      "page": 1,
+      "bbox": [
+        72.0,
+        196.1750030517578,
+        130.07998657226562,
+        211.28900146484375
+      ],
+      "entity_id": "00000000-0000-4000-8000-000000000101",
+      "confidence": 0.95
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000206",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "kind": "proposition",
+      "label": "Proposition 3.6",
+      "title": null,
+      "statement_md": "Proposition 3.6: standard statement for demo fixture.",
+      "clauses": [
+        {
+          "id": "i",
+          "text": "Proposition 3.6: standard statement for demo fixture."
+        }
+      ],
+      "symbols": [
+        {
+          "sym": "T",
+          "role": "linear map"
+        }
+      ],
+      "page": 2,
+      "bbox": [
+        72.0,
+        60.17499923706055,
+        148.427978515625,
+        75.28900146484375
+      ],
+      "entity_id": null,
+      "confidence": 0.95
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000207",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "kind": "theorem",
+      "label": "Theorem 3.7",
+      "title": "Dimension Theorem",
+      "statement_md": "Theorem 3.7: standard statement for demo fixture.",
+      "clauses": [
+        {
+          "id": "i",
+          "text": "Theorem 3.7: standard statement for demo fixture."
+        }
+      ],
+      "symbols": [
+        {
+          "sym": "T",
+          "role": "linear map"
+        }
+      ],
+      "page": 2,
+      "bbox": [
+        72.0,
+        84.17500305175781,
+        246.82293701171875,
+        99.28900146484375
+      ],
+      "entity_id": "00000000-0000-4000-8000-000000000102",
+      "confidence": 0.95
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000208",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "kind": "lemma",
+      "label": "Lemma 3.8",
+      "title": null,
+      "statement_md": "Lemma 3.8: standard statement for demo fixture.",
+      "clauses": [
+        {
+          "id": "i",
+          "text": "Lemma 3.8: standard statement for demo fixture."
+        }
+      ],
+      "symbols": [
+        {
+          "sym": "T",
+          "role": "linear map"
+        }
+      ],
+      "page": 2,
+      "bbox": [
+        72.0,
+        108.17500305175781,
+        130.07998657226562,
+        123.28900146484375
+      ],
+      "entity_id": "00000000-0000-4000-8000-000000000101",
+      "confidence": 0.95
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000209",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "kind": "corollary",
+      "label": "Corollary 3.9",
+      "title": null,
+      "statement_md": "Corollary 3.9: standard statement for demo fixture.",
+      "clauses": [
+        {
+          "id": "i",
+          "text": "Corollary 3.9: standard statement for demo fixture."
+        }
+      ],
+      "symbols": [
+        {
+          "sym": "T",
+          "role": "linear map"
+        }
+      ],
+      "page": 2,
+      "bbox": [
+        72.0,
+        132.1750030517578,
+        137.40599060058594,
+        147.28900146484375
+      ],
+      "entity_id": null,
+      "confidence": 0.95
+    },
+    {
+      "id": "00000000-0000-4000-8000-00000000020a",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "kind": "theorem",
+      "label": "Theorem 3.10",
+      "title": null,
+      "statement_md": "Theorem 3.10: standard statement for demo fixture.",
+      "clauses": [
+        {
+          "id": "i",
+          "text": "Theorem 3.10: standard statement for demo fixture."
+        }
+      ],
+      "symbols": [
+        {
+          "sym": "T",
+          "role": "linear map"
+        }
+      ],
+      "page": 2,
+      "bbox": [
+        72.0,
+        156.1750030517578,
+        143.53298950195312,
+        171.28900146484375
+      ],
+      "entity_id": null,
+      "confidence": 0.95
+    },
+    {
+      "id": "00000000-0000-4000-8000-00000000020b",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "kind": "definition",
+      "label": "Definition 3.11",
+      "title": "Rank",
+      "statement_md": "Definition 3.11: standard statement for demo fixture.",
+      "clauses": [
+        {
+          "id": "i",
+          "text": "Definition 3.11: standard statement for demo fixture."
+        }
+      ],
+      "symbols": [
+        {
+          "sym": "T",
+          "role": "linear map"
+        }
+      ],
+      "page": 2,
+      "bbox": [
+        72.0,
+        180.1750030517578,
+        145.36997985839844,
+        195.28900146484375
+      ],
+      "entity_id": null,
+      "confidence": 0.95
+    },
+    {
+      "id": "00000000-0000-4000-8000-00000000020c",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "kind": "lemma",
+      "label": "Lemma 3.12",
+      "title": null,
+      "statement_md": "Lemma 3.12: standard statement for demo fixture.",
+      "clauses": [
+        {
+          "id": "i",
+          "text": "Lemma 3.12: standard statement for demo fixture."
+        }
+      ],
+      "symbols": [
+        {
+          "sym": "T",
+          "role": "linear map"
+        }
+      ],
+      "page": 3,
+      "bbox": [
+        72.0,
+        60.17499923706055,
+        136.19598388671875,
+        75.28900146484375
+      ],
+      "entity_id": null,
+      "confidence": 0.95
+    },
+    {
+      "id": "00000000-0000-4000-8000-00000000020d",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "kind": "theorem",
+      "label": "Theorem 3.22",
+      "title": "Rank-Nullity",
+      "statement_md": "Theorem 3.22: standard statement for demo fixture.",
+      "clauses": [
+        {
+          "id": "i",
+          "text": "Theorem 3.22: standard statement for demo fixture."
+        }
+      ],
+      "symbols": [
+        {
+          "sym": "T",
+          "role": "linear map"
+        }
+      ],
+      "page": 3,
+      "bbox": [
+        72.0,
+        84.17500305175781,
+        143.53298950195312,
+        99.28900146484375
+      ],
+      "entity_id": "00000000-0000-4000-8000-000000000101",
+      "confidence": 0.95
+    },
+    {
+      "id": "00000000-0000-4000-8000-00000000020e",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "kind": "example",
+      "label": "Example 3.13",
+      "title": null,
+      "statement_md": "Example 3.13: standard statement for demo fixture.",
+      "clauses": [
+        {
+          "id": "i",
+          "text": "Example 3.13: standard statement for demo fixture."
+        }
+      ],
+      "symbols": [
+        {
+          "sym": "T",
+          "role": "linear map"
+        }
+      ],
+      "page": 3,
+      "bbox": [
+        72.0,
+        108.17500305175781,
+        142.31198120117188,
+        123.28900146484375
+      ],
+      "entity_id": null,
+      "confidence": 0.95
+    },
+    {
+      "id": "00000000-0000-4000-8000-00000000020f",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "kind": "proof",
+      "label": null,
+      "title": "Proof of Theorem 3.4",
+      "statement_md": "Proof of Theorem 3.4: standard statement for demo fixture.",
+      "clauses": [
+        {
+          "id": "i",
+          "text": "Proof of Theorem 3.4: standard statement for demo fixture."
+        }
+      ],
+      "symbols": [
+        {
+          "sym": "T",
+          "role": "linear map"
+        }
+      ],
+      "page": 3,
+      "bbox": [
+        72.0,
+        132.1750030517578,
+        101.34799194335938,
+        147.28900146484375
+      ],
+      "entity_id": null,
+      "confidence": 0.95
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000210",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "kind": "notation",
+      "label": "Notation 3.1",
+      "title": null,
+      "statement_md": "Notation 3.1: standard statement for demo fixture.",
+      "clauses": [
+        {
+          "id": "i",
+          "text": "Notation 3.1: standard statement for demo fixture."
+        }
+      ],
+      "symbols": [],
+      "page": 3,
+      "bbox": [
+        72.0,
+        156.1750030517578,
+        134.36997985839844,
+        171.28900146484375
+      ],
+      "entity_id": null,
+      "confidence": 0.95
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000211",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "kind": "theorem",
+      "label": "Theorem 3.14",
+      "title": "Spectral",
+      "statement_md": "Theorem 3.14: standard statement for demo fixture.",
+      "clauses": [
+        {
+          "id": "i",
+          "text": "Theorem 3.14: standard statement for demo fixture."
+        }
+      ],
+      "symbols": [
+        {
+          "sym": "T",
+          "role": "linear map"
+        }
+      ],
+      "page": 3,
+      "bbox": [
+        72.0,
+        180.1750030517578,
+        194.2649688720703,
+        195.28900146484375
+      ],
+      "entity_id": "00000000-0000-4000-8000-000000000103",
+      "confidence": 0.95
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000212",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "kind": "lemma",
+      "label": "Lemma 3.15",
+      "title": null,
+      "statement_md": "Lemma 3.15: standard statement for demo fixture.",
+      "clauses": [
+        {
+          "id": "i",
+          "text": "Lemma 3.15: standard statement for demo fixture."
+        }
+      ],
+      "symbols": [
+        {
+          "sym": "T",
+          "role": "linear map"
+        }
+      ],
+      "page": 4,
+      "bbox": [
+        72.0,
+        60.17499923706055,
+        136.19598388671875,
+        75.28900146484375
+      ],
+      "entity_id": "00000000-0000-4000-8000-000000000103",
+      "confidence": 0.95
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000213",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "kind": "corollary",
+      "label": "Corollary 3.16",
+      "title": null,
+      "statement_md": "Corollary 3.16: standard statement for demo fixture.",
+      "clauses": [
+        {
+          "id": "i",
+          "text": "Corollary 3.16: standard statement for demo fixture."
+        }
+      ],
+      "symbols": [
+        {
+          "sym": "T",
+          "role": "linear map"
+        }
+      ],
+      "page": 4,
+      "bbox": [
+        72.0,
+        84.17500305175781,
+        143.52198791503906,
+        99.28900146484375
+      ],
+      "entity_id": "00000000-0000-4000-8000-000000000102",
+      "confidence": 0.95
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000214",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "kind": "proposition",
+      "label": "Proposition 3.17",
+      "title": null,
+      "statement_md": "Proposition 3.17: standard statement for demo fixture.",
+      "clauses": [
+        {
+          "id": "i",
+          "text": "Proposition 3.17: standard statement for demo fixture."
+        }
+      ],
+      "symbols": [
+        {
+          "sym": "T",
+          "role": "linear map"
+        }
+      ],
+      "page": 4,
+      "bbox": [
+        72.0,
+        108.17500305175781,
+        154.54397583007812,
+        123.28900146484375
+      ],
+      "entity_id": "00000000-0000-4000-8000-000000000101",
+      "confidence": 0.95
+    }
+  ],
+  "edges": [
+    {
+      "src": "00000000-0000-4000-8000-000000000201",
+      "dst": "00000000-0000-4000-8000-000000000202",
+      "kind": "uses_notation",
+      "extractor": "deterministic",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-000000000201",
+      "dst": "00000000-0000-4000-8000-000000000203",
+      "kind": "uses_notation",
+      "extractor": "deterministic",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-000000000204",
+      "dst": "00000000-0000-4000-8000-000000000202",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-000000000204",
+      "dst": "00000000-0000-4000-8000-000000000203",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-000000000204",
+      "dst": "00000000-0000-4000-8000-000000000201",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-000000000205",
+      "dst": "00000000-0000-4000-8000-000000000204",
+      "kind": "restates",
+      "extractor": "heuristic",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-000000000206",
+      "dst": "00000000-0000-4000-8000-000000000202",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-000000000207",
+      "dst": "00000000-0000-4000-8000-000000000202",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-000000000207",
+      "dst": "00000000-0000-4000-8000-000000000203",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-000000000208",
+      "dst": "00000000-0000-4000-8000-000000000204",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-000000000209",
+      "dst": "00000000-0000-4000-8000-000000000204",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-00000000020a",
+      "dst": "00000000-0000-4000-8000-000000000207",
+      "kind": "depends_on",
+      "extractor": "heuristic",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-00000000020b",
+      "dst": "00000000-0000-4000-8000-000000000203",
+      "kind": "uses_notation",
+      "extractor": "notation",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-00000000020c",
+      "dst": "00000000-0000-4000-8000-000000000205",
+      "kind": "depends_on",
+      "extractor": "heuristic",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-00000000020d",
+      "dst": "00000000-0000-4000-8000-000000000204",
+      "kind": "restates",
+      "extractor": "deterministic",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-00000000020e",
+      "dst": "00000000-0000-4000-8000-000000000204",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-00000000020f",
+      "dst": "00000000-0000-4000-8000-000000000204",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-000000000210",
+      "dst": "00000000-0000-4000-8000-000000000201",
+      "kind": "uses_notation",
+      "extractor": "notation",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-000000000211",
+      "dst": "00000000-0000-4000-8000-000000000201",
+      "kind": "depends_on",
+      "extractor": "llm",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-000000000212",
+      "dst": "00000000-0000-4000-8000-000000000211",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-000000000213",
+      "dst": "00000000-0000-4000-8000-000000000205",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-000000000213",
+      "dst": "00000000-0000-4000-8000-000000000207",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-000000000214",
+      "dst": "00000000-0000-4000-8000-00000000020d",
+      "kind": "restates",
+      "extractor": "llm",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-000000000214",
+      "dst": "00000000-0000-4000-8000-000000000204",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-000000000209",
+      "dst": "00000000-0000-4000-8000-000000000205",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-00000000020c",
+      "dst": "00000000-0000-4000-8000-000000000204",
+      "kind": "depends_on",
+      "extractor": "heuristic",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-000000000212",
+      "dst": "00000000-0000-4000-8000-000000000204",
+      "kind": "specialises",
+      "extractor": "heuristic",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-00000000020e",
+      "dst": "00000000-0000-4000-8000-000000000202",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-00000000020f",
+      "dst": "00000000-0000-4000-8000-000000000202",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-00000000020a",
+      "dst": "00000000-0000-4000-8000-000000000208",
+      "kind": "depends_on",
+      "extractor": "heuristic",
+      "confidence": 0.9
+    }
+  ],
+  "anchors": [
+    {
+      "id": "00000000-0000-4000-8000-000000000301",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "page": 2,
+      "bbox": [
+        156.35899353027344,
+        132.1750030517578,
+        218.71795654296875,
+        147.28900146484375
+      ],
+      "surface": "By Theorem 3.4",
+      "target_node_id": "00000000-0000-4000-8000-000000000204",
+      "target_entity_id": "00000000-0000-4000-8000-000000000101",
+      "card_id": "00000000-0000-4000-8000-000000000401"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000302",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "page": 2,
+      "bbox": [
+        156.35899353027344,
+        132.1750030517578,
+        218.71795654296875,
+        147.28900146484375
+      ],
+      "surface": "Theorem 3.4",
+      "target_node_id": "00000000-0000-4000-8000-000000000204",
+      "target_entity_id": "00000000-0000-4000-8000-000000000101",
+      "card_id": "00000000-0000-4000-8000-000000000402"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000303",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "page": 3,
+      "bbox": [
+        425.95794677734375,
+        108.17500305175781,
+        488.31695556640625,
+        123.28900146484375
+      ],
+      "surface": "Theorem 3.4",
+      "target_node_id": "00000000-0000-4000-8000-000000000204",
+      "target_entity_id": "00000000-0000-4000-8000-000000000101",
+      "card_id": "00000000-0000-4000-8000-000000000403"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000304",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "page": 3,
+      "bbox": [
+        212.0189666748047,
+        60.17499923706055,
+        307.9939270019531,
+        75.28900146484375
+      ],
+      "surface": "the previous lemma",
+      "target_node_id": null,
+      "target_entity_id": null,
+      "card_id": "00000000-0000-4000-8000-000000000404"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000305",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "page": 3,
+      "bbox": [
+        139.2539825439453,
+        60.17499923706055,
+        185.11297607421875,
+        75.28900146484375
+      ],
+      "surface": "as above",
+      "target_node_id": null,
+      "target_entity_id": null,
+      "card_id": "00000000-0000-4000-8000-000000000405"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000306",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "page": 4,
+      "bbox": [
+        139.2429962158203,
+        132.1750030517578,
+        207.71795654296875,
+        147.28900146484375
+      ],
+      "surface": "Theorem 3.14",
+      "target_node_id": "00000000-0000-4000-8000-000000000211",
+      "target_entity_id": null,
+      "card_id": "00000000-0000-4000-8000-000000000406"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000307",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "page": 4,
+      "bbox": [
+        162.47499084472656,
+        84.17500305175781,
+        217.49696350097656,
+        99.28900146484375
+      ],
+      "surface": "Lemma 3.5",
+      "target_node_id": "00000000-0000-4000-8000-000000000205",
+      "target_entity_id": null,
+      "card_id": "00000000-0000-4000-8000-000000000407"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000308",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "page": 4,
+      "bbox": [
+        241.96095275878906,
+        84.17500305175781,
+        304.3199462890625,
+        99.28900146484375
+      ],
+      "surface": "Theorem 3.7",
+      "target_node_id": "00000000-0000-4000-8000-000000000207",
+      "target_entity_id": null,
+      "card_id": "00000000-0000-4000-8000-000000000408"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000309",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "page": 4,
+      "bbox": [
+        429.6429138183594,
+        108.17500305175781,
+        498.117919921875,
+        123.28900146484375
+      ],
+      "surface": "Theorem 3.22",
+      "target_node_id": "00000000-0000-4000-8000-00000000020d",
+      "target_entity_id": null,
+      "card_id": "00000000-0000-4000-8000-000000000409"
+    },
+    {
+      "id": "00000000-0000-4000-8000-00000000030a",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "page": 4,
+      "bbox": [
+        139.2539825439453,
+        60.17499923706055,
+        243.1819305419922,
+        75.28900146484375
+      ],
+      "surface": "the spectral theorem",
+      "target_node_id": null,
+      "target_entity_id": null,
+      "card_id": "00000000-0000-4000-8000-00000000040a"
+    },
+    {
+      "id": "00000000-0000-4000-8000-00000000030b",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "page": 4,
+      "bbox": [
+        247.47193908691406,
+        108.17500305175781,
+        306.7508850097656,
+        123.28900146484375
+      ],
+      "surface": "Rank-Nullity",
+      "target_node_id": null,
+      "target_entity_id": "00000000-0000-4000-8000-000000000101",
+      "card_id": "00000000-0000-4000-8000-00000000040b"
+    },
+    {
+      "id": "00000000-0000-4000-8000-00000000030c",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "page": 1,
+      "bbox": [
+        72.0,
+        196.1750030517578,
+        127.02198791503906,
+        211.28900146484375
+      ],
+      "surface": "Lemma 3.5",
+      "target_node_id": "00000000-0000-4000-8000-000000000205",
+      "target_entity_id": null,
+      "card_id": "00000000-0000-4000-8000-00000000040c"
+    },
+    {
+      "id": "00000000-0000-4000-8000-00000000030d",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "page": 2,
+      "bbox": [
+        72.0,
+        84.17500305175781,
+        134.35899353027344,
+        99.28900146484375
+      ],
+      "surface": "Theorem 3.7",
+      "target_node_id": "00000000-0000-4000-8000-000000000207",
+      "target_entity_id": null,
+      "card_id": "00000000-0000-4000-8000-00000000040d"
+    },
+    {
+      "id": "00000000-0000-4000-8000-00000000030e",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "page": 2,
+      "bbox": [
+        72.0,
+        132.1750030517578,
+        134.34799194335938,
+        147.28900146484375
+      ],
+      "surface": "Corollary 3.9",
+      "target_node_id": "00000000-0000-4000-8000-000000000209",
+      "target_entity_id": null,
+      "card_id": "00000000-0000-4000-8000-00000000040e"
+    },
+    {
+      "id": "00000000-0000-4000-8000-00000000030f",
+      "doc_id": "00000000-0000-4000-8000-000000000011",
+      "page": 4,
+      "bbox": [
+        260.9029541015625,
+        156.1750030517578,
+        323.261962890625,
+        171.28900146484375
+      ],
+      "surface": "Theorem 3.4",
+      "target_node_id": "00000000-0000-4000-8000-000000000204",
+      "target_entity_id": "00000000-0000-4000-8000-000000000101",
+      "card_id": "00000000-0000-4000-8000-00000000040f"
+    }
+  ],
+  "cards": [
+    {
+      "id": "00000000-0000-4000-8000-000000000401",
+      "anchor_id": "00000000-0000-4000-8000-000000000301",
+      "headline": "Rank-Nullity",
+      "instantiated_md": "Let $T: V \\to W$ be linear, $\\dim V$ finite. Then $\\dim \\ker T + \\dim \\operatorname{im} T = \\dim V$.",
+      "full_md": "Let $T: V \\to W$ be linear, $\\dim V$ finite. Then $\\dim \\ker T + \\dim \\operatorname{im} T = \\dim V$.",
+      "substitutions": [
+        {
+          "from": "V",
+          "to": "V"
+        }
+      ],
+      "clause_ids": [
+        "i"
+      ],
+      "gloss": "Demo fixture card for hover.",
+      "source": {
+        "doc_id": "00000000-0000-4000-8000-000000000011",
+        "page": 1
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000402",
+      "anchor_id": "00000000-0000-4000-8000-000000000302",
+      "headline": "Rank-Nullity",
+      "instantiated_md": "Let $T: V \\to W$ be linear, $\\dim V$ finite. Then $\\dim \\ker T + \\dim \\operatorname{im} T = \\dim V$.",
+      "full_md": "Let $T: V \\to W$ be linear, $\\dim V$ finite. Then $\\dim \\ker T + \\dim \\operatorname{im} T = \\dim V$.",
+      "substitutions": [
+        {
+          "from": "V",
+          "to": "V"
+        }
+      ],
+      "clause_ids": [
+        "i"
+      ],
+      "gloss": "Demo fixture card for hover.",
+      "source": {
+        "doc_id": "00000000-0000-4000-8000-000000000011",
+        "page": 1
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000403",
+      "anchor_id": "00000000-0000-4000-8000-000000000303",
+      "headline": "Rank-Nullity",
+      "instantiated_md": "Let $T: V \\to W$ be linear, $\\dim V$ finite. Then $\\dim \\ker T + \\dim \\operatorname{im} T = \\dim V$.",
+      "full_md": "Let $T: V \\to W$ be linear, $\\dim V$ finite. Then $\\dim \\ker T + \\dim \\operatorname{im} T = \\dim V$.",
+      "substitutions": [
+        {
+          "from": "V",
+          "to": "V"
+        }
+      ],
+      "clause_ids": [
+        "i"
+      ],
+      "gloss": "Demo fixture card for hover.",
+      "source": {
+        "doc_id": "00000000-0000-4000-8000-000000000011",
+        "page": 1
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000404",
+      "anchor_id": "00000000-0000-4000-8000-000000000304",
+      "headline": "Rank-Nullity",
+      "instantiated_md": "Let $T: V \\to W$ be linear, $\\dim V$ finite. Then $\\dim \\ker T + \\dim \\operatorname{im} T = \\dim V$.",
+      "full_md": "Let $T: V \\to W$ be linear, $\\dim V$ finite. Then $\\dim \\ker T + \\dim \\operatorname{im} T = \\dim V$.",
+      "substitutions": [
+        {
+          "from": "V",
+          "to": "V"
+        }
+      ],
+      "clause_ids": [
+        "i"
+      ],
+      "gloss": "Demo fixture card for hover.",
+      "source": {
+        "doc_id": "00000000-0000-4000-8000-000000000011",
+        "page": 1
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000405",
+      "anchor_id": "00000000-0000-4000-8000-000000000305",
+      "headline": "Rank-Nullity",
+      "instantiated_md": "Let $T: V \\to W$ be linear, $\\dim V$ finite. Then $\\dim \\ker T + \\dim \\operatorname{im} T = \\dim V$.",
+      "full_md": "Let $T: V \\to W$ be linear, $\\dim V$ finite. Then $\\dim \\ker T + \\dim \\operatorname{im} T = \\dim V$.",
+      "substitutions": [
+        {
+          "from": "V",
+          "to": "V"
+        }
+      ],
+      "clause_ids": [
+        "i"
+      ],
+      "gloss": "Demo fixture card for hover.",
+      "source": {
+        "doc_id": "00000000-0000-4000-8000-000000000011",
+        "page": 1
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000406",
+      "anchor_id": "00000000-0000-4000-8000-000000000306",
+      "headline": "Spectral",
+      "instantiated_md": "Theorem 3.14: standard statement for demo fixture.",
+      "full_md": "Theorem 3.14: standard statement for demo fixture.",
+      "substitutions": [
+        {
+          "from": "V",
+          "to": "V"
+        }
+      ],
+      "clause_ids": [
+        "i"
+      ],
+      "gloss": "Demo fixture card for hover.",
+      "source": {
+        "doc_id": "00000000-0000-4000-8000-000000000011",
+        "page": 3
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000407",
+      "anchor_id": "00000000-0000-4000-8000-000000000307",
+      "headline": "Lemma 3.5",
+      "instantiated_md": "Lemma 3.5: standard statement for demo fixture.",
+      "full_md": "Lemma 3.5: standard statement for demo fixture.",
+      "substitutions": [
+        {
+          "from": "V",
+          "to": "V"
+        }
+      ],
+      "clause_ids": [
+        "i"
+      ],
+      "gloss": "Demo fixture card for hover.",
+      "source": {
+        "doc_id": "00000000-0000-4000-8000-000000000011",
+        "page": 1
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000408",
+      "anchor_id": "00000000-0000-4000-8000-000000000308",
+      "headline": "Dimension Theorem",
+      "instantiated_md": "Theorem 3.7: standard statement for demo fixture.",
+      "full_md": "Theorem 3.7: standard statement for demo fixture.",
+      "substitutions": [
+        {
+          "from": "V",
+          "to": "V"
+        }
+      ],
+      "clause_ids": [
+        "i"
+      ],
+      "gloss": "Demo fixture card for hover.",
+      "source": {
+        "doc_id": "00000000-0000-4000-8000-000000000011",
+        "page": 2
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000409",
+      "anchor_id": "00000000-0000-4000-8000-000000000309",
+      "headline": "Rank-Nullity",
+      "instantiated_md": "Theorem 3.22: standard statement for demo fixture.",
+      "full_md": "Theorem 3.22: standard statement for demo fixture.",
+      "substitutions": [
+        {
+          "from": "V",
+          "to": "V"
+        }
+      ],
+      "clause_ids": [
+        "i"
+      ],
+      "gloss": "Demo fixture card for hover.",
+      "source": {
+        "doc_id": "00000000-0000-4000-8000-000000000011",
+        "page": 3
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-00000000040a",
+      "anchor_id": "00000000-0000-4000-8000-00000000030a",
+      "headline": "Rank-Nullity",
+      "instantiated_md": "Let $T: V \\to W$ be linear, $\\dim V$ finite. Then $\\dim \\ker T + \\dim \\operatorname{im} T = \\dim V$.",
+      "full_md": "Let $T: V \\to W$ be linear, $\\dim V$ finite. Then $\\dim \\ker T + \\dim \\operatorname{im} T = \\dim V$.",
+      "substitutions": [
+        {
+          "from": "V",
+          "to": "V"
+        }
+      ],
+      "clause_ids": [
+        "i"
+      ],
+      "gloss": "Demo fixture card for hover.",
+      "source": {
+        "doc_id": "00000000-0000-4000-8000-000000000011",
+        "page": 1
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-00000000040b",
+      "anchor_id": "00000000-0000-4000-8000-00000000030b",
+      "headline": "Rank-Nullity",
+      "instantiated_md": "Let $T: V \\to W$ be linear, $\\dim V$ finite. Then $\\dim \\ker T + \\dim \\operatorname{im} T = \\dim V$.",
+      "full_md": "Let $T: V \\to W$ be linear, $\\dim V$ finite. Then $\\dim \\ker T + \\dim \\operatorname{im} T = \\dim V$.",
+      "substitutions": [
+        {
+          "from": "V",
+          "to": "V"
+        }
+      ],
+      "clause_ids": [
+        "i"
+      ],
+      "gloss": "Demo fixture card for hover.",
+      "source": {
+        "doc_id": "00000000-0000-4000-8000-000000000011",
+        "page": 1
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-00000000040c",
+      "anchor_id": "00000000-0000-4000-8000-00000000030c",
+      "headline": "Lemma 3.5",
+      "instantiated_md": "Lemma 3.5: standard statement for demo fixture.",
+      "full_md": "Lemma 3.5: standard statement for demo fixture.",
+      "substitutions": [
+        {
+          "from": "V",
+          "to": "V"
+        }
+      ],
+      "clause_ids": [
+        "i"
+      ],
+      "gloss": "Demo fixture card for hover.",
+      "source": {
+        "doc_id": "00000000-0000-4000-8000-000000000011",
+        "page": 1
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-00000000040d",
+      "anchor_id": "00000000-0000-4000-8000-00000000030d",
+      "headline": "Dimension Theorem",
+      "instantiated_md": "Theorem 3.7: standard statement for demo fixture.",
+      "full_md": "Theorem 3.7: standard statement for demo fixture.",
+      "substitutions": [
+        {
+          "from": "V",
+          "to": "V"
+        }
+      ],
+      "clause_ids": [
+        "i"
+      ],
+      "gloss": "Demo fixture card for hover.",
+      "source": {
+        "doc_id": "00000000-0000-4000-8000-000000000011",
+        "page": 2
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-00000000040e",
+      "anchor_id": "00000000-0000-4000-8000-00000000030e",
+      "headline": "Corollary 3.9",
+      "instantiated_md": "Corollary 3.9: standard statement for demo fixture.",
+      "full_md": "Corollary 3.9: standard statement for demo fixture.",
+      "substitutions": [
+        {
+          "from": "V",
+          "to": "V"
+        }
+      ],
+      "clause_ids": [
+        "i"
+      ],
+      "gloss": "Demo fixture card for hover.",
+      "source": {
+        "doc_id": "00000000-0000-4000-8000-000000000011",
+        "page": 2
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-00000000040f",
+      "anchor_id": "00000000-0000-4000-8000-00000000030f",
+      "headline": "Rank-Nullity",
+      "instantiated_md": "Let $T: V \\to W$ be linear, $\\dim V$ finite. Then $\\dim \\ker T + \\dim \\operatorname{im} T = \\dim V$.",
+      "full_md": "Let $T: V \\to W$ be linear, $\\dim V$ finite. Then $\\dim \\ker T + \\dim \\operatorname{im} T = \\dim V$.",
+      "substitutions": [
+        {
+          "from": "V",
+          "to": "V"
+        }
+      ],
+      "clause_ids": [
+        "i"
+      ],
+      "gloss": "Demo fixture card for hover.",
+      "source": {
+        "doc_id": "00000000-0000-4000-8000-000000000011",
+        "page": 1
+      }
+    }
+  ],
+  "entities": [
+    {
+      "id": "00000000-0000-4000-8000-000000000101",
+      "corpus_id": "00000000-0000-4000-8000-000000000001",
+      "canonical_node_id": "00000000-0000-4000-8000-000000000204",
+      "name": "Rank-Nullity Theorem"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000102",
+      "corpus_id": "00000000-0000-4000-8000-000000000001",
+      "canonical_node_id": "00000000-0000-4000-8000-000000000207",
+      "name": "Dimension Theorem"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000103",
+      "corpus_id": "00000000-0000-4000-8000-000000000001",
+      "canonical_node_id": "00000000-0000-4000-8000-000000000211",
+      "name": "Spectral Theorem"
+    }
+  ]
+}

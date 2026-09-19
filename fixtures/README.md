@@ -10,7 +10,8 @@ One JSON file per source document, envelope `GoldenFixture` (see
 `00000000-0000-4000-8000-000000000001`.
 
 Session A's Phase A0 commits, hand-authored from a real chapter of a real
-LaTeX-produced textbook:
+LaTeX-produced textbook (or generated via `apps/worker/scripts/build_a0_golden.py`
+until your PDFs are in place — see INTEGRATION.md):
 
 | File | Contents |
 |---|---|
@@ -27,9 +28,22 @@ Rules:
   a value that is provably wrong, and say so in INTEGRATION.md.
 - `pnpm test:contracts` must pass before every push.
 
-## Later
+## demo.dump
 
-- `demo.dump` — A5 snapshot of the fully ingested four-document demo corpus.
-  `make demo-db` restores it in under 30 seconds with no network.
+A5 snapshot of the ingested demo corpus, written by `cairn-worker dump-demo`.
+Plain SQL rather than `pg_dump` output, so restoring never depends on a client
+whose version matches the server. It opens by deleting the corpora it is about
+to insert, so applying it twice is safe.
+
+```bash
+make demo-db        # schema + dump into $DATABASE_URL (offline, < 30s)
+make demo-fixtures  # or load fixtures/golden/* directly, no dump needed
+make demo-dump      # regenerate the snapshot from the current database
+```
+
+Currently two documents (the A0 golden pair); the demo corpus grows to four
+once the lecture notes and slides land.
+
+## Later
 - `trace/` — B4 hand-written `TraceResponse` examples for the stack-trace panel.
 - `evals/` — C1 (20 instantiation cases) and C3 (resolution) expected outputs.
