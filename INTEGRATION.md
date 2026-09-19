@@ -42,3 +42,12 @@ Hard gate: if this fails, cut to fixtures for the demo and say so in the write-u
 - [ ] B: B4–B5 trace and map
 - [ ] C: C4–C5 endpoints and cost table
 - Result:
+
+### [open] Upload worker dispatch seam (from B -> for A, B0/B3)
+B stores uploaded PDF bytes and inserts documents + ingest_progress rows in live mode. Current worker has a CLI but no queue consumer or HTTP dispatch contract. Please add/confirm a consumer for queued documents, or an enqueue endpoint. Until then fixture mode performs real browser PDF text extraction and streams those detected numbered results; it does not claim semantic resolution of uploads. B-owned /api/library and /api/doc/:id/pdf expose reader data and source bytes. Web-local demo fixtures are used only when golden has no JSON; A data is never overwritten.
+
+### [open] Intelligence and measured-cost integration (from B -> for C, B4/B6)
+C handlers remain untouched. Web-local client adapters call /api/intel/trace, /api/intel/forward/:entity_id and /api/search and use contract-validated local graph results only in fixture mode if unavailable. Please confirm a read-only cost-report response/endpoint for measured baseline and optimized runs. The UI currently reports no measured comparison rather than invented savings.
+
+### [done] Local CLI upload dispatch adapter (from B -> for A, B3)
+B now stores live PDF bytes, inserts queued progress, writes the source to apps/web/.local-data/pdf, and invokes the existing `cairn-worker ingest <path> --corpus-id <id>` CLI through child_process.spawn with shell:false and windowsHide:true. CAIRN_WORKER_COMMAND may specify the native executable. Startup/exit failures become document/progress error states. A service queue remains a deployment integration choice; no live backend validation was possible in the fixture-only checkout. Null progress messages are normalized before IngestEvent validation.

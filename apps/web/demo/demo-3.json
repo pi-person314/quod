@@ -1,0 +1,798 @@
+{
+  "document": {
+    "id": "b0000000-0000-4000-8000-000000000004",
+    "corpus_id": "00000000-0000-4000-8000-000000000001",
+    "title": "Seminar slides \u00b7 Structure",
+    "filename": "demo-3.pdf",
+    "file_hash": null,
+    "page_count": 3,
+    "quality": 1,
+    "status": "ready"
+  },
+  "pdf": "demo-3.pdf",
+  "nodes": [
+    {
+      "id": "b0000000-0000-4000-8000-000000000160",
+      "doc_id": "b0000000-0000-4000-8000-000000000004",
+      "kind": "definition",
+      "label": "Definition 3.1",
+      "title": "Vector spaces",
+      "statement_md": "A vector space is a set closed under addition and scalar multiplication.",
+      "clauses": [],
+      "symbols": [],
+      "page": 1,
+      "bbox": [
+        62,
+        172,
+        550,
+        234
+      ],
+      "entity_id": "b0000000-0000-4000-8000-000000000500",
+      "confidence": 0.98
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000000161",
+      "doc_id": "b0000000-0000-4000-8000-000000000004",
+      "kind": "definition",
+      "label": "Definition 3.2",
+      "title": "Linear maps",
+      "statement_md": "A map T is linear when T(au + bv) = aT(u) + bT(v).",
+      "clauses": [],
+      "symbols": [],
+      "page": 1,
+      "bbox": [
+        62,
+        307,
+        550,
+        369
+      ],
+      "entity_id": "b0000000-0000-4000-8000-000000000501",
+      "confidence": 0.98
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000000162",
+      "doc_id": "b0000000-0000-4000-8000-000000000004",
+      "kind": "definition",
+      "label": "Definition 3.3",
+      "title": "Kernel and image",
+      "statement_md": "The kernel is the set of vectors sent to zero. The image is the range of T.",
+      "clauses": [],
+      "symbols": [],
+      "page": 1,
+      "bbox": [
+        62,
+        442,
+        550,
+        504
+      ],
+      "entity_id": "b0000000-0000-4000-8000-000000000502",
+      "confidence": 0.64
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000000163",
+      "doc_id": "b0000000-0000-4000-8000-000000000004",
+      "kind": "theorem",
+      "label": "Theorem 3.4",
+      "title": "Rank-Nullity",
+      "statement_md": "(i) The kernel and image of A are subspaces. (ii) If V is finite dimensional, dim ker A + dim im A = dim V.",
+      "clauses": [],
+      "symbols": [],
+      "page": 1,
+      "bbox": [
+        62,
+        577,
+        550,
+        639
+      ],
+      "entity_id": "b0000000-0000-4000-8000-000000000503",
+      "confidence": 0.98
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000000164",
+      "doc_id": "b0000000-0000-4000-8000-000000000004",
+      "kind": "corollary",
+      "label": "Corollary 3.5",
+      "title": "Injectivity criterion",
+      "statement_md": "A linear map is injective if and only if its kernel contains only zero.",
+      "clauses": [],
+      "symbols": [],
+      "page": 2,
+      "bbox": [
+        62,
+        172,
+        550,
+        234
+      ],
+      "entity_id": "b0000000-0000-4000-8000-000000000504",
+      "confidence": 0.98
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000000165",
+      "doc_id": "b0000000-0000-4000-8000-000000000004",
+      "kind": "lemma",
+      "label": "Lemma 3.6",
+      "title": "Basis extension",
+      "statement_md": "Every linearly independent list extends to a basis of a finite dimensional space.",
+      "clauses": [],
+      "symbols": [],
+      "page": 2,
+      "bbox": [
+        62,
+        307,
+        550,
+        369
+      ],
+      "entity_id": "b0000000-0000-4000-8000-000000000505",
+      "confidence": 0.98
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000000166",
+      "doc_id": "b0000000-0000-4000-8000-000000000004",
+      "kind": "definition",
+      "label": "Definition 3.7",
+      "title": "Direct sums",
+      "statement_md": "If U and W intersect only at zero, their sum is a direct sum.",
+      "clauses": [],
+      "symbols": [],
+      "page": 2,
+      "bbox": [
+        62,
+        442,
+        550,
+        504
+      ],
+      "entity_id": "b0000000-0000-4000-8000-000000000506",
+      "confidence": 0.98
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000000167",
+      "doc_id": "b0000000-0000-4000-8000-000000000004",
+      "kind": "definition",
+      "label": "Definition 3.8",
+      "title": "Isomorphisms",
+      "statement_md": "An invertible linear map identifies two vector spaces of equal dimension.",
+      "clauses": [],
+      "symbols": [],
+      "page": 2,
+      "bbox": [
+        62,
+        577,
+        550,
+        639
+      ],
+      "entity_id": "b0000000-0000-4000-8000-000000000507",
+      "confidence": 0.98
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000000168",
+      "doc_id": "b0000000-0000-4000-8000-000000000004",
+      "kind": "proposition",
+      "label": "Proposition 3.9",
+      "title": "Composition",
+      "statement_md": "The composition of two linear maps is linear.",
+      "clauses": [],
+      "symbols": [],
+      "page": 3,
+      "bbox": [
+        62,
+        172,
+        550,
+        234
+      ],
+      "entity_id": "b0000000-0000-4000-8000-000000000508",
+      "confidence": 0.98
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000000169",
+      "doc_id": "b0000000-0000-4000-8000-000000000004",
+      "kind": "theorem",
+      "label": "Theorem 3.10",
+      "title": "Dimension formula",
+      "statement_md": "The dimension of U + W equals dim U + dim W minus dim of their intersection.",
+      "clauses": [],
+      "symbols": [],
+      "page": 3,
+      "bbox": [
+        62,
+        307,
+        550,
+        369
+      ],
+      "entity_id": "b0000000-0000-4000-8000-000000000509",
+      "confidence": 0.98
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000000170",
+      "doc_id": "b0000000-0000-4000-8000-000000000004",
+      "kind": "definition",
+      "label": "Definition 3.11",
+      "title": "Quotient spaces",
+      "statement_md": "The quotient V/U consists of cosets of U, with the induced vector operations.",
+      "clauses": [],
+      "symbols": [],
+      "page": 3,
+      "bbox": [
+        62,
+        442,
+        550,
+        504
+      ],
+      "entity_id": "b0000000-0000-4000-8000-000000000510",
+      "confidence": 0.98
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000000171",
+      "doc_id": "b0000000-0000-4000-8000-000000000004",
+      "kind": "theorem",
+      "label": "Theorem 3.12",
+      "title": "First isomorphism theorem",
+      "statement_md": "The quotient of V by ker T is isomorphic to the image of T.",
+      "clauses": [],
+      "symbols": [],
+      "page": 3,
+      "bbox": [
+        62,
+        577,
+        550,
+        639
+      ],
+      "entity_id": "b0000000-0000-4000-8000-000000000511",
+      "confidence": 0.98
+    }
+  ],
+  "edges": [
+    {
+      "src": "b0000000-0000-4000-8000-000000000160",
+      "dst": "b0000000-0000-4000-8000-000000000100",
+      "kind": "restates",
+      "extractor": "deterministic",
+      "confidence": 1
+    },
+    {
+      "src": "b0000000-0000-4000-8000-000000000161",
+      "dst": "b0000000-0000-4000-8000-000000000160",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 1
+    },
+    {
+      "src": "b0000000-0000-4000-8000-000000000161",
+      "dst": "b0000000-0000-4000-8000-000000000101",
+      "kind": "restates",
+      "extractor": "deterministic",
+      "confidence": 1
+    },
+    {
+      "src": "b0000000-0000-4000-8000-000000000162",
+      "dst": "b0000000-0000-4000-8000-000000000161",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 1
+    },
+    {
+      "src": "b0000000-0000-4000-8000-000000000162",
+      "dst": "b0000000-0000-4000-8000-000000000102",
+      "kind": "restates",
+      "extractor": "deterministic",
+      "confidence": 1
+    },
+    {
+      "src": "b0000000-0000-4000-8000-000000000163",
+      "dst": "b0000000-0000-4000-8000-000000000162",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 1
+    },
+    {
+      "src": "b0000000-0000-4000-8000-000000000163",
+      "dst": "b0000000-0000-4000-8000-000000000165",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 1
+    },
+    {
+      "src": "b0000000-0000-4000-8000-000000000163",
+      "dst": "b0000000-0000-4000-8000-000000000103",
+      "kind": "restates",
+      "extractor": "deterministic",
+      "confidence": 1
+    },
+    {
+      "src": "b0000000-0000-4000-8000-000000000164",
+      "dst": "b0000000-0000-4000-8000-000000000162",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 1
+    },
+    {
+      "src": "b0000000-0000-4000-8000-000000000164",
+      "dst": "b0000000-0000-4000-8000-000000000104",
+      "kind": "restates",
+      "extractor": "deterministic",
+      "confidence": 1
+    },
+    {
+      "src": "b0000000-0000-4000-8000-000000000165",
+      "dst": "b0000000-0000-4000-8000-000000000160",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 1
+    },
+    {
+      "src": "b0000000-0000-4000-8000-000000000165",
+      "dst": "b0000000-0000-4000-8000-000000000105",
+      "kind": "restates",
+      "extractor": "deterministic",
+      "confidence": 1
+    },
+    {
+      "src": "b0000000-0000-4000-8000-000000000166",
+      "dst": "b0000000-0000-4000-8000-000000000160",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 1
+    },
+    {
+      "src": "b0000000-0000-4000-8000-000000000166",
+      "dst": "b0000000-0000-4000-8000-000000000106",
+      "kind": "restates",
+      "extractor": "deterministic",
+      "confidence": 1
+    },
+    {
+      "src": "b0000000-0000-4000-8000-000000000167",
+      "dst": "b0000000-0000-4000-8000-000000000161",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 1
+    },
+    {
+      "src": "b0000000-0000-4000-8000-000000000167",
+      "dst": "b0000000-0000-4000-8000-000000000107",
+      "kind": "restates",
+      "extractor": "deterministic",
+      "confidence": 1
+    },
+    {
+      "src": "b0000000-0000-4000-8000-000000000168",
+      "dst": "b0000000-0000-4000-8000-000000000161",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 1
+    },
+    {
+      "src": "b0000000-0000-4000-8000-000000000168",
+      "dst": "b0000000-0000-4000-8000-000000000108",
+      "kind": "restates",
+      "extractor": "deterministic",
+      "confidence": 1
+    },
+    {
+      "src": "b0000000-0000-4000-8000-000000000169",
+      "dst": "b0000000-0000-4000-8000-000000000166",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 1
+    },
+    {
+      "src": "b0000000-0000-4000-8000-000000000169",
+      "dst": "b0000000-0000-4000-8000-000000000163",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 1
+    },
+    {
+      "src": "b0000000-0000-4000-8000-000000000169",
+      "dst": "b0000000-0000-4000-8000-000000000109",
+      "kind": "restates",
+      "extractor": "deterministic",
+      "confidence": 1
+    },
+    {
+      "src": "b0000000-0000-4000-8000-000000000170",
+      "dst": "b0000000-0000-4000-8000-000000000160",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 1
+    },
+    {
+      "src": "b0000000-0000-4000-8000-000000000170",
+      "dst": "b0000000-0000-4000-8000-000000000110",
+      "kind": "restates",
+      "extractor": "deterministic",
+      "confidence": 1
+    },
+    {
+      "src": "b0000000-0000-4000-8000-000000000171",
+      "dst": "b0000000-0000-4000-8000-000000000170",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 1
+    },
+    {
+      "src": "b0000000-0000-4000-8000-000000000171",
+      "dst": "b0000000-0000-4000-8000-000000000162",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 1
+    },
+    {
+      "src": "b0000000-0000-4000-8000-000000000171",
+      "dst": "b0000000-0000-4000-8000-000000000161",
+      "kind": "depends_on",
+      "extractor": "deterministic",
+      "confidence": 1
+    },
+    {
+      "src": "b0000000-0000-4000-8000-000000000171",
+      "dst": "b0000000-0000-4000-8000-000000000111",
+      "kind": "restates",
+      "extractor": "deterministic",
+      "confidence": 1
+    }
+  ],
+  "anchors": [
+    {
+      "id": "b0000000-0000-4000-8000-000000001060",
+      "doc_id": "b0000000-0000-4000-8000-000000000004",
+      "page": 1,
+      "bbox": [
+        204.81199645996094,
+        245.16400146484375,
+        269.8399963378906,
+        259.2640075683594
+      ],
+      "surface": "Theorem 3.4",
+      "target_node_id": "b0000000-0000-4000-8000-000000000103",
+      "target_entity_id": "b0000000-0000-4000-8000-000000000503",
+      "card_id": "b0000000-0000-4000-8000-000000002060"
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000001061",
+      "doc_id": "b0000000-0000-4000-8000-000000000004",
+      "page": 1,
+      "bbox": [
+        204.81199645996094,
+        380.16400146484375,
+        269.8399963378906,
+        394.2640075683594
+      ],
+      "surface": "Theorem 3.5",
+      "target_node_id": "b0000000-0000-4000-8000-000000000104",
+      "target_entity_id": "b0000000-0000-4000-8000-000000000504",
+      "card_id": "b0000000-0000-4000-8000-000000002061"
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000001062",
+      "doc_id": "b0000000-0000-4000-8000-000000000004",
+      "page": 1,
+      "bbox": [
+        204.81199645996094,
+        515.1640014648438,
+        269.8399963378906,
+        529.2639770507812
+      ],
+      "surface": "Theorem 3.6",
+      "target_node_id": "b0000000-0000-4000-8000-000000000105",
+      "target_entity_id": "b0000000-0000-4000-8000-000000000505",
+      "card_id": "b0000000-0000-4000-8000-000000002062"
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000001063",
+      "doc_id": "b0000000-0000-4000-8000-000000000004",
+      "page": 1,
+      "bbox": [
+        204.81199645996094,
+        650.1640014648438,
+        269.8399963378906,
+        664.2639770507812
+      ],
+      "surface": "Theorem 3.7",
+      "target_node_id": "b0000000-0000-4000-8000-000000000106",
+      "target_entity_id": "b0000000-0000-4000-8000-000000000506",
+      "card_id": "b0000000-0000-4000-8000-000000002063"
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000001064",
+      "doc_id": "b0000000-0000-4000-8000-000000000004",
+      "page": 2,
+      "bbox": [
+        204.81199645996094,
+        245.16400146484375,
+        269.8399963378906,
+        259.2640075683594
+      ],
+      "surface": "Theorem 3.8",
+      "target_node_id": "b0000000-0000-4000-8000-000000000107",
+      "target_entity_id": "b0000000-0000-4000-8000-000000000507",
+      "card_id": "b0000000-0000-4000-8000-000000002064"
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000001065",
+      "doc_id": "b0000000-0000-4000-8000-000000000004",
+      "page": 2,
+      "bbox": [
+        204.81199645996094,
+        380.16400146484375,
+        269.8399963378906,
+        394.2640075683594
+      ],
+      "surface": "Theorem 3.9",
+      "target_node_id": "b0000000-0000-4000-8000-000000000108",
+      "target_entity_id": "b0000000-0000-4000-8000-000000000508",
+      "card_id": "b0000000-0000-4000-8000-000000002065"
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000001066",
+      "doc_id": "b0000000-0000-4000-8000-000000000004",
+      "page": 2,
+      "bbox": [
+        204.81199645996094,
+        515.1640014648438,
+        275.8399963378906,
+        529.2639770507812
+      ],
+      "surface": "Theorem 3.10",
+      "target_node_id": "b0000000-0000-4000-8000-000000000109",
+      "target_entity_id": "b0000000-0000-4000-8000-000000000509",
+      "card_id": "b0000000-0000-4000-8000-000000002066"
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000001067",
+      "doc_id": "b0000000-0000-4000-8000-000000000004",
+      "page": 2,
+      "bbox": [
+        204.81199645996094,
+        650.1640014648438,
+        275.8399963378906,
+        664.2639770507812
+      ],
+      "surface": "Theorem 3.11",
+      "target_node_id": "b0000000-0000-4000-8000-000000000110",
+      "target_entity_id": "b0000000-0000-4000-8000-000000000510",
+      "card_id": "b0000000-0000-4000-8000-000000002067"
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000001068",
+      "doc_id": "b0000000-0000-4000-8000-000000000004",
+      "page": 3,
+      "bbox": [
+        204.81199645996094,
+        245.16400146484375,
+        275.8399963378906,
+        259.2640075683594
+      ],
+      "surface": "Theorem 3.12",
+      "target_node_id": "b0000000-0000-4000-8000-000000000111",
+      "target_entity_id": "b0000000-0000-4000-8000-000000000511",
+      "card_id": "b0000000-0000-4000-8000-000000002068"
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000001069",
+      "doc_id": "b0000000-0000-4000-8000-000000000004",
+      "page": 3,
+      "bbox": [
+        204.81199645996094,
+        380.16400146484375,
+        269.8399963378906,
+        394.2640075683594
+      ],
+      "surface": "Theorem 3.1",
+      "target_node_id": "b0000000-0000-4000-8000-000000000100",
+      "target_entity_id": "b0000000-0000-4000-8000-000000000500",
+      "card_id": "b0000000-0000-4000-8000-000000002069"
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000001070",
+      "doc_id": "b0000000-0000-4000-8000-000000000004",
+      "page": 3,
+      "bbox": [
+        204.81199645996094,
+        515.1640014648438,
+        269.8399963378906,
+        529.2639770507812
+      ],
+      "surface": "Theorem 3.2",
+      "target_node_id": "b0000000-0000-4000-8000-000000000101",
+      "target_entity_id": "b0000000-0000-4000-8000-000000000501",
+      "card_id": "b0000000-0000-4000-8000-000000002070"
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000001071",
+      "doc_id": "b0000000-0000-4000-8000-000000000004",
+      "page": 3,
+      "bbox": [
+        204.81199645996094,
+        650.1640014648438,
+        269.8399963378906,
+        664.2639770507812
+      ],
+      "surface": "Theorem 3.3",
+      "target_node_id": "b0000000-0000-4000-8000-000000000102",
+      "target_entity_id": "b0000000-0000-4000-8000-000000000502",
+      "card_id": "b0000000-0000-4000-8000-000000002071"
+    }
+  ],
+  "cards": [
+    {
+      "id": "b0000000-0000-4000-8000-000000002060",
+      "anchor_id": "b0000000-0000-4000-8000-000000001060",
+      "headline": "Rank-Nullity \u00b7 clause (ii)",
+      "instantiated_md": "$\\dim\\ker T + \\dim\\operatorname{im} T = n$. Every input dimension is either lost in the kernel or preserved in the image.",
+      "full_md": "(i) The kernel and image of A are subspaces. (ii) If V is finite dimensional, dim ker A + dim im A = dim V.",
+      "substitutions": [
+        {
+          "from": "A",
+          "to": "T"
+        },
+        {
+          "from": "V",
+          "to": "\\mathbb{R}^{n}"
+        }
+      ],
+      "clause_ids": [
+        "ii"
+      ],
+      "gloss": "The dimensions that disappear and the dimensions that survive add up to the whole space.",
+      "source": {
+        "doc_id": "b0000000-0000-4000-8000-000000000001",
+        "page": 1
+      }
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000002061",
+      "anchor_id": "b0000000-0000-4000-8000-000000001061",
+      "headline": "Injectivity criterion",
+      "instantiated_md": "A linear map is injective if and only if its kernel contains only zero.",
+      "full_md": "A linear map is injective if and only if its kernel contains only zero.",
+      "substitutions": [],
+      "clause_ids": [],
+      "gloss": "Keep this earlier result in view while following the argument.",
+      "source": {
+        "doc_id": "b0000000-0000-4000-8000-000000000001",
+        "page": 2
+      }
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000002062",
+      "anchor_id": "b0000000-0000-4000-8000-000000001062",
+      "headline": "Basis extension",
+      "instantiated_md": "Every linearly independent list extends to a basis of a finite dimensional space.",
+      "full_md": "Every linearly independent list extends to a basis of a finite dimensional space.",
+      "substitutions": [],
+      "clause_ids": [],
+      "gloss": "Keep this earlier result in view while following the argument.",
+      "source": {
+        "doc_id": "b0000000-0000-4000-8000-000000000001",
+        "page": 2
+      }
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000002063",
+      "anchor_id": "b0000000-0000-4000-8000-000000001063",
+      "headline": "Direct sums",
+      "instantiated_md": "If U and W intersect only at zero, their sum is a direct sum.",
+      "full_md": "If U and W intersect only at zero, their sum is a direct sum.",
+      "substitutions": [],
+      "clause_ids": [],
+      "gloss": "Keep this earlier result in view while following the argument.",
+      "source": {
+        "doc_id": "b0000000-0000-4000-8000-000000000001",
+        "page": 2
+      }
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000002064",
+      "anchor_id": "b0000000-0000-4000-8000-000000001064",
+      "headline": "Isomorphisms",
+      "instantiated_md": "An invertible linear map identifies two vector spaces of equal dimension.",
+      "full_md": "An invertible linear map identifies two vector spaces of equal dimension.",
+      "substitutions": [],
+      "clause_ids": [],
+      "gloss": "Keep this earlier result in view while following the argument.",
+      "source": {
+        "doc_id": "b0000000-0000-4000-8000-000000000001",
+        "page": 2
+      }
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000002065",
+      "anchor_id": "b0000000-0000-4000-8000-000000001065",
+      "headline": "Composition",
+      "instantiated_md": "The composition of two linear maps is linear.",
+      "full_md": "The composition of two linear maps is linear.",
+      "substitutions": [],
+      "clause_ids": [],
+      "gloss": "Keep this earlier result in view while following the argument.",
+      "source": {
+        "doc_id": "b0000000-0000-4000-8000-000000000001",
+        "page": 3
+      }
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000002066",
+      "anchor_id": "b0000000-0000-4000-8000-000000001066",
+      "headline": "Dimension formula",
+      "instantiated_md": "The dimension of U + W equals dim U + dim W minus dim of their intersection.",
+      "full_md": "The dimension of U + W equals dim U + dim W minus dim of their intersection.",
+      "substitutions": [],
+      "clause_ids": [],
+      "gloss": "Keep this earlier result in view while following the argument.",
+      "source": {
+        "doc_id": "b0000000-0000-4000-8000-000000000001",
+        "page": 3
+      }
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000002067",
+      "anchor_id": "b0000000-0000-4000-8000-000000001067",
+      "headline": "Quotient spaces",
+      "instantiated_md": "The quotient V/U consists of cosets of U, with the induced vector operations.",
+      "full_md": "The quotient V/U consists of cosets of U, with the induced vector operations.",
+      "substitutions": [],
+      "clause_ids": [],
+      "gloss": "Keep this earlier result in view while following the argument.",
+      "source": {
+        "doc_id": "b0000000-0000-4000-8000-000000000001",
+        "page": 3
+      }
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000002068",
+      "anchor_id": "b0000000-0000-4000-8000-000000001068",
+      "headline": "First isomorphism theorem",
+      "instantiated_md": "The quotient of V by ker T is isomorphic to the image of T.",
+      "full_md": "The quotient of V by ker T is isomorphic to the image of T.",
+      "substitutions": [],
+      "clause_ids": [],
+      "gloss": "Keep this earlier result in view while following the argument.",
+      "source": {
+        "doc_id": "b0000000-0000-4000-8000-000000000001",
+        "page": 3
+      }
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000002069",
+      "anchor_id": "b0000000-0000-4000-8000-000000001069",
+      "headline": "Vector spaces",
+      "instantiated_md": "A vector space is a set closed under addition and scalar multiplication.",
+      "full_md": "A vector space is a set closed under addition and scalar multiplication.",
+      "substitutions": [],
+      "clause_ids": [],
+      "gloss": "Keep this earlier result in view while following the argument.",
+      "source": {
+        "doc_id": "b0000000-0000-4000-8000-000000000001",
+        "page": 1
+      }
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000002070",
+      "anchor_id": "b0000000-0000-4000-8000-000000001070",
+      "headline": "Linear maps",
+      "instantiated_md": "A map T is linear when T(au + bv) = aT(u) + bT(v).",
+      "full_md": "A map T is linear when T(au + bv) = aT(u) + bT(v).",
+      "substitutions": [],
+      "clause_ids": [],
+      "gloss": "Keep this earlier result in view while following the argument.",
+      "source": {
+        "doc_id": "b0000000-0000-4000-8000-000000000001",
+        "page": 1
+      }
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000002071",
+      "anchor_id": "b0000000-0000-4000-8000-000000001071",
+      "headline": "Kernel and image",
+      "instantiated_md": "The kernel is the set of vectors sent to zero. The image is the range of T.",
+      "full_md": "The kernel is the set of vectors sent to zero. The image is the range of T.",
+      "substitutions": [],
+      "clause_ids": [],
+      "gloss": "Keep this earlier result in view while following the argument.",
+      "source": {
+        "doc_id": "b0000000-0000-4000-8000-000000000001",
+        "page": 1
+      }
+    }
+  ],
+  "entities": []
+}

@@ -1,0 +1,4 @@
+.local-data/
+test-results/
+playwright-report/
+.next-dev/

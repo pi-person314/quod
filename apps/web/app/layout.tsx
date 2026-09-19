@@ -3,10 +3,15 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Cairn",
-  description: "A textbook is a dependency graph flattened into a line. Cairn unflattens it.",
+  description:
+    "A textbook is a dependency graph flattened into a line. Cairn unflattens it.",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <body className="min-h-screen">{children}</body>
