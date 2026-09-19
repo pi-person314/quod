@@ -6,11 +6,19 @@
   "main": "./index.ts",
   "types": "./index.ts",
   "exports": {
-    ".": "./index.ts"
+    ".": "./index.ts",
+    "./voice": "./voice/server.ts",
+    "./voice/client": "./voice/client.ts"
   },
   "scripts": {
+    "test": "node --import tsx --test tests/*.test.ts",
+    "fixtures:generate": "node --import tsx evals/generate-fixtures.ts",
+    "eval:offline": "node --import tsx evals/run-offline.ts",
+    "test:db": "node --import tsx scripts/check-database.ts",
+    "test:search": "node --import tsx scripts/check-search.ts",
     "typecheck": "tsc --noEmit",
-    "cost-report": "tsx scripts/cost-report.ts"
+    "cost-report": "node --import tsx scripts/cost-report.ts",
+    "cost-compare": "node --import tsx scripts/compare-costs.ts"
   },
   "dependencies": {
     "@cairn/contracts": "workspace:*",

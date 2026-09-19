@@ -10,7 +10,9 @@
  * prints totals by stage, and a synthetic run of 50 calls is logged accurately.
  */
 import OpenAI from "openai";
+import { createHash } from "node:crypto";
 import { db } from "@cairn/contracts/db";
+import { requireLiveBudget } from "./budget";
 
 /** Stage tag on every ledger row. Extend freely; keep names stable once used. */
 export type Stage =
@@ -34,11 +36,9 @@ export const MODELS = {
 } as const;
 
 /**
- * USD per million tokens, pulled from the OpenAI pricing page on 2026-09-19.
- * Sol is on promotional pricing through at least 2026-11-21 and the lineup moved
- * twice this summer: re-pull at the venue before C5. Cache writes bill at 1.25x
- * input but the SDK's usage object does not report them, so the ledger records 0
- * and the C5 table should reconcile against the OpenAI usage dashboard.
+ * USD per million tokens, checked against https://developers.openai.com/api/docs/pricing
+ * on 2026-09-19. These are standard short-context estimates, not billing receipts.
+ * Long-context requests require separate pricing and are rejected below.
  */
 export const PRICING: Record<string, { input: number; cachedInput: number; cacheWrite: number; output: number }> = {
   "gpt-5.6-luna": { input: 0.2, cachedInput: 0.02, cacheWrite: 0.25, output: 1.2 },
@@ -54,20 +54,34 @@ export interface LedgerUsage {
   cache_write_tokens: number;
 }
 
+function tokenCount(value: number): number {
+  if (!Number.isSafeInteger(value) || value < 0) throw new Error("Invalid token usage");
+  return value;
+}
+
 /** OpenAI's input_tokens includes cached_tokens; split them for the ledger. */
 export function toLedgerUsage(usage: OpenAI.Responses.ResponseUsage): LedgerUsage {
-  const cached = usage.input_tokens_details?.cached_tokens ?? 0;
+  const cached = tokenCount(usage.input_tokens_details?.cached_tokens ?? 0);
+  // Newer API responses may supply this field even though the installed SDK predates it.
+  const details = usage.input_tokens_details as { cached_tokens?: number; cache_write_tokens?: number };
+  const writes = tokenCount(details?.cache_write_tokens ?? 0);
+  const input = tokenCount(usage.input_tokens) - cached - writes;
+  if (input < 0) throw new Error("Cached tokens exceed total input usage");
   return {
-    input_tokens: usage.input_tokens - cached,
-    output_tokens: usage.output_tokens,
+    input_tokens: input,
+    output_tokens: tokenCount(usage.output_tokens),
     cache_read_tokens: cached,
-    cache_write_tokens: 0,
+    cache_write_tokens: writes,
   };
 }
 
 export function estimateCostUsd(model: string, u: LedgerUsage): number {
+  if (!Object.hasOwn(PRICING, model)) throw new Error(`No verified pricing for model: ${model}`);
   const p = PRICING[model];
-  if (!p) return 0;
+  for (const value of [u.input_tokens, u.output_tokens, u.cache_read_tokens, u.cache_write_tokens]) tokenCount(value);
+  if (model === "gpt-5.6-sol" && u.input_tokens + u.cache_read_tokens + u.cache_write_tokens > 272_000) {
+    throw new Error("Long-context pricing requires reconciliation");
+  }
   return (
     (u.input_tokens * p.input +
       u.cache_read_tokens * p.cachedInput +
@@ -87,7 +101,7 @@ export interface CallModelOptions {
   input: string | OpenAI.Responses.ResponseInput;
   /** One key per (document, chapter) so batched calls share a cache prefix. */
   promptCacheKey?: string;
-  /** Strict JSON output. `text` in the result is then guaranteed to parse. */
+  /** Request strict JSON; callers still validate its schema and semantics. */
   jsonSchema?: { name: string; schema: Record<string, unknown> };
   maxOutputTokens?: number;
   /** Ledger attribution. */
@@ -95,6 +109,8 @@ export interface CallModelOptions {
   corpusId?: string;
   /** Anything useful for the C5 before/after table: batch size, caching on/off, ... */
   meta?: Record<string, unknown>;
+  /** Opt-in process-local result reuse; use off for independent baseline/eval runs. */
+  cache?: "off" | "content";
 }
 
 export interface CallModelResult {
@@ -103,53 +119,126 @@ export interface CallModelResult {
   usage: LedgerUsage;
   costUsd: number;
   latencyMs: number;
+  cacheHit?: boolean;
 }
 
 let client: OpenAI | undefined;
-export function openai(): OpenAI {
-  return (client ??= new OpenAI());
+function openai(): OpenAI {
+  // Automatic retries could spend beyond a single request's future reservation.
+  return (client ??= new OpenAI({ maxRetries: 0 }));
 }
 
-export async function callModel(opts: CallModelOptions): Promise<CallModelResult> {
+export interface ModelDependencies {
+  authorize: () => Promise<void>;
+  respond: (request: OpenAI.Responses.ResponseCreateParamsNonStreaming) => Promise<OpenAI.Responses.Response>;
+  embeddings: (request: OpenAI.Embeddings.EmbeddingCreateParams) => Promise<OpenAI.Embeddings.CreateEmbeddingResponse>;
+  log: (row: LedgerRow) => Promise<void>;
+}
+
+const live: ModelDependencies = {
+  authorize: requireLiveBudget,
+  respond: (request) => openai().responses.create(request),
+  embeddings: (request) => openai().embeddings.create(request),
+  log: (row) => logCall(row),
+};
+
+/** Dependency injection supports offline tests; the default transport is spending-gated. */
+export function createModelRunner(deps: ModelDependencies) {
+const cache = new Map<string, CallModelResult>();
+const pending = new Map<string, Promise<CallModelResult>>();
+const cachedResult = (result: CallModelResult): CallModelResult => ({ ...structuredClone(result),
+  costUsd: 0, latencyMs: 0, cacheHit: true,
+  usage: { input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0 } });
+
+async function callModel(opts: CallModelOptions): Promise<CallModelResult> {
+  if (opts.cache !== "content") return executeModel(opts);
+  const key = createHash("sha256").update(JSON.stringify({ model: opts.model ?? MODELS.fast, stage: opts.stage,
+    instructions: opts.instructions, input: opts.input, jsonSchema: opts.jsonSchema,
+    maxOutputTokens: opts.maxOutputTokens ?? 8192, docId: opts.docId, corpusId: opts.corpusId,
+    promptVersion: opts.meta?.prompt_version })).digest("hex");
+  const found = cache.get(key);
+  if (found) {
+    cache.delete(key); cache.set(key, found);
+    return cachedResult(found);
+  }
+  const inFlight = pending.get(key);
+  if (inFlight) return cachedResult(await inFlight);
+  const work = executeModel(opts);
+  pending.set(key, work);
+  try {
+    const result = await work;
+    cache.set(key, structuredClone(result));
+    if (cache.size > 128) cache.delete(cache.keys().next().value!);
+    return result;
+  } finally { pending.delete(key); }
+}
+
+async function executeModel(opts: CallModelOptions): Promise<CallModelResult> {
   const model = opts.model ?? MODELS.fast;
+  estimateCostUsd(model, { input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0 });
+  const maxOutput = opts.maxOutputTokens ?? 8192;
+  if (!Number.isSafeInteger(maxOutput) || maxOutput <= 0) throw new Error("Invalid maxOutputTokens");
+  await deps.authorize();
   const started = Date.now();
-  const response = await openai().responses.create({
+  const response = await deps.respond({
     model,
     instructions: opts.instructions,
     input: opts.input,
-    max_output_tokens: opts.maxOutputTokens ?? 8192,
+    max_output_tokens: maxOutput,
     prompt_cache_key: opts.promptCacheKey,
     text: opts.jsonSchema
       ? { format: { type: "json_schema", name: opts.jsonSchema.name, schema: opts.jsonSchema.schema, strict: true } }
       : undefined,
   });
   const latencyMs = Date.now() - started;
-  const usage = toLedgerUsage(response.usage ?? { input_tokens: 0, output_tokens: 0, total_tokens: 0, input_tokens_details: { cached_tokens: 0 }, output_tokens_details: { reasoning_tokens: 0 } });
+  if (!response.usage) throw new Error("Missing usage; billing reconciliation required");
+  const usage = toLedgerUsage(response.usage);
   const costUsd = estimateCostUsd(model, usage);
 
-  await logCall({ stage: opts.stage, model, usage, latencyMs, costUsd, docId: opts.docId, corpusId: opts.corpusId, meta: opts.meta });
+  await deps.log({ stage: opts.stage, model, usage, latencyMs, costUsd, docId: opts.docId, corpusId: opts.corpusId,
+    meta: { ...opts.meta, response_id: response.id, response_status: response.status } });
 
-  return { text: response.output_text, response, usage, costUsd, latencyMs };
+  if (response.status !== "completed" || !response.output_text?.trim()) {
+    throw new Error("Model response incomplete, refused, or empty");
+  }
+  if (opts.jsonSchema) {
+    try { JSON.parse(response.output_text); } catch { throw new Error("Model returned invalid JSON"); }
+  }
+
+  return { text: response.output_text, response, usage, costUsd, latencyMs, cacheHit: false };
 }
 
 /** Embeddings for the ES dense index (C2). Logged under stage "embed". */
-export async function embed(texts: string[], opts: { docId?: string; corpusId?: string } = {}): Promise<number[][]> {
+async function embed(texts: string[], opts: { docId?: string; corpusId?: string; meta?: Record<string, unknown> } = {}): Promise<number[][]> {
   if (texts.length === 0) return [];
   const model = MODELS.embedding;
+  estimateCostUsd(model, { input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0 });
+  await deps.authorize();
   const started = Date.now();
-  const res = await openai().embeddings.create({ model, input: texts });
+  const res = await deps.embeddings({ model, input: texts });
+  if (!res.usage) throw new Error("Missing embedding usage; billing reconciliation required");
   const usage: LedgerUsage = {
-    input_tokens: res.usage?.prompt_tokens ?? 0,
+    input_tokens: tokenCount(res.usage.prompt_tokens),
     output_tokens: 0,
     cache_read_tokens: 0,
     cache_write_tokens: 0,
   };
-  await logCall({
+  await deps.log({
     stage: "embed", model, usage, latencyMs: Date.now() - started, costUsd: estimateCostUsd(model, usage),
-    docId: opts.docId, corpusId: opts.corpusId, meta: { count: texts.length },
+    docId: opts.docId, corpusId: opts.corpusId, meta: { ...opts.meta, count: texts.length },
   });
-  return res.data.map((d) => d.embedding);
+  const ordered = [...res.data].sort((a, b) => a.index - b.index);
+  const dimensions = ordered[0]?.embedding.length;
+  if (!dimensions || ordered.length !== texts.length || ordered.some((d, i) =>
+    d.index !== i || d.embedding.length !== dimensions || !d.embedding.every(Number.isFinite))) {
+    throw new Error("Invalid embedding response");
+  }
+  return ordered.map((d) => d.embedding);
 }
+return { callModel, embed, clearCache: () => cache.clear() };
+}
+
+export const { callModel, embed } = createModelRunner(live);
 
 export interface LedgerRow {
   stage: Stage;
@@ -163,8 +252,12 @@ export interface LedgerRow {
 }
 
 /** Insert one ledger row. Exported so eval scripts and synthetic tests can log without a real call. */
-export async function logCall(row: LedgerRow): Promise<void> {
-  await db().query(
+export async function logCall(row: LedgerRow, query: (sql: string, values: unknown[]) => Promise<unknown> = (sql, values) => db().query(sql, values)): Promise<void> {
+  for (const value of [row.usage.input_tokens, row.usage.output_tokens, row.usage.cache_read_tokens, row.usage.cache_write_tokens]) tokenCount(value);
+  if (!Number.isFinite(row.costUsd) || row.costUsd < 0 || !Number.isFinite(row.latencyMs) || row.latencyMs < 0) {
+    throw new Error("Invalid ledger cost or latency");
+  }
+  await query(
     `INSERT INTO llm_calls
        (stage, model, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, latency_ms, cost_usd, corpus_id, doc_id, meta)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,

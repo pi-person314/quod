@@ -1,1 +1,10 @@
 export * from "./llm";
+export * from "./budget";
+export * from "./bake";
+export * from "./prompts/instantiate";
+export * from "./trace";
+export * from "./forward";
+export * from "./graph-store";
+export { createSearchClient, lexicalSearch, reciprocalRankFusion } from "./search";
+export * from "./resolve";
+export * from "./resolution-service";
