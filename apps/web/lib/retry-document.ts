@@ -5,7 +5,7 @@ import { LOCAL } from "./data";
 import { dispatchWorker } from "./worker";
 
 /** Lock the document so concurrent clicks can enqueue only one retry. */
-export async function retryDocument(id: string, dispatch = dispatchWorker): Promise<"queued" | "missing" | "unavailable"> {
+export async function retryDocument(id: string, dispatch = dispatchWorker, reprocess = false): Promise<"queued" | "missing" | "unavailable"> {
   const connection = await db().connect();
   let job: { path: string; corpusId: string } | undefined;
   try {
@@ -13,7 +13,7 @@ export async function retryDocument(id: string, dispatch = dispatchWorker): Prom
     const { rows } = await connection.query("SELECT corpus_id,status,pdf_bytes FROM documents WHERE id=$1 FOR UPDATE", [id]);
     const doc = rows[0];
     if (!doc) { await connection.query("ROLLBACK"); return "missing"; }
-    if (doc.status !== "error" || !doc.pdf_bytes) {
+    if (!(doc.status === "error" || (reprocess && doc.status === "ready")) || !doc.pdf_bytes) {
       await connection.query("ROLLBACK"); return "unavailable";
     }
     const path = join(LOCAL, "pdf", `${id}.pdf`);

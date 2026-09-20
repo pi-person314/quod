@@ -142,6 +142,7 @@ export function PdfPage({
               return (
                 <button
                   key={a.id}
+                  data-anchor={a.id}
                   aria-label={`Reference: ${a.surface}`}
                   className={`anchor ${target?.doc_id !== docId ? "cross" : ""} ${target && target.confidence < 0.7 ? "uncertain" : ""}`}
                   style={{

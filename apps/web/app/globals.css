@@ -1225,6 +1225,14 @@ th {
 .reader-toast button {
   margin-left: 18px;
 }
+.outline-page-label {
+  margin: 16px 10px 8px;
+  color: var(--muted);
+  font: inherit;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
 .voice-control { position: relative; }
 .voice-control button:disabled { opacity: .55; cursor: not-allowed; }
 .voice-control button[aria-pressed="true"] { color: var(--accent); }

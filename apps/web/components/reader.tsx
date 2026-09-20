@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type {
   Anchor,
@@ -16,6 +16,7 @@ import { CorpusMap } from "./corpus-map";
 import { MathText } from "./math-text";
 import { CostPanel } from "./cost-panel";
 import { VoiceControl } from "./voice-control";
+import { referenceOverlays } from "@/lib/reference-overlays";
 const STATE_KEY = "cairn.reader.v1";
 export function Reader({
   data,
@@ -33,7 +34,8 @@ export function Reader({
     [hydrated, setHydrated] = useState(false),
     [pins, setPins] = useState<Card[]>([]),
     [floating, setFloating] = useState<{
-      card: Card;
+      card?: Card;
+      reference?: string;
       x: number;
       y: number;
     } | null>(null),
@@ -89,6 +91,8 @@ export function Reader({
   const openTimer = useRef<ReturnType<typeof setTimeout> | null>(null),
     closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cache = useRef(new Map(data.cards.map((c) => [c.anchor_id, c])));
+  const hoverSequence = useRef(0);
+  useEffect(() => { hoverSequence.current++; setFloating(null); }, [docId, page]);
   const doc = data.docs.find((d) => d.id === docId)!;
   useEffect(() => {
     setRetryError(""); setIngestStage("");
@@ -110,9 +114,11 @@ export function Reader({
       location.reload();
     } catch (error) { setRetryError(error instanceof Error ? error.message : "Retry could not start."); setRetrying(false); }
   }
-  const anchors = data.anchors.filter(
+  const anchors = referenceOverlays(data.anchors.filter(
     (a) => a.doc_id === docId && a.page === page,
-  );
+  ));
+  const documentNodes = data.nodes.filter(n => n.doc_id === docId)
+    .sort((a, b) => a.page - b.page || a.bbox[1] - b.bbox[1] || a.bbox[0] - b.bbox[0] || a.id.localeCompare(b.id));
   const pageNodes = data.nodes.filter(
     (n) => n.doc_id === docId && n.page === page,
   );
@@ -283,34 +289,46 @@ export function Reader({
     if (closeTimer.current) clearTimeout(closeTimer.current);
   };
   const leave = () => {
+    hoverSequence.current++;
     if (openTimer.current) clearTimeout(openTimer.current);
     cancelClose();
     closeTimer.current = setTimeout(() => setFloating(null), 300);
   };
   const hover = (a: Anchor, r: DOMRect) => {
+    const sequence = ++hoverSequence.current;
     setError("");
     cancelClose();
     if (openTimer.current) clearTimeout(openTimer.current);
     openTimer.current = setTimeout(async () => {
+      const position = { x: Math.max(12, Math.min(r.left, innerWidth - 432)), y: Math.max(12, Math.min(r.bottom + 10, innerHeight - 570)) };
+      if (!a.card_id && !a.target_node_id && !a.target_entity_id) {
+        setFloating({ ...position, reference: a.surface });
+        return;
+      }
       let card = cache.current.get(a.id);
       if (!card) {
         try {
           const response = await fetch(`/api/card/${a.id}`);
-          if (!response.ok) throw new Error("Card has not been baked yet.");
+          if (sequence !== hoverSequence.current) return;
+          if (response.status === 404) { setFloating({ ...position, reference: a.surface }); return; }
+          if (!response.ok) throw new Error("Could not load this reference. Please try again.");
           card = await response.json();
           cache.current.set(a.id, card!);
         } catch (e) {
+          if (sequence !== hoverSequence.current) return;
           setError(String(e));
           return;
         }
       }
+      if (sequence !== hoverSequence.current) return;
       setFloating({
         card: card!,
         x: Math.max(12, Math.min(r.left, innerWidth - 432)),
         y: Math.max(12, Math.min(r.bottom + 10, innerHeight - 570)),
       });
-      if (a.target_node_id)
-        update(a.target_node_id, (s) => ({ hover_count: s.hover_count + 1 }));
+      const targetId = a.target_node_id ?? data.entities.find(e => e.id === a.target_entity_id)?.canonical_node_id;
+      if (targetId)
+        update(targetId, (s) => ({ hover_count: s.hover_count + 1 }));
     }, 120);
   };
   useEffect(
@@ -485,19 +503,19 @@ export function Reader({
             </div>
             <div className="outline-heading">
               <span className="eyebrow">IN THIS DOCUMENT</span>
-              <span>{data.nodes.filter((n) => n.doc_id === docId).length}</span>
+              <span>{documentNodes.length}</span>
             </div>
             <div className="outline-nodes">
-              {data.nodes
-                .filter((n) => n.doc_id === docId)
-                .map((n) => (
+              {documentNodes.map((n, i) => (
+                <Fragment key={n.id}>
+                  {(i === 0 || documentNodes[i - 1].page !== n.page) && <h3 className="outline-page-label">Page {n.page}</h3>}
                   <button
-                    key={n.id}
+                    data-node={n.id}
                     className={n.page === page ? "current" : ""}
                     onClick={() => jump(n.doc_id, n.page, n.id)}
                   >
                     <span className="eyebrow">
-                      {n.label}{" "}
+                      {n.label ?? n.kind}{" "}
                       {state[n.id]?.known
                         ? "· known"
                         : state[n.id]?.seen
@@ -505,8 +523,9 @@ export function Reader({
                           : ""}
                     </span>
                     <span>{n.title}</span>
-                    <small>{n.page}</small>
+                    <small>p. {n.page}</small>
                   </button>
+                </Fragment>
                 ))}
             </div>
             <div className="outline-bottom">
@@ -659,14 +678,18 @@ export function Reader({
           onMouseEnter={cancelClose}
           onMouseLeave={leave}
         >
-          <ReferenceCard
+          {floating.card ? <ReferenceCard
             card={floating.card}
             data={data}
             state={state}
             onJump={jump}
             onKnown={known}
-            onPin={() => pin(floating.card)}
-          />
+            onPin={() => pin(floating.card!)}
+          /> : <article className="reference-card" aria-label="Unmatched reference">
+            <h3>{floating.reference}</h3>
+            <p>This reference has not been matched to a result in this corpus.</p>
+            <p className="muted">The referenced document may be missing, or it may use a different name.</p>
+          </article>}
           {pins.length === 3 && (
             <p className="pin-limit">
               Three cards pinned. Unpin one to make room.

@@ -28,7 +28,8 @@ export function ReferenceCard({
     [collapsed, setCollapsed] = useState(false),
     [links, setLinks] = useState<ForwardResponse["downstream"]>([]);
   const anchor = data.anchors.find((a) => a.id === card.anchor_id),
-    node = data.nodes.find((n) => n.id === anchor?.target_node_id),
+    targetId = anchor?.target_node_id ?? data.entities.find(e => e.id === anchor?.target_entity_id)?.canonical_node_id,
+    node = data.nodes.find((n) => n.id === targetId),
     doc = data.docs.find((d) => d.id === card.source.doc_id);
   const known = node && state[node.id]?.known;
   const occurrences = data.nodes.filter(

@@ -141,11 +141,13 @@ export function Upload() {
       const events = new EventSource(`/api/corpus/${corpus_id}/events`);
       source.current = events;
       const terminal = new Set<string>();
+      const failed = new Set<string>();
       let firstReady = "";
       events.onmessage = (event) => {
         const e = IngestEvent.parse(JSON.parse(event.data));
         if (e.stage === "done" || e.stage === "error") {
           terminal.add(e.doc_id);
+          if (e.stage === "error") failed.add(e.doc_id);
           if (e.stage === "done" && !firstReady) firstReady = e.doc_id;
         }
         setColumns((old) =>
@@ -169,6 +171,7 @@ export function Upload() {
           setFinished(true);
           if (
             firstReady &&
+            failed.size === 0 &&
             terminal.size === doc_ids.length &&
             !metadata.some((m) => m.error)
           )
@@ -253,14 +256,15 @@ export function Upload() {
                     segment: "segmenting",
                     bake: "preparing",
                     done: "ready",
-                    error: "unsupported",
+                    error: /unsupported|parse quality/i.test(c.message ?? "") ? "unsupported" : "failed",
                   } as Record<string, string>
                 )[c.stage] ?? c.stage}
               </span>
             </header>
-            {c.message ? (
+            {c.stage === "error" ? (
               <div className="unsupported">
                 <p>{c.message}</p>
+                {!/unsupported|parse quality/i.test(c.message ?? "") && <p><Link href={`/read/${c.id}`}>Open document to retry ↗</Link></p>}
                 <button
                   onClick={() =>
                     setColumns((old) => old.filter((v) => v.id !== c.id))
@@ -271,6 +275,7 @@ export function Upload() {
               </div>
             ) : (
               <>
+                {c.message && <p className="muted" aria-live="polite">{c.message}</p>}
                 <div className="detected-nodes">
                   {c.nodes.map((n) => (
                     <div key={n.id}>
@@ -302,9 +307,9 @@ export function Upload() {
       </div>
       {finished && (
         <p className="ingest-done">
-          Your documents are ready.{" "}
+          Processing finished.{" "}
           {columns.some((c) => c.stage === "error")
-            ? "Some documents need a selectable text layer."
+            ? "Some documents could not be prepared. See their messages above."
             : "Opening your reader…"}
         </p>
       )}

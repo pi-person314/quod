@@ -147,6 +147,11 @@ def find_candidates(spans: list[Span]) -> list[dict]:
             continue
         m = HEADER_RE.match(text.strip())
         if m:
+            # Wrapped proof prose can begin with "Theorem 2.3(ii) applied...".
+            # A numbered environment has heading punctuation or bold styling;
+            # a citation at the start of a line is not a new theorem.
+            if not text.strip()[m.end():].lstrip().startswith(".") and not any(s.bold for s in ssp[:2]):
+                continue
             kind = KIND_WORD[m.group("kind").lower()]
             label = f"{m.group('kind').capitalize()} {m.group('num')}"
             # Title-case the kind word to match fixtures ("Theorem 3.4")

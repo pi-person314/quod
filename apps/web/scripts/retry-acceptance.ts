@@ -25,7 +25,10 @@ async function main() {
     await db().query("UPDATE documents SET status='ready' WHERE id=$1", [doc]);
     assert.equal(await retryDocument(doc, dispatch), "unavailable");
     assert.equal(dispatched.length, 1);
-    console.log("PASS: concurrent retries dispatch once, preserve stored bytes and IDs, clear progress atomically, and cannot retry ready/missing documents. No provider calls.");
+    assert.equal(await retryDocument(doc, dispatch, true), "queued");
+    assert.equal(await retryDocument(doc, dispatch, true), "unavailable");
+    assert.equal(dispatched.length, 2);
+    console.log("PASS: retries dispatch once, preserve bytes and IDs, clear progress, reject ready/missing documents by default, and support explicit ready-document reprocessing. No provider calls.");
   } finally {
     await db().query("DELETE FROM corpora WHERE id=$1", [corpus]);
     await rm(join(LOCAL, "pdf", `${doc}.pdf`), { force: true });

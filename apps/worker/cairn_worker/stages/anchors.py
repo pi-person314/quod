@@ -27,8 +27,10 @@ SOFT = [
 ]
 NAMED = [
     (re.compile(r"\bthe spectral theorem\b", re.IGNORECASE), "the spectral theorem"),
-    (re.compile(r"\bRank-?Nullity\b", re.IGNORECASE), "Rank-Nullity"),
+    (re.compile(r"\bRank[-–—]?Nullity\b", re.IGNORECASE), "Rank-Nullity"),
 ]
+NAMED_RESULT_RE = re.compile(r"\b(?:the\s+)?(?P<name>[A-Za-z][A-Za-z–—-]*)\s+(?:theorem|lemma|proposition|corollary)\b", re.IGNORECASE)
+GENERIC_NAMES = {"previous", "preceding", "following", "same", "this", "that", "a", "any", "the", "next", "each", "another", "above", "below", "by", "of", "from"}
 
 
 def _norm_label(kind: str, num: str) -> str:
@@ -108,12 +110,22 @@ def find_anchors(spans: list[Span], nodes: list[Node], doc_id, pdf_path: Path | 
             add(page, surface, _bbox_for_match(text, m.start(), m.end(), ssp), True)
         for cre, surface in SOFT + NAMED:
             for m in cre.finditer(text):
-                add(page, surface, _bbox_for_match(text, m.start(), m.end(), ssp), False)
+                add(page, m.group(0), _bbox_for_match(text, m.start(), m.end(), ssp), False)
     if pdf_path is not None:
         import pymupdf
         # Span boxes cover entire text runs. Use the PDF's character geometry for
         # each matched reference so an underline does not cover the whole line.
         with pymupdf.open(pdf_path) as pdf:
+            # Named citations may wrap across lines ("dimension\ntheorem").
+            # Keep a separate hit box on each line instead of covering the intervening page.
+            for page in pdf:
+                page_text = page.get_text()
+                for match in NAMED_RESULT_RE.finditer(page_text):
+                    if match.group("name").lower() in GENERIC_NAMES or re.match(r"\s*\d", page_text[match.end():]):
+                        continue
+                    surface = re.sub(r"\s+", " ", match.group(0))
+                    for rect in page.search_for(surface):
+                        add(page.number + 1, surface, tuple(rect), False)
             for anchor in found:
                 candidates = pdf[anchor.page - 1].search_for(anchor.surface)
                 inside = [r for r in candidates if r.x0 >= anchor.bbox[0] - 2 and r.y0 >= anchor.bbox[1] - 2

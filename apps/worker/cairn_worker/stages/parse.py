@@ -53,6 +53,10 @@ def _extract_spans(doc: fitz.Document) -> list[Span]:
                 for s in line["spans"]:
                     text = s.get("text") or ""
                     if not text.strip():
+                        # TeX PDFs often put spaces in their own font runs. Keep
+                        # them in the previous span instead of joining every word.
+                        if spans and spans[-1].page == page_no and spans[-1].line == line_global:
+                            spans[-1].text += text
                         continue
                     x0, y0, x1, y1 = (float(v) for v in s["bbox"])
                     font = s.get("font") or ""

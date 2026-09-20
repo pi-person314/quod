@@ -1,5 +1,35 @@
 # Cairn integration audit — 2026-09-19
 
+## Reported PDF and reader repairs — 2026-09-19
+
+The supplied textbook and pset exposed gaps that fixture acceptance did not cover.
+Worker schema initialization now serializes concurrent DDL; corpus ingestion is
+serialized to prevent stale resolution snapshots. TeX whitespace runs are preserved,
+and wrapped citations no longer become false theorem headings. Existing uploads were
+reprocessed in place: both textbook copies now have 22 results/proofs; pset4 has five problems.
+
+The outline follows page and vertical position, groups entries by page, and labels
+unnamed proofs. Nested duplicate reference overlays collapse into one hit target.
+Missing generated cards fall back to the original source statement; unresolved
+references have a normal popover instead of an error toast. Resolution runs bounded
+parallel batches and reports progress. The repaired 22-node textbook resolve stage
+took approximately 85 seconds; ingestion still includes model-backed card preparation.
+
+Contextual citation matching uses invoking text, corpus-scoped candidates, a confidence
+threshold, and a verified verbatim source excerpt. It handles differently numbered
+lecture citations and source-label typos without equating exercises with prerequisites.
+All seven citations in the supplied pset now link (eight overlays because one wraps):
+dimension theorem/rank–nullity → Theorem 2.4; exchange lemma → Theorem 2.3;
+Proposition 7 → Proposition 1.5; Proposition 9 → Theorem 2.3(ii);
+Theorem 3.5 → Corollary 3.5; Theorem 3.4 → Theorem 3.4. Cards use the actual source label.
+Newly resolved references in earlier documents are also baked after later uploads.
+
+Validation: 19 worker tests, 84 intelligence tests, workspace typecheck and isolated
+production build pass; four concurrent fresh-database schema initializations pass.
+Real database retry/reprocess, source-card fallback/unmatched-popover browser checks,
+and worker-to-intelligence integration including outage recovery pass. These repairs
+do not supersede the broader quality limitations or the original A4 benchmark below.
+
 The fixture reader is complete. **The whole project is not yet fully accepted.**
 All three sessions are merged into `main` (audit baseline `19801c5`). This audit
 fixed integration defects and separated runnable code from missing quality evidence.

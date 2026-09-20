@@ -68,3 +68,20 @@ test("named anchors resolve only unambiguous names with bounded labels", async (
   const ambiguous = { ...snapshot, nodes: snapshot.nodes.map((node, i) => i === 1 ? { ...node, label: "Toy 1" } : node) };
   assert.equal(resolvedAnchorEntities(ambiguous, plan).size, 0);
 });
+
+test("contextual citation decisions reach the saved plan after exact matching", async () => {
+  const h = await harness();
+  const invoking = h.exercises.nodes[0];
+  const anchor = { ...h.exercises.anchors[0], doc_id: invoking.doc_id, page: invoking.page, bbox: invoking.bbox,
+    surface: "Lecture Proposition 73", target_node_id: null, target_entity_id: null };
+  h.snapshot.anchors = [anchor];
+  await resolveCorpus({ corpus_id: DEVELOPMENT_CORPUS_ID, node_ids: [invoking.id] }, {
+    ...h.deps, referenceModel: async request => {
+      const [item] = JSON.parse(request.input);
+      assert.equal(item.anchor_id, anchor.id);
+      return { links: [{ anchor_id: anchor.id, target_node_id: h.chapter.nodes[0].id, confidence: 0.95, evidence: h.chapter.nodes[0].statement_md }] };
+    },
+  });
+  assert.deepEqual(h.plans[0].anchorTargets, [{ anchor_id: anchor.id, node_id: h.chapter.nodes[0].id }]);
+  assert(resolvedAnchorEntities(h.snapshot, h.plans[0]).has(anchor.id));
+});

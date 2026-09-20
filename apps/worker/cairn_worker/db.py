@@ -17,9 +17,13 @@ def connect() -> psycopg.Connection:
 
 def apply_schema(conn: psycopg.Connection) -> None:
     """Apply packages/contracts/schema.sql. Idempotent; safe to call every run."""
-    conn.execute(SCHEMA_SQL.read_text(encoding="utf-8"))
-    for migration in sorted((SCHEMA_SQL.parent / "migrations").glob("*.sql")):
-        conn.execute(migration.read_text(encoding="utf-8"))
+    # Uploads launch independent workers. PostgreSQL's CREATE OR REPLACE FUNCTION
+    # is not safe to race, even in an otherwise idempotent migration.
+    with conn.transaction():
+        conn.execute("SELECT pg_advisory_xact_lock(1748293101)")
+        conn.execute(SCHEMA_SQL.read_text(encoding="utf-8"))
+        for migration in sorted((SCHEMA_SQL.parent / "migrations").glob("*.sql")):
+            conn.execute(migration.read_text(encoding="utf-8"))
 
 
 def set_progress(

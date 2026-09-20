@@ -58,6 +58,21 @@ def register_document(conn: psycopg.Connection, corpus_id: UUID, pdf_path: Path)
 
 
 def run_document(ctx: PipelineContext, force: bool = False) -> None:
+    # Resolution reads the complete corpus. Another upload must not mutate that
+    # snapshot while its paid adjudication is running. Different corpora proceed
+    # independently; session locks release automatically if a worker crashes.
+    key = f"cairn:ingest:{ctx.corpus_id}"
+    if not force and db.doc_status(ctx.conn, ctx.doc_id) == "ready":
+        return
+    db.set_progress(ctx.conn, ctx.doc_id, "queued", message="Waiting for other documents in this corpus.")
+    ctx.conn.execute("SELECT pg_advisory_lock(hashtextextended(%s,0))", (key,))
+    try:
+        _run_document(ctx, force)
+    finally:
+        ctx.conn.execute("SELECT pg_advisory_unlock(hashtextextended(%s,0))", (key,))
+
+
+def _run_document(ctx: PipelineContext, force: bool = False) -> None:
     """Parse -> segment -> anchors -> edges -> resolve (C) -> bake (C).
 
     Re-ingesting the same file is a no-op once the document is ready; pass
@@ -71,8 +86,8 @@ def run_document(ctx: PipelineContext, force: bool = False) -> None:
         log.info("%s already ingested; skipping (use --force to rebuild)", ctx.pdf_path.name)
         return
     # A second pass must replace the old graph, not stack a new one beside it.
-    db.clear_doc_graph(conn, doc_id)
     try:
+        db.clear_doc_graph(conn, doc_id)
         db.set_progress(conn, doc_id, "parse")
         spans, quality, page_count = parse.parse_pdf(ctx.pdf_path)
         conn.execute(
@@ -97,6 +112,15 @@ def run_document(ctx: PipelineContext, force: bool = False) -> None:
 
         db.set_progress(conn, doc_id, "bake", nodes_done=len(nodes), total=len(nodes))
         remote.bake(doc_id)
+        # A later upload can resolve references in an earlier document. Prepare
+        # those newly linked cards too, while the corpus lock still protects us.
+        pending = conn.execute("""SELECT DISTINCT a.doc_id FROM anchors a
+            JOIN documents d ON d.id=a.doc_id
+            WHERE d.corpus_id=%s AND d.status='ready' AND a.doc_id<>%s
+              AND a.card_id IS NULL AND (a.target_node_id IS NOT NULL OR a.target_entity_id IS NOT NULL)""",
+            (ctx.corpus_id, doc_id)).fetchall()
+        for (other_doc_id,) in pending:
+            remote.bake(other_doc_id)
 
         conn.execute("UPDATE documents SET status = 'ready' WHERE id = %s", (doc_id,))
         db.set_progress(conn, doc_id, "done", nodes_done=len(nodes), total=len(nodes))
