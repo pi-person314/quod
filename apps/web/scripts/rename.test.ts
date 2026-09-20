@@ -47,6 +47,15 @@ test("renames persist with ownership, validation and original files preserved", 
       : mockFetch(input,init);
     const library=await list(new Request("https://quod.test/api/corpus",{headers:{authorization:`Bearer ${jwt}`}}));
     assert.equal((await library.json()).corpora[0].name,"Algebra notes");
+    const emptyId="88888888-8888-4888-8888-888888888888";
+    const deletedId="77777777-7777-4777-8777-777777777777";
+    await saveLocal("corpora",emptyId,{id:emptyId,name:"Empty but active",created_at:"2026-09-20T00:00:00Z"});
+    globalThis.fetch=async(input,init)=>String(input).includes(":runQuery")
+      ? Response.json([corpus,emptyId,deletedId].map(id=>({document:{fields:Object.fromEntries(Object.entries({id,name:"Old name",created_at:"2026-09-20T00:00:00Z",owner_uid:"alice"}).map(([k,v])=>[k,{stringValue:v}]))}})))
+      : mockFetch(input,init);
+    const filtered=await list(new Request("https://quod.test/api/corpus",{headers:{authorization:`Bearer ${jwt}`}}));
+    const sets=(await filtered.json()).corpora;
+    assert.deepEqual(sets.map((record:{id:string})=>record.id),[corpus,emptyId],"Deleted sets stay absent; active empty sets remain visible");
   } finally {
     globalThis.fetch=previousFetch;process.chdir(cwd);
     for(const key of keys){if(previous[key]===undefined)delete process.env[key];else process.env[key]=previous[key];}

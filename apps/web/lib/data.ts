@@ -138,7 +138,11 @@ export async function userCorpora(user: AuthUser): Promise<Corpus[]> {
   if (hostedFrontend()) return (await remoteData<{ corpora: Corpus[] }>("/api/corpus", user.token)).corpora;
   const owned = await listUserCorpora(user);
   const names = new Map((owned.length ? await corpora() : []).map(record => [record.id, record.name]));
-  return owned.map(record => ({ ...record, name: names.get(record.id) ?? record.name }));
+  // Firestore reserves ownership even after local metadata is deleted. Those
+  // stale ownership records must not recreate deleted sets in the library.
+  // A real empty set still has local metadata and remains visible.
+  return owned.filter(record => names.has(record.id))
+    .map(record => ({ ...record, name: names.get(record.id)! }));
 }
 export async function requireDocumentOwner(user: AuthUser, docId: string): Promise<Doc> {
   const doc = (await dataset()).docs.find(d => d.id === docId);

@@ -21,6 +21,7 @@ import { MathText } from "./math-text";
 import { CostPanel } from "./cost-panel";
 import { VoiceControl } from "./voice-control";
 import { referenceOverlays } from "@/lib/reference-overlays";
+import { ankiCsv } from "@/lib/anki-export";
 const STATE_KEY = "quod.reader.v1";
 // Preserve reading progress from installations before the Quod rename.
 const savedReaderState = () =>
@@ -75,6 +76,7 @@ export function Reader({
   const [activeResult, setActiveResult] = useState(0);
   const [retrying, setRetrying] = useState(false);
   const [retryError, setRetryError] = useState("");
+  const [exportStatus, setExportStatus] = useState("");
   const [ingestStage, setIngestStage] = useState("");
   const dialog = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -487,26 +489,21 @@ export function Reader({
   }, [doc.page_count]);
   const weak = data.nodes.filter((n) => (state[n.id]?.hover_count ?? 0) >= 3);
   const exportCsv = () => {
-    const quote = (s: string) => `"${s.replace(/"/g, '""')}"`;
-    const csv = weak
-      .map((n) =>
-        [
-          n.title ?? n.label ?? "Result",
-          n.statement_md,
-          `${data.docs.find((d) => d.id === n.doc_id)?.title} p. ${n.page}`,
-        ]
-          .map(quote)
-          .join(","),
-      )
-      .join("\r\n");
-    const url = URL.createObjectURL(
-      new Blob([csv], { type: "text/csv;charset=utf-8" }),
-    );
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "quod-weak-spots.csv";
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      const url = URL.createObjectURL(new Blob([ankiCsv(weak, data.docs, data.nodes)], { type: "text/csv;charset=utf-8" }));
+      const a = document.createElement("a");
+      a.href = url; a.download = "quod-weak-spots.csv"; a.hidden = true;
+      document.body.appendChild(a);
+      try { a.click(); }
+      finally {
+        a.remove();
+        // Let the browser consume the URL before releasing it (including Safari).
+        window.setTimeout(() => URL.revokeObjectURL(url), 30000);
+      }
+      setExportStatus("Download started. Import quod-weak-spots.csv in Anki using the Basic note type (Front and Back).");
+    } catch {
+      setExportStatus(""); setError("Could not create the Anki download. Please try again.");
+    }
   };
   if (!user || authLoading) return <main className="reader-auth"><span className="eyebrow">PRIVATE LIBRARY</span><h1>{authLoading ? "Connecting your library." : "Your reading stays together."}</h1><p>{authLoading ? "Checking your signed-in session…" : "Log in with Google to open this document and keep your reading progress private."}</p><AccountMenu /></main>;
   if (map)
@@ -905,9 +902,10 @@ export function Reader({
                 <p>Results you have returned to at least three times.</p>
                 {weak.length ? (
                   <>
-                    <button className="primary" onClick={exportCsv}>
+                    <button className="primary export-anki" onClick={exportCsv}>
                       Export to Anki · CSV
                     </button>
+                    {exportStatus && <p className="export-status" role="status">{exportStatus}</p>}
                     {weak.map((n) => (
                       <button
                         className="search-result"

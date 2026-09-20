@@ -1,7 +1,7 @@
 "use client";
 import { documentColor } from "@/lib/document-colors";
 import { nodeLabel, nodeDescription } from "@/lib/node-label";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   forceSimulation,
   forceManyBody,
@@ -37,6 +37,9 @@ export function CorpusMap({
     [hover, setHover] = useState<Node | null>(null),
     [viewport, setViewport] = useState(0);
   const queryRef = useRef(query);
+  const captions = useMemo(() => new Map(data.nodes.map(node => [node.id, {
+    label: nodeLabel(node, data.nodes), description: nodeDescription(node, data.nodes),
+  }])), [data.nodes]);
   queryRef.current = query;
   useEffect(() => {
     const resize = () => setViewport((v) => v + 1);
@@ -104,24 +107,31 @@ export function CorpusMap({
       .attr("stroke-width", 2)
       .attr("tabindex", 0)
       .attr("role", "button")
-      .attr("aria-label", (n) => nodeDescription(n.node))
+      .attr("aria-label", (n) => captions.get(n.id)!.description)
       .style("cursor", "pointer");
+    const leaders = group.append("g").attr("aria-hidden", "true")
+      .selectAll("line").data(dots).join("line")
+      .attr("stroke", "#58708b").attr("stroke-width", 0.7)
+      .attr("pointer-events", "none");
     const labels = group
       .append("g")
       .selectAll("text")
       .data(dots)
       .join("text")
-      .text((n) => nodeLabel(n.node))
+      .text((n) => captions.get(n.id)!.label)
       .attr("fill", "#f4f1de")
       .attr("font-size", 11)
       .attr("font-family", "Instrument Sans, sans-serif")
+      .attr("paint-order", "stroke")
+      .attr("stroke", "#0c1b28")
+      .attr("stroke-width", 3)
+      .attr("stroke-linejoin", "round")
       .attr("pointer-events", "none");
     let fitScale = 1;
-    const visibleLabels = new Set<string>();
     const reset = () => {
       const q = queryRef.current.toLowerCase();
       circles.attr("opacity", (n) =>
-        q && !nodeDescription(n.node).toLowerCase().includes(q)
+        q && !captions.get(n.id)!.description.toLowerCase().includes(q)
           ? 0.12
           : state[n.id]?.seen
             ? 1
@@ -129,14 +139,12 @@ export function CorpusMap({
       );
       labels.attr("opacity", (n) =>
         q
-          ? nodeDescription(n.node).toLowerCase().includes(q)
+          ? captions.get(n.id)!.description.toLowerCase().includes(q)
             ? 1
             : 0
-          : visibleLabels.has(n.id)
-            ? 0.9
-            : 0,
+          : 0.9,
       );
-      labels.style("display", (n) => (q ? nodeDescription(n.node).toLowerCase().includes(q) : visibleLabels.has(n.id)) ? null : "none");
+      labels.style("display", (n) => (!q || captions.get(n.id)!.description.toLowerCase().includes(q)) ? null : "none");
       lines.attr("opacity", 0.45);
       highlightedLines.attr("d", "");
     };
@@ -152,8 +160,8 @@ export function CorpusMap({
           }
         }
         circles.attr("opacity", (d) => (near.has(d.id) ? 1 : 0.08));
-        labels.attr("opacity", (d) => (near.has(d.id) ? 1 : 0));
-        labels.style("display", (d) => near.has(d.id) ? null : "none");
+        labels.attr("opacity", (d) => (near.has(d.id) ? 1 : 0.35));
+        labels.style("display", null);
         lines.attr("opacity", 0.05);
         highlightedLines.attr("d", edgePath(links.filter((edge: any) => near.has(edge.source.id) && near.has(edge.target.id))));
       })
@@ -217,25 +225,32 @@ export function CorpusMap({
     const placeLabels = () => {
       if (!el.isConnected) return;
       labels.style("display", null);
-      visibleLabels.clear();
       const occupied: DOMRect[] = [];
       const elements = labels.nodes();
+      const bounds = el.getBoundingClientRect();
       for (const dot of [...dots].sort((a, b) => b.rank - a.rank)) {
         const element = elements[dots.indexOf(dot)];
         if (!(element instanceof SVGElement)) continue;
-        const rect = element.getBoundingClientRect();
-        if (
-          !occupied.some(
-            (r) =>
-              rect.left < r.right + 7 &&
-              rect.right + 7 > r.left &&
-              rect.top < r.bottom + 4 &&
-              rect.bottom + 4 > r.top,
-          )
-        ) {
-          occupied.push(rect);
-          visibleLabels.add(dot.id);
+        // Move colliding labels instead of silently hiding them until hover.
+        // All labels remain in the graph, including on dense maps.
+        let bestY = dot.y! + 4, bestScore = Infinity;
+        for (let attempt = 0; attempt < 32; attempt++) {
+          const row = Math.ceil(attempt / 2) * (attempt % 2 ? 1 : -1);
+          const y = dot.y! + 4 + row * 17 / fitScale;
+          element.setAttribute("y", String(y));
+          const rect = element.getBoundingClientRect();
+          const collisions = occupied.filter(r => rect.left < r.right + 7 && rect.right + 7 > r.left
+            && rect.top < r.bottom + 3 && rect.bottom + 3 > r.top).length;
+          const score = collisions + (rect.top < bounds.top + 200 || rect.bottom > bounds.bottom - 45 ? 1000 : 0);
+          if (score < bestScore) { bestScore = score; bestY = y; }
+          if (score === 0) break;
         }
+        element.setAttribute("y", String(bestY));
+        occupied.push(element.getBoundingClientRect());
+        leaders.filter(d => d.id === dot.id)
+          .attr("x1", dot.x!).attr("y1", dot.y!)
+          .attr("x2", dot.x! + 8).attr("y2", bestY - 4)
+          .attr("opacity", Math.abs(bestY - dot.y! - 4) > 1 ? 0.5 : 0);
       }
       reset();
     };
@@ -253,7 +268,7 @@ export function CorpusMap({
       clearInterval(interval);
       root.on(".zoom", null);
     };
-  }, [data, state, onJump, viewport]);
+  }, [data, state, onJump, viewport, captions]);
   return (
     <section className="map-view" aria-label="Document map">
       <header className="map-heading">
@@ -290,7 +305,7 @@ export function CorpusMap({
       <footer>
         <span>
           {hover
-            ? nodeDescription(hover)
+            ? captions.get(hover.id)!.description
             : "Hover to follow two steps of connection. Click to read the source."}
         </span>
         <span>Size: PageRank · Opacity: reading state · Scroll to zoom</span>

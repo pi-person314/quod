@@ -1,4 +1,9 @@
 /* Scoped reader surface. This file is imported after globals.css by app/layout. */
+.reader .panel button.export-anki { border:1px solid var(--reader-copper-light); background:var(--reader-copper-light); color:#091320; padding:11px 16px; border-radius:8px; font-weight:600; }
+.reader .panel button.export-anki:hover, .reader .panel button.export-anki:focus-visible { background:#efb783; border-color:#efb783; color:#091320; }
+.reader .panel button.export-anki:focus-visible { outline:2px solid var(--reader-ink); outline-offset:3px; }
+.reader .panel .export-status { color:var(--reader-secondary); font-size:12px; line-height:1.5; }
+.reader .panel .search-result:hover { background:var(--reader-surface); color:var(--reader-ink); }
 .reader-body { grid-template-rows:minmax(0,1fr); }
 .reader .reading-surface { min-height:0; overflow:hidden; }
 .reader {

@@ -1,17 +1,15 @@
 import { CreateCorpusRequest, CreateCorpusResponse } from "@quod/contracts";
 import { db } from "@quod/contracts/db";
 import { fixturesEnabled } from "@/lib/fixtures";
-import { saveLocal, LOCAL, corpora } from "@/lib/data";
+import { saveLocal, LOCAL, userCorpora } from "@/lib/data";
 import { jsonOf, parseBody } from "@/lib/http";
 import { authErrorResponse, AuthError, requireUser } from "@/lib/auth";
-import { createUserCorpus, listUserCorpora } from "@/lib/firestore";
+import { createUserCorpus } from "@/lib/firestore";
 import { rm } from "node:fs/promises";
 import { join } from "node:path";
 export async function GET(req: Request) {
   try {
-    const owned = await listUserCorpora(await requireUser(req));
-    const names = new Map((owned.length ? await corpora() : []).map(record => [record.id, record.name]));
-    return Response.json({ corpora: owned.map(record => ({ ...record, name: names.get(record.id) ?? record.name })) }, { headers: { "Cache-Control": "no-store" } });
+    return Response.json({ corpora: await userCorpora(await requireUser(req)) }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) { return authErrorResponse(error); }
 }
 export async function POST(req: Request) {
