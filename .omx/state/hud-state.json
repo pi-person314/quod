@@ -1,6 +1,0 @@
-{
-  "last_turn_at": "2026-09-20T07:06:20.549Z",
-  "turn_count": 25,
-  "last_progress_at": "2026-09-20T07:06:20.549Z",
-  "last_agent_output": "Fixed: `auth.ts` loaded `next/headers` before Next initialized AsyncLocalStorage. It now loads that "
-}

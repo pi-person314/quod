@@ -1,4 +1,4 @@
--- Cairn Postgres schema. Single source of truth; see CONTRACTS.md.
+-- Quod Postgres schema. Single source of truth for database structure.
 -- Idempotent: safe to re-run. `pnpm db:schema` applies it to the compose DB.
 -- Enums are text + CHECK so re-runs never fight with CREATE TYPE.
 

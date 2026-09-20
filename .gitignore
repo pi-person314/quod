@@ -21,6 +21,8 @@ next-env.d.ts
 !.env.example
 .session-tools/
 .cairn-sessions/
+.omx/
+firebase-debug.log
 .next-dev/
 .local-data/
 

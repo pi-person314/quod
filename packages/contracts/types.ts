@@ -1,9 +1,5 @@
 /**
- * Cairn shared contracts. See CONTRACTS.md at the repo root.
- *
- * The four core types (Node, Edge, Anchor, Card) are frozen. Changing them is
- * a synchronous decision across all three sessions. API shapes may gain
- * optional fields if logged in INTEGRATION.md.
+ * Quod shared runtime schemas and TypeScript contracts.
  *
  * Each schema is exported twice under the same name: as a zod value and as
  * the inferred TypeScript type. `import { Node } from "@quod/contracts"`
@@ -214,7 +210,7 @@ export const GoldenFixture = z.object({
 export type GoldenFixture = z.infer<typeof GoldenFixture>;
 
 // ---- API shapes -----------------------------------------------------------
-// Route owners may add optional fields; log each in INTEGRATION.md.
+// Optional API fields must remain compatible with existing clients.
 
 export const CreateCorpusRequest = z.object({ name: z.string().min(1) });
 export const CreateCorpusResponse = z.object({ corpus_id: Uuid });
