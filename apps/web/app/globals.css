@@ -1225,3 +1225,11 @@ th {
 .reader-toast button {
   margin-left: 18px;
 }
+.voice-control { position: relative; }
+.voice-control button:disabled { opacity: .55; cursor: not-allowed; }
+.voice-control button[aria-pressed="true"] { color: var(--accent); }
+.voice-feedback { position: absolute; bottom: 36px; left: 0; width: min(380px, 75vw); padding: 16px;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--text);
+  box-shadow: 0 8px 28px #0005; font-size: 13px; line-height: 1.5; z-index: 40; }
+.voice-feedback > .voice-dismiss { float: right; }
+.voice-feedback p { margin: 8px 0; }

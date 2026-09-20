@@ -79,7 +79,7 @@ export async function forward(data: Dataset, entity: string) {
 export async function search(data: Dataset, q: string) {
   try {
     return SearchResponse.parse(
-      await request(`/api/search?q=${encodeURIComponent(q)}`),
+      await request(`/api/search?q=${encodeURIComponent(q)}&corpus_id=${encodeURIComponent(data.docs[0]?.corpus_id ?? "")}`),
     );
   } catch (e) {
     if (!data.fixture) throw e;

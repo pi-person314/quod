@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-import fitz
+import pymupdf as fitz
 
 from cairn_worker.models import Span
 

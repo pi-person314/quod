@@ -1,4 +1,5 @@
 import { db } from "@cairn/contracts/db";
+import { Doc as DocSchema } from "@cairn/contracts";
 import { readFile, writeFile, mkdir, readdir } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import type {
@@ -70,7 +71,8 @@ export async function dataset(): Promise<Dataset> {
     ),
   );
   return {
-    docs: docs.rows,
+    // Never serialize bytea PDF contents into the React client payload.
+    docs: docs.rows.map(row => DocSchema.parse(row)),
     nodes: nodes.rows,
     edges: edges.rows,
     anchors: anchors.rows,

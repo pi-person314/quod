@@ -48,3 +48,22 @@ test("barge-in prevents an old answer from playing even if its fetch ignores abo
   assert.deepEqual(spoken, ["current"]);
   assert.equal(stops, 2);
 });
+
+test("TTS reserves before transport and attributes conservative speech charges", async () => {
+  const events: string[] = [];
+  const deps = {
+    authorize: async () => {}, apiKey: "test", sourceCorpusId: "corpus",
+    reserve: async (usd: number) => { assert.equal(usd, 0.0005); events.push("reserve"); return "reservation"; },
+    fetch: async () => { events.push("fetch"); return new Response(new Uint8Array([1]), { headers: { "content-type": "audio/mpeg" } }); },
+    record: async (call: Parameters<NonNullable<import("../voice/server").SpeechDependencies["record"]>>[0]) => {
+      assert.equal(call.meta?.source_corpus_id, "corpus"); assert.equal(call.costUsd, 0.0003); events.push("record");
+    },
+    settle: async (id: string, usd: number) => { assert.equal(id, "reservation"); assert.equal(usd, 0.0005); events.push("settle"); },
+  };
+  await synthesizeSpeech("0123456789", undefined, deps);
+  assert.deepEqual(events, ["reserve", "fetch", "record", "settle"]);
+  await assert.rejects(synthesizeSpeech("answer", undefined, { ...deps,
+    reserve: async () => { throw new Error("limit reached"); }, fetch: async () => assert.fail("must not call provider") }), /limit/);
+  await assert.rejects(synthesizeSpeech("0123456789", undefined, { ...deps,
+    record: async () => { throw new Error("ledger outage"); }, settle: async () => assert.fail("retain unknown reservation") }), /ledger/);
+});

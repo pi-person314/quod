@@ -8,6 +8,7 @@
   "exports": {
     ".": "./index.ts",
     "./voice": "./voice/server.ts",
+    "./voice/relay": "./voice/relay.ts",
     "./voice/client": "./voice/client.ts"
   },
   "scripts": {
@@ -15,6 +16,7 @@
     "fixtures:generate": "node --import tsx evals/generate-fixtures.ts",
     "eval:offline": "node --import tsx evals/run-offline.ts",
     "test:db": "node --import tsx scripts/check-database.ts",
+    "test:budget": "node --import tsx scripts/check-budget.ts",
     "test:search": "node --import tsx scripts/check-search.ts",
     "typecheck": "tsc --noEmit",
     "cost-report": "node --import tsx scripts/cost-report.ts",
@@ -23,10 +25,12 @@
   "dependencies": {
     "@cairn/contracts": "workspace:*",
     "openai": "^5.0.0",
+    "ws": "^8.21.3",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
+    "@types/ws": "^8.18.1",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0"
   }

@@ -1,4 +1,4 @@
-"""Environment. Loads the repo-root .env so all three sessions share one file."""
+"""Configuration from the process environment only; never read credential files."""
 
 from __future__ import annotations
 
@@ -6,10 +6,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-from dotenv import load_dotenv
-
 REPO_ROOT = Path(__file__).resolve().parents[3]
-load_dotenv(REPO_ROOT / ".env")
 
 SCHEMA_SQL = REPO_ROOT / "packages" / "contracts" / "schema.sql"
 FIXTURES_DIR = REPO_ROOT / "fixtures"

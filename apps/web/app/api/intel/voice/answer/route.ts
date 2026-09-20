@@ -1,16 +1,16 @@
 import { Node } from "@cairn/contracts";
 import { db } from "@cairn/contracts/db";
 import { answerFromViewport, VoiceQuestion } from "@cairn/intel/voice";
-import { parseBody } from "@/lib/http";
-import { fixturesEnabled, loadGoldenCorpus } from "@/lib/fixtures";
+import { parseBody, sameOrigin } from "@/lib/http";
+import { fixturesEnabled } from "@/lib/fixtures";
+import { dataset } from "@/lib/data";
 
 export async function POST(req: Request) {
   const body = await parseBody(req, VoiceQuestion);
   if (body instanceof Response) return body;
-  const origin = req.headers.get("origin");
-  if (origin && origin !== new URL(req.url).origin) return Response.json({ error: "forbidden" }, { status: 403 });
+  if (!sameOrigin(req)) return Response.json({ error: "forbidden" }, { status: 403 });
   if (fixturesEnabled()) {
-    const nodes = loadGoldenCorpus().nodes;
+    const nodes = (await dataset()).nodes;
     const node = nodes.find((item) => item.doc_id === body.doc_id && item.page === body.page && body.visible_node_ids.includes(item.id));
     if (!node) return Response.json({ error: "viewport_not_found" }, { status: 404 });
     try {

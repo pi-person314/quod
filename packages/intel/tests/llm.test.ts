@@ -5,6 +5,15 @@ import { callModel, embed, createModelRunner, estimateCostUsd, logCall, toLedger
 
 const usage = { input_tokens: 100, output_tokens: 20, total_tokens: 120,
   input_tokens_details: { cached_tokens: 40 }, output_tokens_details: { reasoning_tokens: 0 } };
+
+test("live transport reserves before calling and retains the reservation on unknown outcomes", async () => {
+  const events: string[] = [];
+  const h = harness({ reserve: async () => { events.push("reserve"); return "reservation"; },
+    respond: async () => { events.push("provider"); throw new Error("timeout"); },
+    settle: async () => { events.push("settle"); } });
+  await assert.rejects(h.callModel({ stage: "eval", input: "hello" }), /timeout/);
+  assert.deepEqual(events, ["reserve", "provider"]);
+});
 const response = { id: "offline-response", status: "completed", output_text: '{"ok":true}', usage } as OpenAI.Responses.Response;
 function harness(overrides: Partial<ModelDependencies> = {}) {
   const rows: LedgerRow[] = [];

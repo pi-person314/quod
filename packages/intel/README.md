@@ -24,8 +24,9 @@ process environment. The examples are synthetic, not source PDFs.
   incomplete-output handling, default-denied live calls, and opt-in content reuse
   with coalesced concurrent requests. This result cache is process-local and
   bounded; `cache: "off"` disables it for independent evaluations/baselines.
-- `budget.ts`: pure $500-total reservation/settlement transitions. These are NOT
-  a durable spending guard. Live calls remain disabled pending shared enforcement.
+- `budget.ts`: $500-total reservation/settlement helpers plus the durable shared
+  Postgres guard in `contracts/migrations/001_api_budget.sql`, used by both runtimes.
+  Paid calls default disabled and require explicit process and database opt-in.
 - `prompts/instantiate.ts`: strict schema, simultaneous symbol renaming, source
   citations owned by code, original-statement fallback.
 - `bake.ts`: injectable baking and atomic Postgres card/link writes; unchanged
@@ -46,7 +47,8 @@ process environment. The examples are synthetic, not source PDFs.
   produces original-statement cards while model calls are disabled.
 - `cost-comparison.ts`: quality- and scope-checked before/after comparisons.
 - `voice/`: viewport-scoped answers, Deepgram adapters, browser push-to-talk,
-  cancellation/barge-in control. See its README for B's wiring and live limitations.
+  bounded server relay and cancellation/barge-in control. Reader wiring is complete;
+  see its README for startup and live acceptance limits.
 - `artifacts/submissions.md`: seven sponsor drafts and required evidence, with
   primary-source prior-art citations; nothing has been submitted.
 
@@ -77,19 +79,22 @@ or production latency result.
 
 ## Remaining acceptance work
 
-- Shared durable budget proposal: `artifacts/budget-proposal.md`. No shared schema
-  changes or paid calls yet; credentials must never be loaded from `.env`.
+- The shared budget migration is implemented and concurrency-tested. Reconcile
+  historical spending/provider controls before activation; never load `.env`.
+  See the root `PROJECT_STATUS.md` for the superseding integration audit.
 - A's invoking paragraphs/local symbol tables and real golden corpus.
-- Live C1/C3 evaluations, four-document semantic-search acceptance, and
-  reader/worker integration. Protocol tests used synthetic statements/local vectors.
+- Live C1/C3 evaluations and four-document semantic-search acceptance.
+  Reader/worker integration now passes a real provider-backed PDF upload, including
+  20 nodes, 34 cards, SSE, search and browser rendering.
 - Composite substitutions and clause collapsing: current rewrites only rename
   single-letter/LaTeX-command symbols and retain the complete source statement.
 - Real-proof trace latency acceptance remains; unmatched vague selections return
   an empty chain unless a resolved source anchor identifies the dependency.
 - Full-pipeline content caching and measured >=60% savings. Reusing embeddings
   does not make repeated adjudication/model calls free.
-- Voice's real providers/browser/latency checks, B's controls, integrated screenshots,
-  and final sponsor eligibility/evidence. Speech remains disabled pending its budget.
+- Broader voice quality checks and final sponsor eligibility/evidence. One live
+  cited voice turn starts speaking at 3.192s, accepted by the user. Reader controls,
+  streamed browser playback, cancellation and shared reservations are verified.
 
 Passing synthetic answer replays does not establish live clause-selection quality,
-mathematical equivalence or measured savings. No new dependencies were introduced.
+mathematical equivalence or measured savings. The voice relay uses the `ws` package.

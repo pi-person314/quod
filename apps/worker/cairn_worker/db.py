@@ -18,6 +18,8 @@ def connect() -> psycopg.Connection:
 def apply_schema(conn: psycopg.Connection) -> None:
     """Apply packages/contracts/schema.sql. Idempotent; safe to call every run."""
     conn.execute(SCHEMA_SQL.read_text(encoding="utf-8"))
+    for migration in sorted((SCHEMA_SQL.parent / "migrations").glob("*.sql")):
+        conn.execute(migration.read_text(encoding="utf-8"))
 
 
 def set_progress(

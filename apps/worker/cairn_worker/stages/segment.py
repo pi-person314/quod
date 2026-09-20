@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import re
-from uuid import uuid4
+from uuid import UUID, uuid5
 
 from cairn_worker import db
 from cairn_worker.llm import call_model
@@ -174,7 +174,7 @@ def find_candidates(spans: list[Span]) -> list[dict]:
 
 
 def _luna_enrich(ctx: PipelineContext | None, cands: list[dict]) -> None:
-    if not cands:
+    if not cands or ctx is None:
         return
     batch_size = 20
     chapter_key = f"segment:{ctx.doc_id if ctx else 'eval'}"
@@ -233,10 +233,10 @@ def nodes_from_spans(spans: list[Span], doc_id, ctx: PipelineContext | None = No
         c.setdefault("confidence", 0.85)
     _luna_enrich(ctx, cands)
     nodes: list[Node] = []
-    for c in cands:
+    for index, c in enumerate(cands):
         nodes.append(
             Node(
-                id=uuid4(),
+                id=uuid5(UUID(str(doc_id)), f"node:{c['page']}:{index}:{c.get('label') or c['kind']}"),
                 doc_id=doc_id,
                 kind=c["kind"],
                 label=c.get("label"),

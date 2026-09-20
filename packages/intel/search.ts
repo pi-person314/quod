@@ -92,6 +92,7 @@ export function createSearchClient(options: SearchDependencies = {}) {
     const { response, data } = await request("", { mappings: { properties: {
       id: { type: "keyword" }, corpus_id: { type: "keyword" }, doc_id: { type: "keyword" }, entity_id: { type: "keyword" },
       kind: { type: "keyword" }, label: { type: "text" }, title: { type: "text" }, statement_md: { type: "text" },
+      bbox: { type: "double" }, confidence: { type: "double" }, page: { type: "integer" },
       symbols: { properties: { sym: { type: "text" }, role: { type: "text" } } },
       embedding: { type: "dense_vector", dims: dimensions, index: true, similarity: "cosine" },
       embedding_key: { type: "keyword", index: false },
@@ -102,6 +103,19 @@ export function createSearchClient(options: SearchDependencies = {}) {
     const schema = z.record(z.object({ mappings: z.object({ properties: z.object({ embedding: z.object({ type: z.literal("dense_vector"), dims: z.literal(dimensions), index: z.boolean().optional(), similarity: z.literal("cosine") }), corpus_id: z.object({ type: z.literal("keyword") }) }) }) }));
     const parsed = schema.safeParse(mapping.data);
     if (!mapping.response.ok || !parsed.success || !parsed.data[index] || parsed.data[index].mappings.properties.embedding.index === false) throw new Error("Existing search index mapping is incompatible");
+    // PDF boxes mix integral and fractional coordinates. Dynamic inference can
+    // reject a single bulk request before any document is indexed.
+    const properties = (mapping.data as Record<string, { mappings: { properties: Record<string, { type?: string }> } }>)[index].mappings.properties;
+    const missing: Record<string, { type: string }> = {};
+    for (const name of ["bbox", "confidence", "page"]) {
+      const type = properties[name]?.type;
+      if (!type) missing[name] = { type: name === "page" ? "integer" : "double" };
+      else if (!(name === "page" ? ["integer", "long"] : ["float", "double"]).includes(type)) throw new Error("Search numeric mapping is incompatible; migrate the index before ingesting");
+    }
+    if (Object.keys(missing).length) {
+      const repaired = await request("/_mapping", { properties: missing }, "PUT");
+      if (!repaired.response.ok) throw new Error("Search numeric mapping could not be updated");
+    }
   }
 
   async function indexNodes(corpusId: string, nodes: readonly Node[]): Promise<number> {
@@ -180,5 +194,16 @@ export function createSearchClient(options: SearchDependencies = {}) {
     Uuid.parse(corpusId);
     return search(nodeSearchText(node), { corpusId, excludeNodeId: node.id, limit: 8 });
   }
-  return { ensureIndex, indexNodes, search, resolutionCandidates };
+  /** Caller supplies the complete authoritative corpus snapshot, never one document. */
+  async function removeStaleNodes(corpusId: string, validNodeIds: readonly string[]): Promise<void> {
+    Uuid.parse(corpusId); validNodeIds.forEach(id => Uuid.parse(id));
+    if (validNodeIds.length > 65000) throw new Error("Corpus exceeds index synchronization bound");
+    const { response, data } = await request("/_delete_by_query?refresh=true&conflicts=proceed", {
+      query: { bool: { filter: [{ term: { corpus_id: corpusId } }], must_not: [{ terms: { id: validNodeIds } }] } },
+    });
+    if (!response.ok) throw new Error("Search synchronization failed");
+    const result = z.object({ timed_out: z.boolean(), version_conflicts: z.number(), failures: z.array(z.unknown()) }).parse(data);
+    if (result.timed_out || result.version_conflicts || result.failures.length) throw new Error("Search synchronization was incomplete; retry required");
+  }
+  return { ensureIndex, indexNodes, search, resolutionCandidates, removeStaleNodes };
 }

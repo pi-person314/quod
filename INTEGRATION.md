@@ -119,3 +119,57 @@ C handlers remain untouched. Web-local client adapters call /api/intel/trace, /a
 
 ### [done] Local CLI upload dispatch adapter (from B -> for A, B3)
 B now stores live PDF bytes, inserts queued progress, writes the source to apps/web/.local-data/pdf, and invokes the existing `cairn-worker ingest <path> --corpus-id <id>` CLI through child_process.spawn with shell:false and windowsHide:true. CAIRN_WORKER_COMMAND may specify the native executable. Startup/exit failures become document/progress error states. A service queue remains a deployment integration choice; no live backend validation was possible in the fixture-only checkout. Null progress messages are normalized before IngestEvent validation.
+
+### [done] Cross-session audit and integration repairs (2026-09-19)
+The user's explicit cross-session completion request authorizes A/B/C edits in this
+audit. See PROJECT_STATUS.md for the full phase-by-phase acceptance state. Added the
+shared durable budget migration without changing frozen core response schemas;
+both runtimes reserve before paid calls and default to disabled. Worker failures
+propagate, CLI/fixture PDFs are retained, duplicate uploads reuse IDs, reader data
+excludes PDF byte buffers, uploaded fixtures participate in scoped search/trace,
+and the Costs panel reads nonsynthetic ledger rows. Four-document snapshot plus
+repeat restore passes in 0.85s. Real A parsing through C route handlers and Postgres
+passes in-process, including idempotency, outage propagation and retry recovery.
+
+### [open] Acceptance gaps exposed by audit (2026-09-19)
+A4's former passing score depended on hardcoded golden theorem numbers and an
+offline rule mislabeled as LLM output. Those rules are removed; the unchanged
+golden edge gate now honestly fails at F1 0.390. Live semantic model quality,
+four-document semantic retrieval, measured >=60% savings and voice remain
+unaccepted. Process credentials are absent; the no-.env rule remains respected.
+Automatic approval review blocked server starts, even from a verified isolated
+copy without environment files; no fresh browser/HTTP acceptance is claimed.
+
+### [done] Voice reader/relay integration and resumed browser testing (2026-09-19)
+Supersedes the missing-reader handoff above. The custom Next server supports a
+same-origin WebSocket relay; normal dev/start commands use it. Reader push-to-talk
+captures visible context, streams bounded PCM and shows cited answers. Navigation
+and barge-in cancel capture/playback. Deepgram requests reserve against the same
+durable budget as models; direct browser provider tokens remain disabled.
+72 intelligence tests and three PCM sample-rate tests pass. Browser capture and
+playback with controlled providers and actual WebSocket origin/disabled-live
+checks pass. The isolated fixture server starts, but automatic approval review
+still rejected a database-backed test server with "blocked by policy".
+See packages/intel/voice/README.md for private user-run startup instructions.
+The local $500 budget was enabled after verifying zero calls/reservations/opening
+balance; testing processes still disable live calls. Real provider quality and
+latency remain unmeasured. No credential file was accessed or paid calls made.
+
+### [done] Live local acceptance, superseding earlier blockers (2026-09-19)
+The user privately started the isolated database-backed launcher. No agent access
+to `.env` occurred. A real HTTP upload now completes parsing, resolution, baking
+and reader rendering: 20 nodes, 36 anchors, 34 cards, ready/done, byte-identical
+PDF, idempotent duplicate upload, SSE completion and scoped search all pass.
+Fixed Elasticsearch numeric mappings, stale corpus-index entries, stable parsed
+node IDs, bounded model adjudication and contradictory new-merge handling.
+Existing-entity contradictions still stop for review instead of splitting data.
+
+Real Deepgram recognition, Sol answer/citation and streamed Deepgram playback
+pass in the browser. Release-to-first-speech measured 3.192s; the user accepted
+this and requested no more latency work. Playback-before-completion, navigation
+cancellation and same-origin browser requests pass. Total nonsynthetic ledger
+estimate after these checks: $2.021039; unresolved reservations remain committed.
+The reader now supports stored-PDF retry and SSE progress; concurrent retry
+database checks and real browser/native-worker retry pass without provider calls.
+Final production build and typechecks pass. See PROJECT_STATUS.md for remaining
+quality benchmarks. No push, deployment or external submission in this audit.

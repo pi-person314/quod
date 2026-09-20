@@ -25,7 +25,7 @@ test("release before microphone permission resolves stops late tracks without co
   }
 });
 
-test("unavailable token endpoint releases the microphone", async (t) => {
+test("unavailable speech endpoint releases the microphone", async (t) => {
   const original = Object.getOwnPropertyDescriptor(globalThis, "navigator");
   let stopped = 0;
   Object.defineProperty(globalThis, "navigator", { configurable: true, value: { mediaDevices: {
@@ -43,25 +43,19 @@ test("unavailable token endpoint releases the microphone", async (t) => {
 });
 
 test("a delayed old stop cannot shut down the next recording's microphone", async (t) => {
-  const originals = new Map(["navigator", "WebSocket", "MediaRecorder"].map((name) => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
+  const originals = new Map(["navigator", "WebSocket", "location"].map((name) => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
   const stopped = [0, 0];
   let streamIndex = 0;
   const stopEvents: (() => void)[] = [];
   class Socket extends EventTarget {
     static OPEN = 1;
     readyState = 1;
-    constructor(_url: string, protocols: string[]) {
-      super(); assert.deepEqual(protocols, ["bearer", "test-token"]);
-      queueMicrotask(() => this.dispatchEvent(new Event("open")));
+    constructor(url: URL) {
+      super(); assert.equal(url.origin, "ws://localhost:3003");
+      queueMicrotask(() => this.dispatchEvent(new MessageEvent("message", { data: '{"type":"Ready"}' })));
     }
     close() { this.readyState = 3; this.dispatchEvent(new Event("close")); }
     send() {}
-  }
-  class Recorder extends EventTarget {
-    static isTypeSupported() { return true; }
-    state = "inactive";
-    start() { this.state = "recording"; }
-    stop() { this.state = "inactive"; stopEvents.push(() => this.dispatchEvent(new Event("stop"))); }
   }
   Object.defineProperty(globalThis, "navigator", { configurable: true, value: { mediaDevices: {
     getUserMedia: async () => {
@@ -70,9 +64,11 @@ test("a delayed old stop cannot shut down the next recording's microphone", asyn
     },
   } } });
   Object.defineProperty(globalThis, "WebSocket", { configurable: true, value: Socket });
-  Object.defineProperty(globalThis, "MediaRecorder", { configurable: true, value: Recorder });
-  t.mock.method(globalThis, "fetch", async () => Response.json({ access_token: "test-token" }));
-  const client = new BrowserVoiceCompanion(viewport);
+  Object.defineProperty(globalThis, "location", { configurable: true, value: { href: "http://localhost:3003", protocol: "http:" } });
+  t.mock.method(globalThis, "fetch", async () => Response.json({ available: true }));
+  const client = new BrowserVoiceCompanion(viewport, () => {}, async () => ({
+    stop: async () => new Promise<void>(resolve => stopEvents.push(resolve)), cancel: () => {},
+  }));
   try {
     await client.start();
     const oldStop = client.stop();

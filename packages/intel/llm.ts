@@ -12,7 +12,7 @@
 import OpenAI from "openai";
 import { createHash } from "node:crypto";
 import { db } from "@cairn/contracts/db";
-import { requireLiveBudget } from "./budget";
+import { requireLiveBudget, reserveApiSpend, settleApiSpend } from "./budget";
 
 /** Stage tag on every ledger row. Extend freely; keep names stable once used. */
 export type Stage =
@@ -130,13 +130,20 @@ function openai(): OpenAI {
 
 export interface ModelDependencies {
   authorize: () => Promise<void>;
+  reserve?: typeof reserveApiSpend;
+  settle?: typeof settleApiSpend;
   respond: (request: OpenAI.Responses.ResponseCreateParamsNonStreaming) => Promise<OpenAI.Responses.Response>;
   embeddings: (request: OpenAI.Embeddings.EmbeddingCreateParams) => Promise<OpenAI.Embeddings.CreateEmbeddingResponse>;
   log: (row: LedgerRow) => Promise<void>;
 }
 
 const live: ModelDependencies = {
-  authorize: requireLiveBudget,
+  authorize: async () => {
+    await requireLiveBudget();
+    if (!process.env.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not configured in the process environment");
+  },
+  reserve: reserveApiSpend,
+  settle: settleApiSpend,
   respond: (request) => openai().responses.create(request),
   embeddings: (request) => openai().embeddings.create(request),
   log: (row) => logCall(row),
@@ -177,11 +184,19 @@ async function executeModel(opts: CallModelOptions): Promise<CallModelResult> {
   const model = opts.model ?? MODELS.fast;
   estimateCostUsd(model, { input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0 });
   const maxOutput = opts.maxOutputTokens ?? 8192;
-  if (!Number.isSafeInteger(maxOutput) || maxOutput <= 0) throw new Error("Invalid maxOutputTokens");
+  if (!Number.isSafeInteger(maxOutput) || maxOutput <= 0 || maxOutput > 128000) throw new Error("Invalid maxOutputTokens");
+  // Restrict the transport to bounded text. No remote media, tools, or conversation IDs.
+  if (typeof opts.input !== "string" && !opts.input.every(item =>
+    "role" in item && "content" in item && typeof item.content === "string")) throw new Error("Only text model inputs are supported");
+  if (Buffer.byteLength(JSON.stringify([opts.input, opts.instructions, opts.jsonSchema])) > 240000) throw new Error("Input exceeds short-context budget");
   await deps.authorize();
+  const price = PRICING[model]!;
+  // Reserve the entire short-context allowance, including possible cache writes.
+  const reservation = await deps.reserve?.((272000 * Math.max(price.input, price.cacheWrite) + maxOutput * price.output) / 1000000, opts.stage, model);
   const started = Date.now();
   const response = await deps.respond({
     model,
+    service_tier: "default",
     instructions: opts.instructions,
     input: opts.input,
     max_output_tokens: maxOutput,
@@ -196,7 +211,10 @@ async function executeModel(opts: CallModelOptions): Promise<CallModelResult> {
   const costUsd = estimateCostUsd(model, usage);
 
   await deps.log({ stage: opts.stage, model, usage, latencyMs, costUsd, docId: opts.docId, corpusId: opts.corpusId,
-    meta: { ...opts.meta, response_id: response.id, response_status: response.status } });
+    meta: { ...opts.meta, reservation_id: reservation, response_id: response.id, response_status: response.status } });
+  if (reservation) await deps.settle!(reservation,
+    ((usage.input_tokens + usage.cache_write_tokens) * Math.max(price.input, price.cacheWrite)
+      + usage.cache_read_tokens * price.cachedInput + usage.output_tokens * price.output) / 1000000);
 
   if (response.status !== "completed" || !response.output_text?.trim()) {
     throw new Error("Model response incomplete, refused, or empty");
@@ -214,6 +232,8 @@ async function embed(texts: string[], opts: { docId?: string; corpusId?: string;
   const model = MODELS.embedding;
   estimateCostUsd(model, { input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0 });
   await deps.authorize();
+  if (texts.some(text => Buffer.byteLength(text) > 8000) || texts.reduce((n, text) => n + Buffer.byteLength(text), 0) > 240000) throw new Error("Embedding input exceeds reservation bounds");
+  const reservation = await deps.reserve?.(272000 * PRICING[model]!.input / 1000000, "embed", model);
   const started = Date.now();
   const res = await deps.embeddings({ model, input: texts });
   if (!res.usage) throw new Error("Missing embedding usage; billing reconciliation required");
@@ -225,8 +245,9 @@ async function embed(texts: string[], opts: { docId?: string; corpusId?: string;
   };
   await deps.log({
     stage: "embed", model, usage, latencyMs: Date.now() - started, costUsd: estimateCostUsd(model, usage),
-    docId: opts.docId, corpusId: opts.corpusId, meta: { ...opts.meta, count: texts.length },
+    docId: opts.docId, corpusId: opts.corpusId, meta: { ...opts.meta, reservation_id: reservation, count: texts.length },
   });
+  if (reservation) await deps.settle!(reservation, estimateCostUsd(model, usage));
   const ordered = [...res.data].sort((a, b) => a.index - b.index);
   const dimensions = ordered[0]?.embedding.length;
   if (!dimensions || ordered.length !== texts.length || ordered.some((d, i) =>

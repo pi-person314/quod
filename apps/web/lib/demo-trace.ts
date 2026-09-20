@@ -34,6 +34,10 @@ export function demoProofTrace(
     ),
   );
   if (nodes.some((node) => !node)) return null;
+  const selected = request.selection.toLowerCase().replace(/\s+/g, " ").trim();
+  // This authored fallback applies to the known proof passage, not arbitrary text on its page.
+  if (selected.length < 24 || (!nodes[0]!.statement_md.toLowerCase().replace(/\s+/g, " ").includes(selected)
+    && selected !== "then the corresponding combination lies in the kernel.")) return null;
   const chain = steps.map(([, reason], depth) => {
     const node = nodes[depth]!;
     return {

@@ -3,8 +3,8 @@
 POST {WEB_BASE_URL}/api/intel/resolve  {corpus_id, node_ids} -> {decisions}
 POST {WEB_BASE_URL}/api/intel/bake     {doc_id}              -> {cards_done}
 
-Until C's handlers land they return 501; we log and continue so A's pipeline
-is testable end to end from hour 1.
+Failures must reach the pipeline error state: an unresolved/unbaked document
+must never be advertised as ready.
 """
 
 from __future__ import annotations
@@ -21,14 +21,14 @@ log = logging.getLogger(__name__)
 
 def _post(path: str, body: dict) -> dict | None:
     url = f"{settings.web_base_url}{path}"
-    try:
-        r = httpx.post(url, json=body, timeout=600)
-    except httpx.HTTPError as e:
-        log.warning("%s unreachable (%s); skipping", url, e)
-        return None
-    if r.status_code == 501:
-        log.warning("%s not implemented yet (owner C); skipping", path)
-        return None
+    r = httpx.post(url, json=body, timeout=600)
+    if r.is_error:
+        try:
+            detail = r.json().get("message")
+        except (ValueError, AttributeError):
+            detail = None
+        if isinstance(detail, str) and detail:
+            raise RuntimeError(f"Intelligence {path.rsplit('/', 1)[-1]} failed ({r.status_code}): {detail[:400]}")
     r.raise_for_status()
     return r.json()
 

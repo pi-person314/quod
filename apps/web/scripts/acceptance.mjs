@@ -1,13 +1,13 @@
 import { chromium } from "@playwright/test";
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
-const out = "../../.cairn-sessions/screenshots";
+const out = "../../.cairn-sessions/current-browser/screenshots";
 await mkdir(out, { recursive: true });
-const browser = await chromium.launch();
+const browser = await chromium.launch({ channel: "chrome" });
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
 const errors = [];
 page.on("pageerror", (e) => errors.push(e.message));
-const base = "http://localhost:3001";
+const base = process.env.CAIRN_BASE_URL ?? "http://127.0.0.1:3003";
 const data = await (await page.request.get(base + "/api/library")).json();
 const demo = data.docs.filter((d) => d.id.startsWith("b000"));
 let checked = 0,
@@ -19,6 +19,8 @@ const ready = async () => {
     .waitFor({ timeout: 60000 });
   await page.waitForTimeout(120);
 };
+const mapOnly = process.argv.includes("--map-only");
+if (!mapOnly) {
 for (const doc of demo) {
   console.log("Checking",doc.title);
   await page.goto(`${base}/read/${doc.id}?page=1`);
@@ -165,6 +167,7 @@ assert((await page.locator(".trace-hop").count()) >= 3);
 await page.screenshot({ path: `${out}/trace.png` });
 await page.keyboard.press("Escape");
 await page.goto(base + "/acceptance/map");
+} else await page.goto(base + "/acceptance/map");
 await page.locator("circle").nth(199).waitFor({ timeout: 60000 });
 const bounds = await page.locator("circle").evaluateAll((els) =>
   els.map((e) => {
@@ -209,7 +212,6 @@ const performanceResult = await page.evaluate(async () => {
     requestAnimationFrame(frame);
   });
 });
-assert(performanceResult.fps >= 30);
 await page.screenshot({ path: `${out}/map-200.png` });
 const report = {
   coordinateChecks: checked,
@@ -225,8 +227,9 @@ const report = {
 };
 console.log(JSON.stringify(report, null, 2));
 await writeFile(
-  "../../.cairn-sessions/browser-results.json",
+  `../../.cairn-sessions/current-browser/${mapOnly ? "map-results" : "browser-results"}.json`,
   JSON.stringify(report, null, 2),
 );
+assert(performanceResult.fps >= 30, `200-node map measured ${performanceResult.fps.toFixed(1)}fps, requires 30fps`);
 assert.equal(errors.length, 0);
 await browser.close();

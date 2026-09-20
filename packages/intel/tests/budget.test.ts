@@ -20,6 +20,6 @@ test("invalid amounts and duplicate requests cannot corrupt the budget", () => {
   assert.throws(() => settleSpend(state, "unknown", 1), /Unknown/);
   assert.throws(() => reserveSpend({ spentMicros: NaN, reservations: {} }, "x", 1));
 });
-test("live access fails closed while durable enforcement is pending", async () => {
+test("live access fails closed without explicit process opt-in", async () => {
   await assert.rejects(requireLiveBudget(), /disabled/);
 });

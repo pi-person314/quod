@@ -1,5 +1,17 @@
 import type { ZodType } from "zod";
 
+/** Next may construct an internal localhost URL even when the browser used
+ * 127.0.0.1. Compare against the actual HTTP Host without trusting forwarded hosts. */
+export function sameOrigin(req: Request): boolean {
+  const supplied = req.headers.get("origin");
+  if (!supplied) return true; // Native worker requests do not send browser Origin.
+  try {
+    const origin = new URL(supplied), internal = new URL(req.url);
+    return ["http:", "https:"].includes(origin.protocol) && origin.protocol === internal.protocol
+      && origin.host === (req.headers.get("host") ?? internal.host).toLowerCase();
+  } catch { return false; }
+}
+
 /** 501 for a route shell whose handler has not landed yet. Names the owner so nobody guesses. */
 export function notImplemented(
   route: string,

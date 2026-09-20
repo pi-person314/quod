@@ -6,6 +6,7 @@ SHELL := /bin/bash
 DATABASE_URL ?= postgres://cairn:cairn@localhost:5432/cairn
 SCHEMA := packages/contracts/schema.sql
 DUMP := fixtures/demo.dump
+BUDGET := packages/contracts/migrations/001_api_budget.sql
 WORKER := apps/worker/.venv/bin/cairn-worker
 
 # Prefer a local psql; fall back to the one inside the compose container.
@@ -22,7 +23,7 @@ endif
 ## Restore the pre-ingested demo corpus. Offline; the gate is < 30s.
 demo-db:
 	@test -f $(DUMP) || { echo "$(DUMP) missing — run 'make demo-dump' first"; exit 1; }
-	@time { $(RUN_SQL) < $(SCHEMA) && $(RUN_SQL) < $(DUMP); }
+	@time { $(RUN_SQL) < $(SCHEMA) && $(RUN_SQL) < $(BUDGET) && $(RUN_SQL) < $(DUMP); }
 	@echo "demo corpus restored"
 
 ## Regenerate fixtures/demo.dump from whatever is currently in Postgres.

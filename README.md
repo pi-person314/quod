@@ -12,13 +12,17 @@ prior results it rests on; and a pset's "the dimension theorem", the notes'
 HackMIT 2026. Built by three parallel Claude Code sessions — see `CLAUDE.md`,
 `CONTRACTS.md` and `sessions/`.
 
+See [PROJECT_STATUS.md](PROJECT_STATUS.md) for the current phase-by-phase audit,
+integration fixes and reproducible checks. The fixture frontend is complete;
+live model quality, edge quality, measured savings and voice are not fully accepted.
+
 ## Run
 
 ```bash
-cp .env.example .env
+# Configure runtime variables explicitly in your shell.
 pnpm install
 pnpm infra:up            # Postgres + Elasticsearch
-pnpm dev                 # reader on http://localhost:3000, fixture-backed by default
+pnpm dev                 # reader on http://127.0.0.1:3003, fixture-backed by default
 ```
 
 Worker (ingest):
@@ -39,5 +43,13 @@ cairn-worker ingest path/to/pdfs
 | `fixtures` | golden corpus and demo snapshot |
 
 Architecture, evals and the cost table land here as the build progresses.
+
+The worker reads process variables only. Agent verification must not load `.env`:
+`node apps/web/scripts/isolated-verification.mjs build` makes a separate source
+copy excluding environment files. The shared API budget stays disabled by default.
+
+Voice controls and the bounded speech relay are implemented. See
+[voice setup](packages/intel/voice/README.md) for the private user-run launcher
+and the remaining live-provider acceptance checks.
 
 MIT licensed.

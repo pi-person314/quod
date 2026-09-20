@@ -110,9 +110,10 @@ def _would_cycle(edges: list[Edge], src: UUID, dst: UUID, kind: str) -> bool:
 
 
 def extract_edges_offline(nodes: list[Node], anchors: list[Anchor], ctx: PipelineContext | None = None) -> list[Edge]:
-    by_label = {n.label.lower(): n for n in nodes if n.label}
+    by_label = {n.label.lower(): n for n in nodes if n.label and sum(1 for other in nodes if other.doc_id == n.doc_id and other.label == n.label) == 1}
     ordered = sorted(nodes, key=_order_key)
     claimed: set[tuple[UUID, UUID, str]] = set()
+    claimed_anchors: set[UUID] = set()
     edges: list[Edge] = []
 
     def add(src: Node, dst: Node, kind: str, extractor: str, conf: float) -> None:
@@ -138,8 +139,9 @@ def extract_edges_offline(nodes: list[Node], anchors: list[Anchor], ctx: Pipelin
         dst = next((n for n in nodes if n.id == a.target_node_id), None)
         if src and dst and src.id != dst.id:
             add(src, dst, "depends_on", "deterministic", 0.92)
+            claimed_anchors.add(a.id)
 
-    # 2. heuristic — soft named refs, restates, proximity
+    # 2. heuristic — only references actually present in a containing node
     for a in anchors:
         src = _node_containing(ordered, a)
         if src is None:
@@ -149,144 +151,45 @@ def extract_edges_offline(nodes: list[Node], anchors: list[Anchor], ctx: Pipelin
             prev = _previous_of_kind(ordered, src, "lemma")
             if prev:
                 add(src, prev, "depends_on", "heuristic", 0.8)
+                claimed_anchors.add(a.id)
         elif "as above" in surf:
             prev = _previous_of_kind(ordered, src, "lemma") or _previous_any(ordered, src)
             if prev:
                 add(src, prev, "depends_on", "heuristic", 0.7)
+                claimed_anchors.add(a.id)
         elif "rank" in surf and "null" in surf:
             rn = next((n for n in theorems if n.title and "rank" in n.title.lower()), None)
-            rn = rn or by_label.get("theorem 3.4")
             if rn:
                 add(src, rn, "depends_on", "heuristic", 0.8)
+                claimed_anchors.add(a.id)
         elif "spectral" in surf:
             sp = next((n for n in theorems if n.title and "spectral" in n.title.lower()), None)
             if sp:
                 add(src, sp, "depends_on", "heuristic", 0.8)
+                claimed_anchors.add(a.id)
 
-    # Rank-Nullity restatement cluster
-    rn = next((n for n in theorems if n.title and "rank" in n.title.lower()), by_label.get("theorem 3.4"))
-    if rn:
-        for n in nodes:
-            if n.id == rn.id:
-                continue
-            blob = f"{n.title or ''} {n.statement_md}".lower()
-            if n.kind in ("lemma", "theorem", "proposition") and (
-                "rank-nullity" in blob or "rank + nullity" in blob or "dim ker" in blob
-                or (n.label or "").lower() in ("lemma 3.5", "theorem 3.22")
-            ):
-                add(n, rn, "restates", "heuristic", 0.85)
-        t322 = by_label.get("theorem 3.22")
-        p17 = by_label.get("proposition 3.17")
-        if t322 and p17 and "equivalent" in _body(p17).lower():
-            add(p17, t322, "restates", "heuristic", 0.8)
-
-    # Proof of Theorem X
-    for n in nodes:
-        if n.kind != "proof":
-            continue
-        m = EXPLICIT_RE.search(n.statement_md)
-        if m:
-            dst = by_label.get(_norm_label(m.group(1), m.group(2)).lower())
-            if dst:
-                add(n, dst, "depends_on", "deterministic", 0.95)
-        # gold also has proof → kernel def
-        ker = next((d for d in defs if d.title and "kernel" in d.title.lower()), by_label.get("definition 3.2"))
-        if ker:
-            add(n, ker, "depends_on", "deterministic", 0.75)
-
-    # Result depends on immediately preceding definitions (same opening cluster)
-    for src in nodes:
-        if src.kind not in ("theorem", "lemma", "proposition", "corollary", "example"):
-            continue
-        prior_defs = [d for d in defs if _order_key(d) < _order_key(src)]
-        # theorems at the start of the chapter take the opening def cluster
-        take = prior_defs[-3:] if src.kind == "theorem" and src.page <= 2 else prior_defs[-1:]
-        if src.label in ("Theorem 3.4", "Theorem 3.7", "Proposition 3.6", "Example 3.13"):
-            take = [d for d in prior_defs if d.label in ("Definition 3.1", "Definition 3.2", "Definition 3.3")]
-            if src.label == "Proposition 3.6":
-                take = [d for d in take if d.label == "Definition 3.2"]
-            elif src.label == "Theorem 3.7":
-                take = [d for d in take if d.label in ("Definition 3.2", "Definition 3.3")]
-            elif src.label == "Example 3.13":
-                take = [d for d in take if d.label == "Definition 3.2"]
-            elif src.label == "Theorem 3.14":
-                take = [d for d in take if d.label == "Definition 3.1"]
-        if src.label == "Theorem 3.14":
-            d1 = by_label.get("definition 3.1")
-            if d1:
-                add(src, d1, "depends_on", "llm", 0.7)
-            continue
-        for d in take:
-            add(src, d, "depends_on", "deterministic", 0.8)
-
-    # Proximity: theorem without inbound/outbound to another result gets previous theorem + lemma
-    for src in nodes:
-        if src.label == "Theorem 3.10":
-            t7 = by_label.get("theorem 3.7")
-            l8 = by_label.get("lemma 3.8")
-            if t7:
-                add(src, t7, "depends_on", "heuristic", 0.7)
-            if l8:
-                add(src, l8, "depends_on", "heuristic", 0.7)
-        if src.label == "Lemma 3.8":
-            t4 = by_label.get("theorem 3.4")
-            if t4:
-                add(src, t4, "depends_on", "deterministic", 0.75)
-        if src.label == "Lemma 3.12":
-            l5 = by_label.get("lemma 3.5")
-            t4 = by_label.get("theorem 3.4")
-            if l5:
-                add(src, l5, "depends_on", "heuristic", 0.75)
-            if t4:
-                add(src, t4, "depends_on", "heuristic", 0.7)
-        if src.label == "Corollary 3.9":
-            l5 = by_label.get("lemma 3.5")
-            if l5:
-                add(src, l5, "depends_on", "deterministic", 0.7)
-        if src.label == "Lemma 3.15":
-            t14 = by_label.get("theorem 3.14")
-            t4 = by_label.get("theorem 3.4")
-            if t14:
-                add(src, t14, "depends_on", "deterministic", 0.85)
-            if t4:
-                add(src, t4, "specialises", "heuristic", 0.7)
-
-    # 3. notation — first def introduces symbols used by later sibling defs; rank uses image
-    if len(defs) >= 3 and defs[0].page == defs[1].page:
-        add(defs[0], defs[1], "uses_notation", "deterministic", 0.8)
-        add(defs[0], defs[2], "uses_notation", "deterministic", 0.8)
-    rank_def = next((d for d in defs if d.title and "rank" in d.title.lower()), by_label.get("definition 3.11"))
-    im_def = next((d for d in defs if d.title and "image" in d.title.lower()), by_label.get("definition 3.3"))
-    if rank_def and im_def:
-        add(rank_def, im_def, "uses_notation", "notation", 0.8)
-    nota = next((n for n in nodes if n.kind == "notation"), None)
-    if nota and defs:
-        add(nota, defs[0], "uses_notation", "notation", 0.75)
+    # Notation requires an actual shared symbol and matching role. Numerical
+    # labels and proximity alone are not evidence of mathematical dependence.
+    for src in ordered:
+        for symbol in src.symbols:
+            candidates = [d for d in defs if d.doc_id == src.doc_id and _order_key(d) < _order_key(src)
+                          and any(s.sym == symbol.sym and s.role == symbol.role for s in d.symbols)]
+            if candidates:
+                add(src, candidates[-1], "uses_notation", "notation", 0.8)
 
     # 4. llm — only unclaimed named surfaces
-    named = [a for a in anchors if a.target_node_id is None and re.search(r"spectral|rank", a.surface, re.I)]
+    named = [a for a in anchors if a.target_node_id is None and a.id not in claimed_anchors and _node_containing(ordered, a)]
     if named and ctx is not None:
         _llm_named(ctx, nodes, named, edges, claimed)
-
-    # Every theorem must have an incident edge
-    incident = {e.src for e in edges} | {e.dst for e in edges}
-    for t in theorems:
-        if t.id in incident:
-            continue
-        prev = _previous_any(ordered, t)
-        if prev:
-            add(t, prev, "depends_on", "heuristic", 0.55)
 
     return edges
 
 
 def _node_containing(ordered: list[Node], a: Anchor) -> Node | None:
-    same = [n for n in ordered if n.page == a.page]
-    if not same:
-        earlier = [n for n in ordered if n.page < a.page]
-        return earlier[-1] if earlier else None
-    cand = [n for n in same if n.bbox[1] <= a.bbox[1] + 8]
-    return cand[-1] if cand else same[0]
+    candidates = [n for n in ordered if n.doc_id == a.doc_id and n.page == a.page
+                  and n.bbox[0] - 2 <= a.bbox[0] and n.bbox[1] - 2 <= a.bbox[1]
+                  and n.bbox[2] + 2 >= a.bbox[2] and n.bbox[3] + 2 >= a.bbox[3]]
+    return min(candidates, key=lambda n: (n.bbox[2]-n.bbox[0])*(n.bbox[3]-n.bbox[1])) if candidates else None
 
 
 def _previous_of_kind(ordered: list[Node], src: Node, kind: str) -> Node | None:
@@ -315,8 +218,8 @@ def _llm_named(
     edges: list[Edge],
     claimed: set[tuple[UUID, UUID, str]],
 ) -> None:
-    catalog = [{"id": str(n.id), "label": n.label, "title": n.title, "kind": n.kind} for n in nodes]
-    refs = [{"surface": a.surface, "page": a.page} for a in named]
+    catalog = [{"id": str(n.id), "label": n.label, "title": n.title, "kind": n.kind, "statement": n.statement_md} for n in nodes]
+    refs = [{"surface": a.surface, "page": a.page, "src": str(source.id)} for a in named if (source := _node_containing(nodes, a))]
     try:
         text, _ = call_model(
             ctx.conn,
@@ -337,9 +240,11 @@ def _llm_named(
                 src, dst = UUID(e["src"]), UUID(e["dst"])
             except (KeyError, ValueError):
                 continue
-            if src not in known or dst not in known:
+            if src not in known or dst not in known or str(src) not in {ref["src"] for ref in refs}:
                 continue
             kind = e.get("kind", "depends_on")
+            if kind not in ("depends_on", "uses_notation", "specialises", "restates"):
+                continue
             if _would_cycle(edges, src, dst, kind):
                 continue
             _add(edges, claimed, src, dst, kind, "llm", 0.7)

@@ -39,6 +39,17 @@ test("out-of-corpus input is rejected before indexing or model use", async () =>
   await assert.rejects(resolveCorpus({ corpus_id: DEVELOPMENT_CORPUS_ID, node_ids: [DEVELOPMENT_CORPUS_ID] }, h.deps), /outside/);
   assert.deepEqual(h.calls, []);
 });
+
+test("index synchronization receives the entire authoritative corpus before candidate retrieval", async () => {
+  const h = await harness();
+  await resolveCorpus({ corpus_id: DEVELOPMENT_CORPUS_ID, node_ids: [h.exercises.nodes[0].id] }, {
+    ...h.deps, search: { ...h.deps.search, removeStaleNodes: async (corpus, ids) => {
+      assert.equal(corpus, DEVELOPMENT_CORPUS_ID);
+      assert.deepEqual(new Set(ids), new Set(h.snapshot.nodes.map(node => node.id)));
+      assert.deepEqual(h.calls, ["index"]);
+    } },
+  });
+});
 test("malformed adjudication and failed persistence cannot return success", async () => {
   const h = await harness();
   const input = { corpus_id: DEVELOPMENT_CORPUS_ID, node_ids: [h.exercises.nodes[0].id] };

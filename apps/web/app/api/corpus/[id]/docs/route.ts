@@ -6,6 +6,7 @@ import { badRequest, jsonOf } from "@/lib/http";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { dispatchWorker } from "@/lib/worker";
+import { retryDocument } from "@/lib/retry-document";
 import { z } from "zod";
 import { createHash } from "node:crypto";
 export async function POST(
@@ -104,10 +105,17 @@ export async function POST(
       await writeFile(join(LOCAL, "pdf", `${docId}.pdf`), bytes);
       await saveLocal("docs", docId, { doc, nodes, message: meta?.error });
     } else {
-      await db().query(
-        "INSERT INTO documents(id,corpus_id,title,filename,file_hash,pdf_bytes,status) VALUES($1,$2,$3,$4,$5,$6,'queued')",
+      const inserted = await db().query(
+        "INSERT INTO documents(id,corpus_id,title,filename,file_hash,pdf_bytes,status) VALUES($1,$2,$3,$4,$5,$6,'queued') ON CONFLICT(corpus_id,file_hash) DO NOTHING RETURNING id",
         [docId, id, doc.title, file.name, hash, bytes],
       );
+      if (!inserted.rowCount) {
+        const existing = await db().query("SELECT id FROM documents WHERE corpus_id=$1 AND file_hash=$2", [id, hash]);
+        const existingId = existing.rows[0].id;
+        await retryDocument(existingId);
+        ids.push(existingId);
+        continue;
+      }
       await db().query(
         "INSERT INTO ingest_progress(doc_id,stage) VALUES($1,'queued')",
         [docId],

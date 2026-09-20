@@ -30,7 +30,7 @@ DEMO_DUMP = FIXTURES_DIR / "demo.dump"
 # anchors are patched afterwards because they close reference cycles.
 _DUMP_TABLES = [
     ("corpora", "id, name"),
-    ("documents", "id, corpus_id, title, filename, file_hash, page_count, quality, status"),
+    ("documents", "id, corpus_id, title, filename, file_hash, page_count, quality, status, pdf_bytes"),
     ("entities", "id, corpus_id, name"),
     ("nodes", "id, doc_id, kind, label, title, statement_md, clauses, symbols, page, bbox, entity_id, confidence"),
     ("edges", "src, dst, kind, extractor, confidence"),
@@ -78,6 +78,11 @@ def load_golden(conn: psycopg.Connection, golden_dir: Path = GOLDEN_DIR, corpus_
 
     for fx in fixtures:
         db.upsert_document(conn, fx.document)
+        if fx.pdf:
+            pdf_path = (golden_dir / fx.pdf).resolve()
+            if not pdf_path.is_relative_to(golden_dir.resolve()):
+                raise ValueError("Fixture PDF must remain inside its fixture directory")
+            conn.execute("UPDATE documents SET pdf_bytes=%s WHERE id=%s", (pdf_path.read_bytes(), fx.document.id))
         db.clear_doc_graph(conn, fx.document.id)
         counts["documents"] += 1
 

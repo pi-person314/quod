@@ -2,7 +2,17 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { Edge, Node } from "@cairn/contracts";
 import { forwardGraph } from "../forward";
-import { matchTraceRoots, traceGraph, traceSelection } from "../trace";
+import { matchTraceRoots, matchSelectionRoots, traceGraph, traceSelection } from "../trace";
+
+test("physical selections match a unique containing passage, never a vague or ambiguous fragment", () => {
+  const passage = "Suppose that the vectors form a basis of the vector space.";
+  const a = node("a", { statement_md: passage });
+  const request = { doc_id: "doc", page: 1, selection: "the vectors form a basis of the vector space", read_node_ids: [] };
+  assert.deepEqual(matchSelectionRoots([a], request), ["a"]);
+  assert.deepEqual(matchSelectionRoots([a, node("b", { statement_md: passage })], request), []);
+  assert.deepEqual(matchSelectionRoots([a], { ...request, page: 2 }), []);
+  assert.deepEqual(matchSelectionRoots([a], { ...request, selection: "the vectors" }), []);
+});
 
 const node = (id: string, overrides: Partial<Node> = {}): Node => ({
   id, doc_id: "doc", kind: "theorem", label: `Theorem ${id}`, title: null,

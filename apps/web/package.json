@@ -3,9 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "tsx scripts/server.ts --dev",
     "build": "next build",
-    "start": "next start",
+    "start": "tsx scripts/server.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

@@ -14,6 +14,8 @@ import { PdfPage } from "./pdf-page";
 import { ReferenceCard } from "./reference-card";
 import { CorpusMap } from "./corpus-map";
 import { MathText } from "./math-text";
+import { CostPanel } from "./cost-panel";
+import { VoiceControl } from "./voice-control";
 const STATE_KEY = "cairn.reader.v1";
 export function Reader({
   data,
@@ -49,6 +51,9 @@ export function Reader({
     [hits, setHits] = useState<Node[]>([]),
     [ready, setReady] = useState(false);
   const [activeResult, setActiveResult] = useState(0);
+  const [retrying, setRetrying] = useState(false);
+  const [retryError, setRetryError] = useState("");
+  const [ingestStage, setIngestStage] = useState("");
   const dialog = useRef<HTMLElement>(null);
   useEffect(() => {
     if (!panel) return;
@@ -85,6 +90,26 @@ export function Reader({
     closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cache = useRef(new Map(data.cards.map((c) => [c.anchor_id, c])));
   const doc = data.docs.find((d) => d.id === docId)!;
+  useEffect(() => {
+    setRetryError(""); setIngestStage("");
+    if (!["queued", "ingesting"].includes(doc.status)) return;
+    const events = new EventSource(`/api/corpus/${doc.corpus_id}/events`);
+    events.onmessage = event => {
+      const progress = JSON.parse(event.data);
+      if (progress.doc_id !== doc.id) return;
+      setIngestStage(progress.stage);
+      if (["done", "error"].includes(progress.stage)) { events.close(); location.reload(); }
+    };
+    return () => events.close();
+  }, [doc.id, doc.corpus_id, doc.status]);
+  async function retry() {
+    setRetrying(true); setRetryError("");
+    try {
+      const response = await fetch(`/api/doc/${doc.id}/retry`, { method: "POST" });
+      if (!response.ok) throw new Error("Retry could not start. Please try again.");
+      location.reload();
+    } catch (error) { setRetryError(error instanceof Error ? error.message : "Retry could not start."); setRetrying(false); }
+  }
   const anchors = data.anchors.filter(
     (a) => a.doc_id === docId && a.page === page,
   );
@@ -553,13 +578,16 @@ export function Reader({
           ) : doc.status === "error" ? (
             <div className="empty error">
               This document could not be prepared.
-              <p>Try adding the PDF again.</p>
-              <Link href="/upload">Add a document ↗</Link>
+              {data.fixture ? <><p>Try adding the PDF again.</p><Link href="/upload">Add a document ↗</Link></> : <>
+                <p>Your PDF is saved. Retry to finish preparing it.</p>
+                <button disabled={retrying} onClick={() => void retry()}>{retrying ? "Starting retry…" : "Retry document"}</button>
+                {retryError && <p role="alert">{retryError}</p>}
+              </>}
             </div>
           ) : doc.status !== "ready" ? (
             <div className="empty">
               <div className="skeleton">Preparing this document…</div>
-              <p>Results will be ready once ingestion completes.</p>
+              <p aria-live="polite">{ingestStage ? `Current step: ${ingestStage}. ` : ""}This page will update when it is ready.</p>
               <button onClick={() => location.reload()}>Check again</button>
             </div>
           ) : (
@@ -583,6 +611,7 @@ export function Reader({
             />
           )}
           <footer className="reader-status">
+            <VoiceControl docId={docId} page={page} nodes={pageNodes} onJump={jump} />
             <span>
               {doc.id.startsWith("b000")
                 ? "Demonstration corpus"
@@ -807,37 +836,7 @@ export function Reader({
               </>
             )}
             {panel === "cost" && (
-              <>
-                <h2>Measured, never guessed.</h2>
-                <p>
-                  No measured cost comparison has been supplied for this corpus.
-                </p>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Stage</th>
-                      <th>Tokens</th>
-                      <th>Cost</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {["Segmentation", "Resolution", "Instantiation"].map(
-                      (s) => (
-                        <tr key={s}>
-                          <td>{s}</td>
-                          <td>—</td>
-                          <td>—</td>
-                        </tr>
-                      ),
-                    )}
-                  </tbody>
-                </table>
-                <p className="muted">
-                  Baked reference cards make no model calls while you read.
-                  Savings will appear when a measured baseline and optimized run
-                  are available.
-                </p>
-              </>
+              <CostPanel corpusId={doc.corpus_id} />
             )}
             {panel === "help" && (
               <>

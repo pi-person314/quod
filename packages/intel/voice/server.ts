@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { Node, PageNumber, Uuid } from "@cairn/contracts";
 import { callModel, MODELS } from "../llm";
-import { requireLiveBudget } from "../budget";
+import { requireLiveBudget, reserveApiSpend, settleApiSpend } from "../budget";
+import { logCall } from "../llm";
 
 export const VoiceQuestion = z.object({ doc_id: Uuid, page: PageNumber,
   visible_node_ids: z.array(Uuid).min(1).max(20), question: z.string().trim().min(1).max(2000) }).strict();
@@ -30,21 +31,23 @@ export async function answerFromViewport(raw: VoiceQuestion, available: readonly
   return answer;
 }
 
-export interface SpeechDependencies { authorize?: () => Promise<void>; fetch?: typeof fetch; apiKey?: string }
+export interface SpeechDependencies {
+  authorize?: () => Promise<void>; fetch?: typeof fetch; apiKey?: string;
+  reserve?: typeof reserveApiSpend; settle?: typeof settleApiSpend; record?: typeof logCall;
+  docId?: string; sourceDocId?: string; sourceCorpusId?: string;
+}
 async function speechKey(deps: SpeechDependencies): Promise<string> {
   await (deps.authorize ?? (async () => {
     await requireLiveBudget();
-    throw new Error("Deepgram usage reservations must be configured before live speech");
   }))();
   const key = deps.apiKey ?? process.env.DEEPGRAM_API_KEY;
   if (!key) throw new Error("Deepgram is not configured");
   return key;
 }
 
-/** Server-only master key; browser receives a short-lived JWT, never the API key.
- * https://developers.deepgram.com/reference/auth/tokens/grant
- */
+/** Legacy protocol test seam. Production clients must use the bounded relay. */
 export async function mintVoiceToken(deps: SpeechDependencies = {}) {
+  if (!deps.authorize) throw new Error("Direct browser speech tokens are disabled; use the bounded server relay");
   const key = await speechKey(deps);
   const response = await (deps.fetch ?? fetch)("https://api.deepgram.com/v1/auth/grant", {
     method: "POST", headers: { Authorization: `Token ${key}`, "content-type": "application/json" },
@@ -59,10 +62,22 @@ export async function synthesizeSpeech(text: string, signal?: AbortSignal, deps:
   z.string().trim().min(1).max(1000).parse(text);
   signal?.throwIfAborted();
   const key = await speechKey(deps);
+  const ceiling = text.length * 0.05 / 1000;
+  const reserve = deps.reserve ?? (deps.authorize ? undefined : reserveApiSpend);
+  const reservation = await reserve?.(ceiling, "voice", "aura-2-thalia-en");
+  const started = Date.now();
   const response = await (deps.fetch ?? fetch)("https://api.deepgram.com/v1/speak?model=aura-2-thalia-en&encoding=mp3", {
     method: "POST", headers: { Authorization: `Token ${key}`, "content-type": "application/json" }, body: JSON.stringify({ text }),
     signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(15_000)]) : AbortSignal.timeout(15_000),
   });
   if (!response.ok || !response.body || !response.headers.get("content-type")?.startsWith("audio/")) throw new Error("Speech synthesis failed");
+  if (reservation) {
+    await (deps.record ?? logCall)({ stage: "voice", model: "aura-2-thalia-en", docId: deps.docId, latencyMs: Date.now() - started,
+      usage: { input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0 },
+      costUsd: text.length * 0.03 / 1000,
+      meta: { reservation_id: reservation, characters: text.length, source_doc_id: deps.sourceDocId,
+        source_corpus_id: deps.sourceCorpusId, cost_basis: "published-rate estimate" } });
+    await (deps.settle ?? settleApiSpend)(reservation, ceiling);
+  }
   return new Response(response.body, { headers: { "content-type": response.headers.get("content-type")!, "cache-control": "no-store" } });
 }

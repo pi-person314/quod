@@ -78,13 +78,15 @@ export function CorpusMap({
       for (const n of dots) n.rank = next.get(n.id)!;
     }
     const group = root.append("g");
-    const lines = group
-      .append("g")
-      .selectAll("line")
-      .data(links)
-      .join("line")
+    const lineLayer = group.append("g");
+    const lines = lineLayer.append("path")
+      .attr("fill", "none")
       .attr("stroke", "#42424b")
       .attr("stroke-width", 0.8);
+    const highlightedLines = lineLayer.append("path").attr("fill", "none")
+      .attr("stroke", "#42424b").attr("stroke-width", 0.8).attr("opacity", 0.8);
+    const edgePath = (edges: typeof links) => edges.map((edge: any) =>
+      `M${edge.source.x},${edge.source.y}L${edge.target.x},${edge.target.y}`).join("");
     const circles = group
       .append("g")
       .selectAll("circle")
@@ -134,7 +136,9 @@ export function CorpusMap({
             ? 0.9
             : 0,
       );
+      labels.style("display", (n) => (q ? `${n.node.title} ${n.node.label}`.toLowerCase().includes(q) : visibleLabels.has(n.id)) ? null : "none");
       lines.attr("opacity", 0.45);
+      highlightedLines.attr("d", "");
     };
     circles
       .on("mouseenter", (_, n) => {
@@ -149,9 +153,9 @@ export function CorpusMap({
         }
         circles.attr("opacity", (d) => (near.has(d.id) ? 1 : 0.08));
         labels.attr("opacity", (d) => (near.has(d.id) ? 1 : 0));
-        lines.attr("opacity", (l: any) =>
-          near.has(l.source.id) && near.has(l.target.id) ? 0.8 : 0.05,
-        );
+        labels.style("display", (d) => near.has(d.id) ? null : "none");
+        lines.attr("opacity", 0.05);
+        highlightedLines.attr("d", edgePath(links.filter((edge: any) => near.has(edge.source.id) && near.has(edge.target.id))));
       })
       .on("mouseleave", () => {
         setHover(null);
@@ -187,11 +191,7 @@ export function CorpusMap({
       .force("vertical", forceY(height / 2).strength(0.1))
       .force("collision", forceCollide(dots.length > 100 ? 14 : 42));
     const draw = () => {
-      lines
-        .attr("x1", (d: any) => d.source.x)
-        .attr("y1", (d: any) => d.source.y)
-        .attr("x2", (d: any) => d.target.x)
-        .attr("y2", (d: any) => d.target.y);
+      lines.attr("d", edgePath(links));
       circles.attr("cx", (d) => d.x!).attr("cy", (d) => d.y!);
       labels.attr("x", (d) => d.x! + 10).attr("y", (d) => d.y! + 4);
     };
@@ -216,6 +216,7 @@ export function CorpusMap({
     draw();
     const placeLabels = () => {
       if (!el.isConnected) return;
+      labels.style("display", null);
       visibleLabels.clear();
       const occupied: DOMRect[] = [];
       const elements = labels.nodes();

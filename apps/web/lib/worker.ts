@@ -16,7 +16,7 @@ export function dispatchWorker(
       docId,
     ]);
     await db().query(
-      "UPDATE ingest_progress SET stage='error',message=$2,updated_at=now() WHERE doc_id=$1",
+      "UPDATE ingest_progress SET message=CASE WHEN stage='error' AND message IS NOT NULL THEN message ELSE $2 END,stage='error',updated_at=now() WHERE doc_id=$1",
       [docId, message],
     );
   };
@@ -26,7 +26,7 @@ export function dispatchWorker(
     ).catch(() => {});
   });
   child.on("exit", (code) => {
-    if (code)
+    if (code !== 0)
       void fail(`The ingest worker exited with code ${code}.`).catch(() => {});
   });
   child.unref();

@@ -81,6 +81,14 @@ export function matchSelectionRoots(nodes: readonly Node[], request: TraceReques
   const byId = new Map(nodes.map((node) => [node.id, node]));
   const selection = normalized(request.selection);
   const groups = new Map<string, Set<string>>();
+  // PDF selections generally contain the proof text rather than its heading.
+  // A unique containing node on the selected page is grounded evidence too.
+  if (selection.length >= 24 && selection.split(/\s+/).length >= 4) {
+    const containing = nodes.filter(node => node.doc_id === request.doc_id
+      && (request.page === undefined || node.page === request.page)
+      && normalized(node.statement_md).includes(selection));
+    if (containing.length === 1) roots.add(containing[0]!.id);
+  }
   for (const anchor of anchors) {
     if (anchor.doc_id !== request.doc_id || (request.page !== undefined && anchor.page !== request.page)) continue;
     const surface = normalized(anchor.surface);

@@ -1,10 +1,13 @@
 ﻿import { chromium } from "@playwright/test";
 import assert from "node:assert/strict";
-import { writeFile } from "node:fs/promises";
-const browser = await chromium.launch();
+import { mkdir, writeFile } from "node:fs/promises";
+const base = process.env.CAIRN_BASE_URL ?? "http://127.0.0.1:3003";
+const out = "../../.cairn-sessions/current-browser";
+await mkdir(`${out}/screenshots`, { recursive: true });
+const browser = await chromium.launch({ channel: "chrome" });
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
 await page.goto(
-  "http://localhost:3001/read/b0000000-0000-4000-8000-000000000001?page=4",
+  `${base}/read/b0000000-0000-4000-8000-000000000001?page=4`,
 );
 await page.locator('.pdf-page[data-loading="false"]').waitFor();
 const line = page
@@ -23,11 +26,11 @@ await page
   .click();
 await page.locator(".trace-hop").nth(3).waitFor();
 await page.screenshot({
-  path: "../../.cairn-sessions/screenshots/physical-selection-trace.png",
+  path: `${out}/screenshots/physical-selection-trace.png`,
 });
 await page.keyboard.press("Escape");
 await page.goto(
-  "http://localhost:3001/read/b0000000-0000-4000-8000-000000000003?page=1",
+  `${base}/read/b0000000-0000-4000-8000-000000000003?page=1`,
 );
 await page.locator('.pdf-page[data-loading="false"]').waitFor();
 const cross = await page
@@ -47,7 +50,7 @@ await page
   .fill("no-such-theorem-xyz");
 await page.getByText("No results. Try a theorem name or a symbol.").waitFor();
 await page.screenshot({
-  path: "../../.cairn-sessions/screenshots/search-empty.png",
+  path: `${out}/screenshots/search-empty.png`,
 });
 await page.keyboard.press("Escape");
 await page.route("**/api/doc/*/pdf", (route) =>
@@ -58,7 +61,7 @@ await page
   .getByText("This PDF could not be opened.", { exact: false })
   .waitFor();
 await page.screenshot({
-  path: "../../.cairn-sessions/screenshots/pdf-error.png",
+  path: `${out}/screenshots/pdf-error.png`,
 });
 await page.unroute("**/api/doc/*/pdf");
 await page.getByRole("button", { name: "Try again", exact: true }).click();
@@ -72,7 +75,7 @@ const result = {
 };
 console.log(JSON.stringify(result, null, 2));
 await writeFile(
-  "../../.cairn-sessions/physical-results.json",
+  `${out}/physical-results.json`,
   JSON.stringify(result, null, 2),
 );
 await browser.close();

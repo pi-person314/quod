@@ -4,7 +4,7 @@
 import { ResolveRequest, ResolveResponse } from "@cairn/contracts";
 import { jsonOf, notFound, parseBody } from "@/lib/http";
 import { fixturesEnabled, loadGoldenCorpus } from "@/lib/fixtures";
-import { requireLiveBudget, resolveWithDefaults } from "@cairn/intel";
+import { requireLiveBudget, resolveWithDefaults, resolveDeterministically } from "@cairn/intel";
 
 export async function POST(req: Request) {
   const body = await parseBody(req, ResolveRequest);
@@ -21,9 +21,20 @@ export async function POST(req: Request) {
     })) });
   }
   try {
+    if (process.env.CAIRN_INTELLIGENCE_MODE === "deterministic") return jsonOf(ResolveResponse, await resolveDeterministically(body));
     await requireLiveBudget();
     return jsonOf(ResolveResponse, await resolveWithDefaults(body));
-  } catch {
-    return Response.json({ error: "resolution_unavailable", message: "Live resolution is unavailable; check spending protection and services." }, { status: 503 });
+  } catch (error) {
+    // Only application-authored diagnostics are public; never forward SDK errors
+    // that might contain request headers, credentials, or private source content.
+    const known = ["Conflicting equivalence and non-equivalence evidence", "Missing adjudications",
+      "Conflicting evidence for an existing entity; review required",
+      "Missing or unexpected batch adjudications", "Unexpected or duplicate adjudication",
+      "Model response incomplete, refused, or empty", "Corpus changed during resolution; retry required",
+      "Candidate is outside the corpus or is the source node", "Resolution pair exceeds the context bound",
+      "Search numeric mapping is incompatible; migrate the index before ingesting"];
+    const message = error instanceof Error && known.includes(error.message) ? error.message
+      : "Live resolution is unavailable; check spending protection and services.";
+    return Response.json({ error: "resolution_unavailable", message }, { status: 503 });
   }
 }

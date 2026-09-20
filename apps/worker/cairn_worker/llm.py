@@ -10,6 +10,8 @@ OpenAI Responses API. Cached input is automatic on a stable prefix; pass
 from __future__ import annotations
 
 import json
+import math
+import os
 import time
 from dataclasses import dataclass
 from typing import Any
@@ -36,7 +38,7 @@ _client: OpenAI | None = None
 def _openai() -> OpenAI:
     global _client
     if _client is None:
-        _client = OpenAI()
+        _client = OpenAI(max_retries=0)
     return _client
 
 
@@ -54,15 +56,21 @@ def to_ledger_usage(response: Response) -> LedgerUsage:
     """OpenAI's input_tokens includes cached_tokens; split them for the ledger."""
     u = response.usage
     if u is None:
-        return LedgerUsage(0, 0)
+        raise ValueError("Missing usage; billing reconciliation required")
     cached = u.input_tokens_details.cached_tokens if u.input_tokens_details else 0
-    return LedgerUsage(u.input_tokens - cached, u.output_tokens, cached, 0)
+    writes = getattr(u.input_tokens_details, "cache_write_tokens", 0) or 0
+    values = (u.input_tokens - cached - writes, u.output_tokens, cached, writes)
+    if any(not isinstance(n, int) or n < 0 for n in values):
+        raise ValueError("Invalid token usage")
+    return LedgerUsage(*values)
 
 
 def estimate_cost_usd(model: str, u: LedgerUsage) -> float:
     p = PRICING.get(model)
     if not p:
-        return 0.0
+        raise ValueError(f"No verified pricing for model: {model}")
+    if u.input_tokens + u.cache_read_tokens + u.cache_write_tokens > 272000:
+        raise ValueError("Long-context pricing requires reconciliation")
     return (
         u.input_tokens * p["input"]
         + u.cache_read_tokens * p["cached_input"]
@@ -92,6 +100,24 @@ def call_model(
     ``json_schema`` = {"name": ..., "schema": {...}} enables strict JSON output.
     """
     model = model or settings.model_fast
+    if os.environ.get("CAIRN_LIVE_API") != "1":
+        raise RuntimeError("Live API calls are disabled")
+    if conn is None or not conn.autocommit:
+        raise RuntimeError("Paid calls require an autocommit ledger connection")
+    if not os.environ.get("OPENAI_API_KEY"):
+        raise RuntimeError("OPENAI_API_KEY is not configured in the process environment")
+    estimate_cost_usd(model, LedgerUsage(0, 0))
+    if not isinstance(max_output_tokens, int) or not 0 < max_output_tokens <= 128000:
+        raise ValueError("Invalid maximum output tokens")
+    if not isinstance(input, str):
+        if not all(isinstance(item, dict) and isinstance(item.get("content"), str) and "role" in item for item in input):
+            raise ValueError("Only text model inputs are supported")
+    if len(json.dumps([input, instructions, json_schema], ensure_ascii=False).encode()) > 240000:
+        raise ValueError("Input exceeds short-context budget")
+    price = PRICING[model]
+    maximum = math.ceil(272000 * max(price["input"], price["cache_write"]) + max_output_tokens * price["output"])
+    reservation_row = conn.execute("SELECT cairn_reserve(%s,%s,%s) AS id", (maximum, stage, model)).fetchone()
+    reservation = reservation_row["id"] if isinstance(reservation_row, dict) else reservation_row[0]
     kwargs: dict[str, Any] = {}
     if instructions is not None:
         kwargs["instructions"] = instructions
@@ -101,13 +127,24 @@ def call_model(
         kwargs["text"] = {"format": {"type": "json_schema", "strict": True, **json_schema}}
 
     started = time.perf_counter()
-    response = _openai().responses.create(model=model, input=input, max_output_tokens=max_output_tokens, **kwargs)
+    response = _openai().responses.create(model=model, input=input, max_output_tokens=max_output_tokens, service_tier="default", **kwargs)
     latency_ms = int((time.perf_counter() - started) * 1000)
 
     usage = to_ledger_usage(response)
     if conn is not None:
         log_call(conn, stage=stage, model=model, usage=usage, latency_ms=latency_ms,
-                 cost_usd=estimate_cost_usd(model, usage), doc_id=doc_id, corpus_id=corpus_id, meta=meta)
+                 cost_usd=estimate_cost_usd(model, usage), doc_id=doc_id, corpus_id=corpus_id,
+                 meta={**(meta or {}), "reservation_id": str(reservation), "response_id": response.id})
+    # Cache-write usage is not exposed by every SDK: settle a conservative upper bound.
+    actual = math.ceil((usage.input_tokens + usage.cache_write_tokens) * max(price["input"], price["cache_write"])
+                       + usage.cache_read_tokens * price["cached_input"] + usage.output_tokens * price["output"])
+    settled = conn.execute("SELECT cairn_settle(%s,%s) AS ok", (reservation, actual)).fetchone()
+    if not (settled["ok"] if isinstance(settled, dict) else settled[0]):
+        raise RuntimeError("Cost exceeded reservation; budget blocked")
+    if response.status != "completed" or not response.output_text.strip():
+        raise RuntimeError("Model response incomplete, refused, or empty")
+    if json_schema is not None:
+        json.loads(response.output_text)
     return response.output_text, response
 
 

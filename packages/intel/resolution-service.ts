@@ -13,6 +13,7 @@ export interface ResolutionRepository {
 }
 export interface ResolutionSearch {
   indexNodes(corpusId: string, nodes: readonly Node[]): Promise<number>;
+  removeStaleNodes?(corpusId: string, validNodeIds: readonly string[]): Promise<void>;
   resolutionCandidates(node: Node, corpusId: string): Promise<{ node: Node; score: number }[]>;
 }
 export type ResolutionModel = Parameters<typeof adjudicatePairs>[1];
@@ -28,6 +29,7 @@ export async function resolveCorpus(input: ResolveInput, deps: {
   const requested = [...new Set(request.node_ids)];
   if (requested.some((id) => !byId.has(id))) throw new Error("Requested node is outside the corpus");
   await deps.search.indexNodes(request.corpus_id, snapshot.nodes);
+  await deps.search.removeStaleNodes?.(request.corpus_id, snapshot.nodes.map(node => node.id));
   const pairs: CandidatePair[] = [];
   for (const id of requested) {
     const node = byId.get(id)!;
@@ -131,5 +133,23 @@ export function postgresResolutionRepository(): ResolutionRepository {
 export function resolveWithDefaults(input: ResolveInput): Promise<ResolveResponse> {
   return resolveCorpus(input, { repository: postgresResolutionRepository(), search: createSearchClient(),
     model: async (request) => (await callModel({ ...request, stage: "resolve", model: MODELS.quality,
-      corpusId: input.corpus_id, cache: "content", promptCacheKey: `resolve:${input.corpus_id}`, meta: { prompt_version: "adjudicate-v1" } })).text });
+      corpusId: input.corpus_id, maxOutputTokens: 16384, cache: "content", promptCacheKey: `resolve:${input.corpus_id}`, meta: { prompt_version: "adjudicate-v2" } })).text });
+}
+
+/** Explicit offline mode: merge only byte-identical statements of the same kind.
+ * Semantic equivalence still requires the model path and a live quality evaluation.
+ */
+export async function resolveDeterministically(input: ResolveInput): Promise<ResolveResponse> {
+  const request = ResolveRequest.parse(input);
+  const repository = postgresResolutionRepository();
+  const snapshot = await repository.load(request.corpus_id);
+  const requested = new Set(request.node_ids);
+  if (request.node_ids.some(id => !snapshot.nodes.some(node => node.id === id))) throw new Error("Requested node is outside the corpus");
+  const decisions = snapshot.nodes.flatMap(node => requested.has(node.id) ? snapshot.nodes
+    .filter(other => other.id !== node.id && other.kind === node.kind && node.statement_md.trim().length > 0
+      && other.statement_md === node.statement_md)
+    .map(other => ({ node_id: node.id, candidate_id: other.id, verdict: "same" as const, confidence: 1 })) : []);
+  const plan = planResolution(request.corpus_id, snapshot.nodes, snapshot.entities, decisions);
+  await repository.save(request.corpus_id, snapshot, plan);
+  return ResolveResponse.parse({ decisions: plan.decisions });
 }

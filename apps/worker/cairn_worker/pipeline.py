@@ -50,9 +50,9 @@ def register_document(conn: psycopg.Connection, corpus_id: UUID, pdf_path: Path)
         return row[0]
     doc_id = uuid4()
     conn.execute(
-        """INSERT INTO documents (id, corpus_id, title, filename, file_hash, status)
-           VALUES (%s, %s, %s, %s, %s, 'queued')""",
-        (doc_id, corpus_id, pdf_path.stem, pdf_path.name, file_hash),
+        """INSERT INTO documents (id, corpus_id, title, filename, file_hash, pdf_bytes, status)
+           VALUES (%s, %s, %s, %s, %s, %s, 'queued')""",
+        (doc_id, corpus_id, pdf_path.stem, pdf_path.name, file_hash, pdf_path.read_bytes()),
     )
     return doc_id
 

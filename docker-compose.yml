@@ -13,6 +13,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./packages/contracts/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./packages/contracts/migrations/001_api_budget.sql:/docker-entrypoint-initdb.d/02-api-budget.sql:ro
       - ./packages/contracts:/contracts:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U cairn -d cairn"]
@@ -25,7 +26,7 @@ services:
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
-      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
     ports:
       - "9200:9200"
     volumes:
