@@ -17,6 +17,12 @@ next-env.d.ts
 .env
 .env.local
 .env.*.local
+.env.*
+!.env.example
+.session-tools/
+.cairn-sessions/
+.next-dev/
+.local-data/
 
 # worker output
 apps/worker/parsed/

@@ -14,6 +14,8 @@ import type {
 import { fixturesEnabled, loadGoldenCorpus } from "./fixtures";
 import { AuthError, type AuthUser } from "./auth";
 import { listUserCorpora, assertCorpusOwner } from "./firestore";
+import { hostedFrontend } from "./deployment";
+import { remoteData } from "./remote-data";
 export interface Dataset {
   docs: Doc[];
   nodes: Node[];
@@ -54,6 +56,7 @@ export async function saveLocal(folder: string, id: string, value: unknown) {
   await writeFile(join(LOCAL, folder, `${id}.json`), JSON.stringify(value));
 }
 export async function dataset(): Promise<Dataset> {
+  if (hostedFrontend()) throw new Error("Hosted frontend cannot access the local database.");
   if (fixturesEnabled()) {
     const g = loadGoldenCorpus();
     const uploads = await localRecords<{ doc: Doc; nodes: Node[] }>("docs");
@@ -116,6 +119,7 @@ export async function pdfBytes(id: string) {
 
 /** Only serialize records belonging to the authenticated user's Firestore library. */
 export async function userDataset(user: AuthUser): Promise<Dataset> {
+  if (hostedFrontend()) return remoteData<Dataset>("/api/library", user.token);
   const owned = new Set((await listUserCorpora(user)).map(c => c.id));
   if (!owned.size) return { docs: [], nodes: [], edges: [], anchors: [], cards: [], entities: [], fixture: fixturesEnabled() };
   const data = await dataset();
@@ -129,6 +133,12 @@ export async function userDataset(user: AuthUser): Promise<Dataset> {
     cards: data.cards.filter(c => docIds.has(c.source.doc_id)),
     entities: data.entities.filter(e => owned.has(e.corpus_id)),
   };
+}
+export async function userCorpora(user: AuthUser): Promise<Corpus[]> {
+  if (hostedFrontend()) return (await remoteData<{ corpora: Corpus[] }>("/api/corpus", user.token)).corpora;
+  const owned = await listUserCorpora(user);
+  const names = new Map((owned.length ? await corpora() : []).map(record => [record.id, record.name]));
+  return owned.map(record => ({ ...record, name: names.get(record.id) ?? record.name }));
 }
 export async function requireDocumentOwner(user: AuthUser, docId: string): Promise<Doc> {
   const doc = (await dataset()).docs.find(d => d.id === docId);

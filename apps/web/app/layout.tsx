@@ -4,6 +4,7 @@ import "./quod-design.css";
 import "./workspace-design.css";
 import "./reader-design.css";
 import { AuthProvider } from "@/components/auth-provider";
+import { BackendStatus } from "@/components/backend-status";
 
 export const metadata: Metadata = {
   title: "Quod",
@@ -18,7 +19,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen"><AuthProvider>{children}</AuthProvider></body>
+      <body className="min-h-screen"><AuthProvider>{children}<BackendStatus /></AuthProvider></body>
     </html>
   );
 }

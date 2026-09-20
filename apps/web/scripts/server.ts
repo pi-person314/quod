@@ -5,20 +5,31 @@ import { createServer } from "node:http";
 import next from "next";
 import { attachVoiceRelay } from "@quod/intel/voice/relay";
 import { dataset } from "../lib/data";
+import { hostedFrontend, backendURL, gatewayKey, publicOrigin } from "../lib/deployment";
+import { hostedRequest, hostedUpgrade } from "./hosted-handler";
 async function main() {
 const args = process.argv.slice(2);
 const portIndex = args.findIndex(arg => arg === "--port" || arg === "-p");
 const port = Number((portIndex >= 0 ? args[portIndex + 1] : args.find(arg => /^\d+$/.test(arg))) ?? process.env.PORT ?? 3003);
 if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error("Invalid port");
-const hostname = "127.0.0.1";
+const hosted = hostedFrontend();
+const config = hosted ? { target: backendURL(), key: gatewayKey(), origin: publicOrigin() } : undefined;
+const hostname = hosted ? "0.0.0.0" : "127.0.0.1";
 const app = next({ dev: args.includes("--dev"), hostname, port, dir: process.cwd() });
 await app.prepare();
 process.env.QUOD_VOICE_RELAY = "1";
 process.env.QUOD_VOICE_RELAY ??= process.env.CAIRN_VOICE_RELAY ?? "1";
 process.env.CAIRN_VOICE_RELAY ??= process.env.QUOD_VOICE_RELAY;
 const handle = app.getRequestHandler();
-const server = createServer((request, response) => { void handle(request, response); });
-attachVoiceRelay(server, async (input, request) => {
+const server = createServer((request, response) => {
+  if (config && hostedRequest(request, response, config)) return;
+  if (request.url?.split("?")[0] === "/health") {
+    response.writeHead(200, { "content-type": "application/json", "cache-control": "no-store" });
+    response.end('{"online":true}'); return;
+  }
+  void handle(request, response);
+});
+if (!hosted) attachVoiceRelay(server, async (input, request) => {
   const user = await requireUser(new Request(`http://${hostname}:${port}${request.url}`, {
     headers: { cookie: request.headers.cookie ?? "" },
   }));
@@ -31,6 +42,7 @@ attachVoiceRelay(server, async (input, request) => {
 });
 const upgrade = app.getUpgradeHandler();
 server.on("upgrade", (request, socket, head) => {
+  if (config) { hostedUpgrade(request, socket, head, config); return; }
   if (request.url?.split("?")[0] !== "/api/intel/voice/stream") void upgrade(request, socket, head);
 });
 server.listen(port, hostname, () => console.log(`Quod ready at http://${hostname}:${port}`));

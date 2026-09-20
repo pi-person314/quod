@@ -1,5 +1,6 @@
-import { assertCorpusOwner } from "@/lib/firestore";
-import { userDataset, scopeDataset, corpora } from "@/lib/data";
+import { userDataset, scopeDataset, userCorpora } from "@/lib/data";
+import { BackendOfflineError } from "@/lib/remote-data";
+import { BackendUnavailable } from "@/components/backend-status";
 import { Reader } from "@/components/reader";
 import { notFound, redirect } from "next/navigation";
 import { requireUser, AuthError } from "@/lib/auth";
@@ -16,12 +17,16 @@ export default async function ReadPage({
     if (error instanceof AuthError && error.status === 401) redirect("/upload");
     throw error;
   }
+  try {
   const data = await userDataset(user);
   const doc = data.docs.find((d) => d.id === doc_id);
   if (!doc) notFound();
-  const set = await assertCorpusOwner(user, doc.corpus_id);
-  const setName = (await corpora()).find(record => record.id === set.id)?.name ?? set.name;
+  const setName = (await userCorpora(user)).find(record => record.id === doc.corpus_id)?.name ?? "Documents";
   return (
     <Reader data={scopeDataset(data, doc.corpus_id)} initialDoc={doc_id} initialSetName={setName === "New course corpus" ? "New documents" : setName} />
   );
+  } catch (error) {
+    if (error instanceof BackendOfflineError) return <BackendUnavailable />;
+    throw error;
+  }
 }

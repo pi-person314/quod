@@ -1,4 +1,5 @@
 import { sameOrigin } from "./http";
+import { requestOrigin } from "./deployment";
 
 export type AuthUser = { uid: string; token: string };
 export const SESSION_COOKIE = "cairn_session";
@@ -59,5 +60,5 @@ export async function requireUser(req?: Request): Promise<AuthUser> {
   return verifyIdToken(token);
 }
 export function sessionCookie(req: Request, token: string, maxAge = 3600): string {
-  return `${SESSION_COOKIE}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${new URL(req.url).protocol === "https:" ? "; Secure" : ""}`;
+  return `${SESSION_COOKIE}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${new URL(requestOrigin(req)).protocol === "https:" ? "; Secure" : ""}`;
 }
