@@ -1,4 +1,4 @@
-# cairn-worker — Session A
+# quod-worker — Session A
 
 Takes a directory of PDFs and produces a populated Postgres with nodes, edges
 and anchors. Never touches React or the instantiation prompts.
@@ -9,7 +9,7 @@ and anchors. Never touches React or the instantiation prompts.
 cd apps/worker
 python -m venv .venv && . .venv/Scripts/activate   # Windows; use .venv/bin/activate elsewhere
 pip install -e ".[dev]"
-cairn-worker --help
+quod-worker --help
 ```
 
 Reads `.env` from the repo root (`DATABASE_URL`, `OPENAI_API_KEY`,
@@ -18,12 +18,12 @@ Reads `.env` from the repo root (`DATABASE_URL`, `OPENAI_API_KEY`,
 ## Pipeline
 
 ```
-cairn-worker ingest <dir-or-pdf> [--corpus-id UUID] [--corpus-name NAME] [--force]
-cairn-worker ingest --fixtures                    # A5: load fixtures/golden/*, no parsing
-cairn-worker parse  <pdf> --out parsed/           # A1 only: emit parsed/<doc_id>.jsonl
-cairn-worker load-fixtures                        # same as ingest --fixtures
-cairn-worker dump-demo [--out PATH]               # A5: write fixtures/demo.dump
-cairn-worker db-init                              # apply packages/contracts/schema.sql
+quod-worker ingest <dir-or-pdf> [--corpus-id UUID] [--corpus-name NAME] [--force]
+quod-worker ingest --fixtures                    # A5: load fixtures/golden/*, no parsing
+quod-worker parse  <pdf> --out parsed/           # A1 only: emit parsed/<doc_id>.jsonl
+quod-worker load-fixtures                        # same as ingest --fixtures
+quod-worker dump-demo [--out PATH]               # A5: write fixtures/demo.dump
+quod-worker db-init                              # apply packages/contracts/schema.sql
 ```
 
 Re-ingest is idempotent: a document is keyed on `(corpus_id, sha256)` and a
@@ -31,7 +31,7 @@ second run over the same file is a no-op once it is `ready`. `--force`
 rebuilds its graph in place instead of stacking a second copy beside it.
 Omitting `--corpus-id` reuses the corpus with the same `--corpus-name`.
 
-Stages (`cairn_worker/stages/`), each one a function `(ctx, ...) -> ...` that
+Stages (`quod_worker/stages/`), each one a function `(ctx, ...) -> ...` that
 writes `ingest_progress` at its boundary:
 
 | # | Stage | Phase | Model | Output |
@@ -48,7 +48,7 @@ they exist, they return 501 and the pipeline logs and continues.
 
 ## Models
 
-`cairn_worker/models.py` mirrors `packages/contracts/types.ts` field for
+`quod_worker/models.py` mirrors `packages/contracts/types.ts` field for
 field. If you change one, change the other in the same commit and run
 `pnpm test:contracts`.
 

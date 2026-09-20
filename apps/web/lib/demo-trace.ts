@@ -1,4 +1,4 @@
-﻿import { TraceResponse, type TraceRequest } from "@cairn/contracts";
+﻿import { TraceResponse, type TraceRequest } from "@quod/contracts";
 import type { Dataset } from "./data";
 /** Hand-authored acceptance trace for the demo's independence argument. */
 export function demoProofTrace(

@@ -27,7 +27,7 @@ only at the three integration checkpoints (hour 6, 12, 17).
 ## Core types
 
 Source of truth is `packages/contracts/types.ts` (zod). The Python mirror in
-`apps/worker/cairn_worker/models.py` must match it field for field.
+`apps/worker/quod_worker/models.py` must match it field for field.
 
 ```jsonc
 {
@@ -132,7 +132,7 @@ Two consequences, both deliberate:
    updates `ingest_progress`.
 2. **The `llm_calls` table is the ledger contract, not the wrapper file.**
    `packages/intel/llm.ts` (TS, all of C's calls) and
-   `apps/worker/cairn_worker/llm.py` (Python, A's Luna segmentation calls)
+   `apps/worker/quod_worker/llm.py` (Python, A's Luna segmentation calls)
    write identical rows. The Token Company cost script groups by `stage`.
 
 ## SSE progress

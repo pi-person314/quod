@@ -13,14 +13,15 @@ export function CostPanel({ corpusId }: { corpusId: string }) {
       .then(setCosts).catch(() => { if (!controller.signal.aborted) setError(true); });
     return () => controller.abort();
   }, [corpusId]);
-  return <>
-    <h2>Measured, never guessed.</h2>
+  return <section className="cost-ledger">
+    <p className="cost-kicker">Measured, never guessed</p>
+    <h2>{costs?.measured ? `$${costs.total_usd.toFixed(4)}` : "Cost ledger"}</h2>
     <p>{error ? "The cost ledger is unavailable. Please try again." : !costs ? "Loading cost ledger…"
-      : costs.measured ? `Estimated cost from recorded API usage: $${costs.total_usd.toFixed(4)}.`
-      : "No measured API usage has been recorded for this corpus."}</p>
+      : costs.measured ? "Estimated from recorded API usage."
+      : "No measured API usage has been recorded for these documents."}</p>
     {!!costs?.stages.length && <table><thead><tr><th>Stage</th><th>Calls</th><th>Input / output</th><th>Cached input</th><th>Cost</th></tr></thead>
       <tbody>{costs.stages.map(row => <tr key={row.stage}><td>{row.stage}</td><td>{row.calls}</td>
         <td>{row.input_tokens} / {row.output_tokens}</td><td>{row.cache_read_tokens}</td><td>${row.cost_usd.toFixed(4)}</td></tr>)}</tbody></table>}
-    <p className="muted">Baked reference cards make no model calls while you read. A measured baseline and optimized run are still required to establish savings. Synthetic test calls are excluded.</p>
-  </>;
+    <p className="muted">Baked reference cards make no model calls while you read.</p>
+  </section>;
 }

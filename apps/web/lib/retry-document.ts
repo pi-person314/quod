@@ -1,4 +1,4 @@
-import { db } from "@cairn/contracts/db";
+import { db } from "@quod/contracts/db";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { LOCAL } from "./data";

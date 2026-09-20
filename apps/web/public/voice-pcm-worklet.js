@@ -1,5 +1,5 @@
 /* Mono PCM16 at 16kHz; retains fractional position across render quanta. */
-class CairnPcm extends AudioWorkletProcessor {
+class QuodPcm extends AudioWorkletProcessor {
   constructor() {
     super();
     this.samples = [];
@@ -42,4 +42,4 @@ class CairnPcm extends AudioWorkletProcessor {
     return true;
   }
 }
-registerProcessor("cairn-pcm", CairnPcm);
+registerProcessor("quod-pcm", QuodPcm);

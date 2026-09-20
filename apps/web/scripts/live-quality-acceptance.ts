@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { isDeepStrictEqual } from "node:util";
-import { db } from "@cairn/contracts/db";
+import { db } from "@quod/contracts/db";
 import { instantiationCases } from "../../../packages/intel/evals/instantiation-cases";
 
 async function main() {
@@ -19,7 +19,7 @@ async function main() {
     console.log(JSON.stringify({ correctClauses: report.correctClauses, correctRewrites: report.correctRewrites, total: report.total, rescoredStoredResponses: true })); return;
   }
   if (!process.argv.includes("--live")) throw new Error("Pass --live for provider-backed quality evaluation");
-  const base = process.env.CAIRN_BASE_URL ?? "http://127.0.0.1:3003";
+  const base = process.env.QUOD_BASE_URL ?? process.env.CAIRN_BASE_URL ?? "http://127.0.0.1:3003";
   const corpus = randomUUID(), source = randomUUID(), invoking = randomUUID();
   const cases: { name: string; anchor: string; expected: typeof instantiationCases[number]["expected"] }[] = [];
   try {

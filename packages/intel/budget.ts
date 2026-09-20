@@ -44,22 +44,22 @@ export function settleSpend(state: BudgetState, requestId: string, actualUsd: nu
 
 /** Explicit process opt-in plus a durable account-wide switch; never reads .env. */
 export async function requireLiveBudget(): Promise<void> {
-  if (process.env.CAIRN_LIVE_API !== "1") throw new Error("Live API calls are disabled; set CAIRN_LIVE_API explicitly after configuring the shared budget");
-  const { db } = await import("@cairn/contracts/db");
+  if ((process.env.QUOD_LIVE_API ?? process.env.CAIRN_LIVE_API) !== "1") throw new Error("Live API calls are disabled; set QUOD_LIVE_API explicitly after configuring the shared budget");
+  const { db } = await import("@quod/contracts/db");
   const result = await db().query("SELECT enabled FROM api_budget WHERE id='cairn-total'");
   if (!result.rows[0]?.enabled) throw new Error("Live API calls are disabled by the shared budget");
 }
 
 export async function reserveApiSpend(maximumUsd: number, stage: string, model: string): Promise<string> {
   await requireLiveBudget();
-  const { db } = await import("@cairn/contracts/db");
+  const { db } = await import("@quod/contracts/db");
   const result = await db().query("SELECT cairn_reserve($1,$2,$3) AS id", [money(maximumUsd), stage, model]);
   return result.rows[0].id;
 }
 
 export async function settleApiSpend(id: string, actualUsd: number): Promise<void> {
   if (!Number.isFinite(actualUsd) || actualUsd < 0) throw new Error("Invalid cost");
-  const { db } = await import("@cairn/contracts/db");
+  const { db } = await import("@quod/contracts/db");
   const result = await db().query("SELECT cairn_settle($1,$2) AS ok", [id, Math.ceil(actualUsd * MICROS)]);
   if (!result.rows[0].ok) throw new Error("Cost exceeded reservation; shared budget blocked for reconciliation");
 }

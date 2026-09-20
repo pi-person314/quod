@@ -18,9 +18,9 @@ disabled because token expiry does not cap an already-open stream.
 - `POST /api/intel/voice/speak`: at most 1,000 characters to streamed audio.
 - `POST /api/intel/voice/token`: legacy route, disabled in production.
 
-Normal `pnpm --filter @cairn/web dev` and `start` commands use the custom server,
+Normal `pnpm --filter @quod/web dev` and `start` commands use the custom server,
 bound to loopback. Plain `next start` does not install the relay. Both providers
-require `CAIRN_LIVE_API=1`, process credentials, `DATABASE_URL`, and an enabled
+require `QUOD_LIVE_API=1`, process credentials, `DATABASE_URL`, and an enabled
 shared budget. Deepgram reserves $0.01 per recognition stream and $0.05 per 1,000
 synthesis characters. The full conservative ceiling stays booked while the
 ledger separately labels published-rate estimates. Unknown outcomes retain their

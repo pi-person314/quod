@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { BrowserVoiceCompanion } from "@cairn/intel/voice/client";
-import type { Node } from "@cairn/contracts";
+import { BrowserVoiceCompanion } from "@quod/intel/voice/client";
+import type { Node } from "@quod/contracts";
 
 export function VoiceControl({ docId, page, nodes, onJump }: { docId: string; page: number; nodes: Node[]; onJump: (doc: string, page: number, node: string) => void }) {
   const [available, setAvailable] = useState(false);
@@ -86,7 +86,7 @@ export function VoiceControl({ docId, page, nodes, onJump }: { docId: string; pa
       onKeyDown={event => { if ([" ", "Enter"].includes(event.key)) { event.preventDefault(); if (!event.repeat) void start(); } }}
       onKeyUp={event => { if ([" ", "Enter"].includes(event.key)) { event.preventDefault(); void stop(); } }}
       onBlur={() => { void stop(); }}>
-      {mode === "listening" ? "Listening… release to answer" : mode === "starting" ? "Opening microphone…"
+      <i aria-hidden="true" />{mode === "listening" ? "Listening… release to answer" : mode === "starting" ? "Opening microphone…"
         : mode === "answering" ? "Answering… hold to interrupt" : "Hold to ask aloud"}
     </button>
     {(transcript || answer || error) && <div className="voice-feedback" role="status" aria-live="polite">
@@ -98,7 +98,7 @@ export function VoiceControl({ docId, page, nodes, onJump }: { docId: string; pa
       {answer && <p>{answer}</p>}
       {citations.map(id => nodes.find(node => node.id === id)).filter(node => node !== undefined).map(node =>
         <button key={node.id} onClick={() => onJump(node.doc_id, node.page, node.id)}>{node.label ?? node.title ?? "View source"}</button>)}
-      {error && <p>{error}</p>}
+      {error && <p className="voice-error">{error}</p>}
     </div>}
   </div>;
 }

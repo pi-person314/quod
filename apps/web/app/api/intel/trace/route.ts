@@ -4,12 +4,12 @@ import { requireUser, authErrorResponse } from "@/lib/auth";
 // Recursive CTE walk backward from every entity in the selection, depth <= 4,
 // breadth <= 3 per level, filtered against reader state. B4 builds against a
 // hand-written trace fixture first; swapping to this must need no component changes.
-import { TraceRequest, TraceResponse } from "@cairn/contracts";
+import { TraceRequest, TraceResponse } from "@quod/contracts";
 import {
   documentCorpus,
   traceFromPostgres,
   traceSelection,
-} from "@cairn/intel";
+} from "@quod/intel";
 import { jsonOf, notFound, parseBody } from "@/lib/http";
 import { fixturesEnabled } from "@/lib/fixtures";
 import { userDataset } from "@/lib/data";

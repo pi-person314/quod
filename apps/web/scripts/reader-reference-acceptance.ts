@@ -5,7 +5,7 @@ import { chromium } from "@playwright/test";
 async function main() {
   const ids = process.argv.slice(2);
   assert(ids.length, "Pass document IDs to check");
-  const base = process.env.CAIRN_BASE_URL ?? "http://127.0.0.1:3003";
+  const base = process.env.QUOD_BASE_URL ?? process.env.CAIRN_BASE_URL ?? "http://127.0.0.1:3003";
   const data = await (await fetch(`${base}/api/library`)).json();
   const browser = await chromium.launch({ channel: "chrome" });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });

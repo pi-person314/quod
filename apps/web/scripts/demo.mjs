@@ -103,7 +103,7 @@ for (let d = 0; d < 4; d++) {
         font: f,
         color: rgb(0.12, 0.12, 0.13),
       });
-    line("CAIRN / LINEAR ALGEBRA", 62, 44, 9);
+    line("QUOD / LINEAR ALGEBRA", 62, 44, 9);
     line(String(p + 1), 540, 44, 10);
     line(
       d === 2
@@ -246,7 +246,7 @@ for (let d = 0; d < 4; d++) {
         });
     }
     line(
-      "Cairn demonstration corpus / original teaching material",
+      "Quod demonstration corpus / original teaching material",
       62,
       757,
       9,
@@ -263,7 +263,7 @@ for (let d = 0; d < 4; d++) {
         font: f,
         color: rgb(0.12, 0.12, 0.13),
       });
-    line("CAIRN / LINEAR ALGEBRA", 44, 9);
+    line("QUOD / LINEAR ALGEBRA", 44, 9);
     line("4. A proof of Rank-Nullity", 100, 23, bold);
     line(
       "The dimensions that disappear, and the dimensions that remain.",
@@ -352,7 +352,7 @@ for (let d = 0; d < 4; d++) {
       });
     }
     line(
-      "Cairn demonstration corpus / original teaching material",
+      "Quod demonstration corpus / original teaching material",
       757,
       9,
       italic,

@@ -3,10 +3,10 @@ import json
 import hashlib
 from pathlib import Path
 
-from cairn_worker.stages.parse import parse_pdf
-from cairn_worker.stages.segment import nodes_from_spans
-from cairn_worker.stages.anchors import find_anchors
-from cairn_worker.stages.edges import extract_edges_offline
+from quod_worker.stages.parse import parse_pdf
+from quod_worker.stages.segment import nodes_from_spans
+from quod_worker.stages.anchors import find_anchors
+from quod_worker.stages.edges import extract_edges_offline
 
 ROOT = Path(__file__).resolve().parents[3]
 

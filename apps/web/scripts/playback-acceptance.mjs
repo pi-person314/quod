@@ -3,7 +3,7 @@ import ts from "typescript";
 import { readFile, writeFile } from "node:fs/promises";
 import assert from "node:assert/strict";
 const live = process.argv.includes("--live");
-const base = process.env.CAIRN_BASE_URL ?? (live ? "http://127.0.0.1:3003" : "http://127.0.0.1:3004");
+const base = process.env.QUOD_BASE_URL ?? process.env.CAIRN_BASE_URL ?? (live ? "http://127.0.0.1:3003" : "http://127.0.0.1:3004");
 const source = await readFile("../../packages/intel/voice/playback.ts", "utf8");
 const compiled = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022 } }).outputText;
 const browser = await chromium.launch({ channel: "chrome" });

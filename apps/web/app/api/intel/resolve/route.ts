@@ -2,7 +2,7 @@ import { authErrorResponse } from "@/lib/auth";
 // POST /api/intel/resolve — owner C (C3). {corpus_id, node_ids} -> {decisions}
 // Called by the worker at stage 4. ES top-8 recall, one batched Sol
 // adjudication, union-find into entities, writes nodes.entity_id + entities.
-import { ResolveRequest, ResolveResponse } from "@cairn/contracts";
+import { ResolveRequest, ResolveResponse } from "@quod/contracts";
 import { jsonOf, notFound, parseBody, sameOrigin } from "@/lib/http";
 import { fixturesEnabled, loadGoldenCorpus } from "@/lib/fixtures";
 import {
@@ -10,7 +10,7 @@ import {
   ResolutionStageError,
   resolveWithDefaults,
   resolveDeterministically,
-} from "@cairn/intel";
+} from "@quod/intel";
 
 export async function POST(req: Request) {
   try {
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
       const nodes = corpus.nodes.filter(
         (node) => requested.has(node.id) && docs.has(node.doc_id),
       );
-      if (nodes.length !== requested.size) return notFound("nodes in corpus");
+      if (nodes.length !== requested.size) return notFound("results in documents");
       const entities = new Set(
         corpus.entities
           .filter((entity) => entity.corpus_id === body.corpus_id)
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
       });
     }
     try {
-      if (process.env.CAIRN_INTELLIGENCE_MODE === "deterministic")
+      if ((process.env.QUOD_INTELLIGENCE_MODE ?? process.env.CAIRN_INTELLIGENCE_MODE) === "deterministic")
         return jsonOf(ResolveResponse, await resolveDeterministically(body));
       await requireLiveBudget();
       return jsonOf(ResolveResponse, await resolveWithDefaults(body));
@@ -61,7 +61,7 @@ export async function POST(req: Request) {
         status: typeof (cause as { status?: unknown })?.status === "number" ? (cause as { status: number }).status : undefined,
       });
       const known = [
-        "Live API calls are disabled; set CAIRN_LIVE_API explicitly after configuring the shared budget",
+        "Live API calls are disabled; set QUOD_LIVE_API explicitly after configuring the shared budget",
         "Live API calls are disabled by the shared budget",
         "API spending limit reached",
         "Conflicting equivalence and non-equivalence evidence",
@@ -80,7 +80,7 @@ export async function POST(req: Request) {
           ? error.message
           : "Live resolution is unavailable; check spending protection and services.";
       return Response.json(
-        { error: "resolution_unavailable", message },
+        { error: "resolution_unavailable", message: message.replace(/\bCorpus\b/g, "Documents").replace(/\bcorpus\b/g, "documents") },
         { status: 503 },
       );
     }

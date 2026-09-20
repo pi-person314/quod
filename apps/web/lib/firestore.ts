@@ -1,4 +1,4 @@
-import { Corpus } from "@cairn/contracts";
+import { Corpus } from "@quod/contracts";
 import { AuthError, type AuthUser } from "./auth";
 
 type Document = { fields?: Record<string, { stringValue?: string }> };
@@ -13,7 +13,7 @@ async function request(user: AuthUser, url: string, init?: RequestInit) {
     response = await fetch(url, { ...init, headers: { Authorization: `Bearer ${user.token}`, "Content-Type": "application/json" }, cache: "no-store", signal: AbortSignal.timeout(15000) });
   } catch { throw new AuthError(503, "Firestore is unavailable. Please try again."); }
   if (!response.ok) {
-    if (response.status === 404) throw new AuthError(404, "Corpus not found.");
+    if (response.status === 404) throw new AuthError(404, "Documents not found.");
     if (response.status === 401) throw new AuthError(401, "Please sign in again.");
     if (response.status === 403) throw new AuthError(403, "Firestore access denied. Check that the owner-only Firestore rules are deployed.");
     throw new AuthError(503, "Unable to access Firestore. Check that the Firestore database is enabled.");
@@ -21,7 +21,7 @@ async function request(user: AuthUser, url: string, init?: RequestInit) {
   return response;
 }
 function decode(doc: Document, user: AuthUser): Corpus {
-  if (doc.fields?.owner_uid?.stringValue !== user.uid) throw new AuthError(404, "Corpus not found.");
+  if (doc.fields?.owner_uid?.stringValue !== user.uid) throw new AuthError(404, "Documents not found.");
   return Corpus.parse(Object.fromEntries(Object.entries(doc.fields ?? {}).map(([key, value]) => [key, value.stringValue])));
 }
 export async function listUserCorpora(user: AuthUser): Promise<Corpus[]> {
@@ -47,9 +47,9 @@ export async function deleteUserCorpus(user: AuthUser, id: string) {
   await request(user, `${documents()}/corpora/${encodeURIComponent(id)}`, { method: "DELETE" });
 }
 export async function assertCorpusOwner(user: AuthUser, id: string): Promise<Corpus> {
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) throw new AuthError(404, "Corpus not found.");
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) throw new AuthError(404, "Documents not found.");
   const response = await request(user, `${documents()}/corpora/${encodeURIComponent(id)}`);
   const corpus = decode(await response.json(), user);
-  if (corpus.id !== id) throw new AuthError(404, "Corpus not found.");
+  if (corpus.id !== id) throw new AuthError(404, "Documents not found.");
   return corpus;
 }

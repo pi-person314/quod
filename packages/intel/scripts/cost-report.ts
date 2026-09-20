@@ -1,8 +1,8 @@
 /**
  * C0 acceptance: print total cost grouped by stage.
- * `pnpm --filter @cairn/intel cost-report`
+ * `pnpm --filter @quod/intel cost-report`
  */
-import { db } from "@cairn/contracts/db";
+import { db } from "@quod/contracts/db";
 
 const args = process.argv.slice(2);
 const runIndex = args.indexOf("--run");

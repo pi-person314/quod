@@ -3,13 +3,13 @@ import { assertCorpusOwner } from "@/lib/firestore";
 import { requireUser, authErrorResponse } from "@/lib/auth";
 // GET /api/intel/forward/:entity_id — owner C (C4). Downstream nodes ranked by
 // PageRank over reversed edges. -> {entity_id, downstream}
-import { ForwardResponse, Uuid } from "@cairn/contracts";
+import { ForwardResponse, Uuid } from "@quod/contracts";
 import {
   canonicalEntity,
   entityCorpus,
   forwardGraph,
   loadCorpusGraph,
-} from "@cairn/intel";
+} from "@quod/intel";
 import { badRequest, jsonOf, notFound } from "@/lib/http";
 import { fixturesEnabled } from "@/lib/fixtures";
 

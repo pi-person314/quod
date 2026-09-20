@@ -9,9 +9,9 @@ from uuid import uuid4
 import psycopg
 from psycopg import sql
 from psycopg.conninfo import conninfo_to_dict, make_conninfo
-from cairn_worker import db
-from cairn_worker.config import REPO_ROOT, settings
-from cairn_worker.fixtures import load_golden, write_dump
+from quod_worker import db
+from quod_worker.config import REPO_ROOT, settings
+from quod_worker.fixtures import load_golden, write_dump
 
 def main():
     options = conninfo_to_dict(settings.database_url)

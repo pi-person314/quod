@@ -5,7 +5,7 @@ import {
   ForwardResponse,
   SearchResponse,
   type TraceRequest,
-} from "@cairn/contracts";
+} from "@quod/contracts";
 async function request(url: string, init?: RequestInit) {
   const r = await fetch(url, init);
   if (!r.ok) throw new Error(`Request failed (${r.status})`);

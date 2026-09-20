@@ -14,7 +14,7 @@ from uuid import UUID
 
 import httpx
 
-from cairn_worker.config import settings
+from quod_worker.config import settings
 
 log = logging.getLogger(__name__)
 

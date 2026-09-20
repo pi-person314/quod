@@ -1,4 +1,4 @@
-# Cairn submission drafts
+# Quod submission drafts
 
 Status: working copy, not submitted. Sponsor targets below come from the project
 spec; current eligibility and requirements must be checked before submission.
@@ -6,7 +6,7 @@ Do not remove the evidence gaps until those checks have actually passed.
 
 ## Shared body
 
-Cairn helps students follow mathematical references across a course's textbook,
+Quod helps students follow mathematical references across a course's textbook,
 notes, and problem sets. Its core unit is a result and its prerequisites. The
 intelligence layer searches for related statements, distinguishes equivalent
 results from special cases, and prepares source-linked cards for a reader to show
@@ -37,14 +37,14 @@ invoking-paragraph context and cross-process spending guard.
 
 ## Prior art
 
-Cairn builds on an established direction in augmented reading.
+Quod builds on an established direction in augmented reading.
 [ScholarPhi](https://scholarphi.org/) brings definitions of symbols and terms
 to their use sites; the [Semantic Reader project](https://arxiv.org/abs/2303.14334)
 explores AI-assisted interactive scholarly reading.
 [TheoremGraph](https://arxiv.org/abs/2606.25363) connects statement-level
 dependencies across formal and informal mathematics, while
 [KnowTeX](https://arxiv.org/abs/2601.15294) exposes conceptual dependencies from
-LaTeX sources. Cairn's intended focus is the student's particular course corpus:
+LaTeX sources. Quod's intended focus is the student's particular course corpus:
 recognizing results across local documents and presenting them in the notation
 of the page being read. We do not claim to have invented mathematical dependency
 graphs or in-place scholarly explanations.
@@ -53,7 +53,7 @@ graphs or in-place scholarly explanations.
 
 A course folder contains relationships that ordinary file organization does not
 show: a problem-set reference can name a theorem differently from the textbook.
-Cairn's intended experience brings those documents together around shared results
+Quod's intended experience brings those documents together around shared results
 and prerequisites, so students can follow the connection while reading.
 
 Evidence needed: final selected reader screenshot showing a pset reference linked
@@ -75,7 +75,7 @@ final reader search screenshot and disclose the small authored-corpus scope.
 
 ## Token Company framing
 
-Cairn treats inference cost as a measured part of the pipeline. A shared ledger
+Quod treats inference cost as a measured part of the pipeline. A shared ledger
 records tokens and estimated dollars by stage and run; cached and uncached input
 are separate. Content-keyed embedding reuse avoids repeated embedding calls for
 unchanged statements. The comparison tool rejects changed corpora, changed model
@@ -89,7 +89,7 @@ Still needed: comparable cold baseline/optimized runs with unchanged C1/C3 quali
 
 ## OpenAI framing
 
-Cairn's model interfaces are designed for two constrained tasks: proposing how a
+Quod's model interfaces are designed for two constrained tasks: proposing how a
 referenced statement maps into local notation, and judging whether retrieved
 statements express the same mathematical result. Structured output is only the
 first check; code validates IDs, substitutions, source references, and merge rules.
@@ -114,7 +114,7 @@ submission. Controlled-provider tests remain distinct from live evidence.
 
 ## Long Lake framing
 
-Cairn makes supporting mathematical material inspectable. Cards retain their
+Quod makes supporting mathematical material inspectable. Cards retain their
 original statement and source page; resolution records uncertainty; prerequisite
 traces follow stored graph edges. The design favors an explicit original-source
 fallback over an unsupported rewrite.
@@ -125,7 +125,7 @@ structural validation proves every generated statement mathematically correct.
 
 ## Ramp framing
 
-Cairn targets the repeated interruption of hunting through course materials to
+Quod targets the repeated interruption of hunting through course materials to
 identify a cited result. A prepared card and prerequisite chain could reduce that
 lookup effort while preserving the source needed to check the argument.
 

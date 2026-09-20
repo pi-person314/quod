@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./quod-design.css";
+import "./workspace-design.css";
+import "./reader-design.css";
 import { AuthProvider } from "@/components/auth-provider";
 
 export const metadata: Metadata = {
-  title: "Cairn",
+  title: "Quod",
   description:
-    "A textbook is a dependency graph flattened into a line. Cairn unflattens it.",
+    "A textbook is a dependency graph flattened into a line. Quod unflattens it.",
 };
 
 export default function RootLayout({

@@ -2,7 +2,7 @@ import { chromium } from "@playwright/test";
 import { PDFDocument } from "pdf-lib";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import assert from "node:assert/strict";
-const base = process.env.CAIRN_BASE_URL ?? "http://127.0.0.1:3004";
+const base = process.env.QUOD_BASE_URL ?? process.env.CAIRN_BASE_URL ?? "http://127.0.0.1:3004";
 const out = "../../.cairn-sessions/current-browser";
 await mkdir(`${out}/screenshots`, { recursive: true });
 const browser = await chromium.launch({ channel: "chrome" });

@@ -1,4 +1,4 @@
-import type { Edge, ForwardResponse, Node } from "@cairn/contracts";
+import type { Edge, ForwardResponse, Node } from "@quod/contracts";
 
 /** Reversed-edge PageRank over the reachable downstream subgraph, including roots. */
 export function forwardGraph(nodes: readonly Node[], edges: readonly Edge[], entityId: string): ForwardResponse {

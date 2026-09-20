@@ -9,7 +9,7 @@ export function authErrorResponse(error: unknown): Response {
   if (error instanceof AuthError)
     return Response.json({ error: error.message }, { status: error.status });
   console.error("Corpus request failed", error);
-  return Response.json({ error: "Unable to save or retrieve your corpora. Please try again." }, { status: 500 });
+  return Response.json({ error: "Unable to save or retrieve your documents. Please try again." }, { status: 500 });
 }
 export function assertSameOrigin(req: Request) {
   if (!sameOrigin(req) || req.headers.get("sec-fetch-site") === "cross-site")

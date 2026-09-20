@@ -1,8 +1,11 @@
-# Cairn
+# Quod
 
-A textbook is a dependency graph flattened into a line. Cairn unflattens it.
+Previously named Cairn. See [rename compatibility notes](QUOD-MIGRATION.md)
+for existing installations and preserved data/configuration identifiers.
 
-Drop a course corpus in (textbook, lecture notes, problem sets, slides). Cairn
+A textbook is a dependency graph flattened into a line. Quod unflattens it.
+
+Drop a course corpus in (textbook, lecture notes, problem sets, slides). Quod
 reconstructs the dependency graph across all of them and makes reading
 adaptive: hover any reference to read the cited result in place, restated in
 the notation of the page you are on; select a line to see the minimal chain of
@@ -27,6 +30,7 @@ pnpm install --frozen-lockfile
 py -3 -m venv .session-tools/worker-venv
 .\.session-tools\worker-venv\Scripts\python.exe -m pip install -e "apps/worker[dev]"
 docker compose up -d --wait
+docker pull dxjoke/tectonic-docker@sha256:bfc560f1dcd8be573a18be77700494fd18e7f4d8c147c13ccb33d4a23dc537f7
 ```
 
 On macOS/Linux, create the worker environment with:
@@ -51,7 +55,8 @@ docker compose up -d --wait
 pnpm dev:live
 ```
 
-Open **http://127.0.0.1:3003** and upload a selectable-text PDF. `dev:live`
+Open **http://127.0.0.1:3003** and upload a selectable-text PDF or standalone
+LaTeX source. `dev:live`
 loads the root `.env`, overrides fixture mode, enables live provider calls, locates
 the local worker environment, and sets the worker callback URL to the actual port.
 It checks database access, the spending switch, and Elasticsearch before starting.
@@ -65,6 +70,20 @@ database when moving machines to retain spending history.
 Use `pnpm dev:live` for real uploads and model calls. Synthetic fixture results
 have no API costs. `pnpm test:startup` checks the live launch configuration without
 loading private credentials or making paid calls.
+
+## LaTeX uploads
+
+LaTeX uploads are compiled to PDF with the pinned Tectonic image pulled above.
+The source must be UTF-8, standalone (including `\\documentclass` and
+`\\begin{document}`), at most 2 MB, and cannot refer to local files or use shell
+escape. Standard cached math packages such as `amsmath`, `amsthm`, and `amssymb`
+are supported. The compiler runs with no network and mounts only a new temporary
+source/output directory; it never mounts the repository or a private `.env`.
+
+For a deployment that uses a separately reviewed image, pull that image during
+setup and set `QUOD_TEX_IMAGE` to its immutable digest. The image must provide
+`tectonic` and the required packages in its cache because the runtime compiler
+uses `--only-cached`.
 
 ## Layout
 

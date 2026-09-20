@@ -1,6 +1,7 @@
 ﻿"use client";
+import { documentColor } from "@/lib/document-colors";
 import { useEffect, useState } from "react";
-import type { Card, ForwardResponse, ReaderState } from "@cairn/contracts";
+import type { Card, ForwardResponse, ReaderState } from "@quod/contracts";
 import type { Dataset } from "@/lib/data";
 import { forward } from "@/lib/intelligence";
 import { MathText } from "./math-text";
@@ -80,7 +81,7 @@ export function ReferenceCard({
           <button
             className="source-chip"
             style={{
-              color: `var(--doc-${(data.docs.findIndex((d) => d.id === doc?.id) % 4) + 1})`,
+              color: documentColor(doc?.id ?? "",data.docs),
             }}
             onClick={() =>
               onJump(card.source.doc_id, card.source.page, node?.id)
@@ -129,7 +130,7 @@ export function ReferenceCard({
                       key={n.id}
                       onClick={() => onJump(n.doc_id, n.page, n.id)}
                       style={{
-                        color: `var(--doc-${(data.docs.findIndex((d) => d.id === n.doc_id) % 4) + 1})`,
+                        color: documentColor(n.doc_id,data.docs),
                       }}
                     >
                       {

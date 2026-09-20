@@ -1,7 +1,7 @@
 import { assertCorpusOwner } from "@/lib/firestore";
 import { requireUser, authErrorResponse } from "@/lib/auth";
-import { UploadDocsResponse, Uuid, Node as NodeSchema } from "@cairn/contracts";
-import { db } from "@cairn/contracts/db";
+import { UploadDocsResponse, Uuid, Node as NodeSchema } from "@quod/contracts";
+import { db } from "@quod/contracts/db";
 import { fixturesEnabled } from "@/lib/fixtures";
 import { LOCAL, saveLocal } from "@/lib/data";
 import { badRequest, jsonOf } from "@/lib/http";
@@ -11,6 +11,8 @@ import { dispatchWorker } from "@/lib/worker";
 import { retryDocument } from "@/lib/retry-document";
 import { z } from "zod";
 import { createHash } from "node:crypto";
+import { compileTex, isTexUpload, TexCompileError } from "@/lib/tex";
+import { PDFDocument } from "pdf-lib";
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -18,14 +20,14 @@ export async function POST(
   try {
     const user = await requireUser(req);
     const { id } = await params;
-    if (!Uuid.safeParse(id).success) return badRequest("Invalid corpus");
+    if (!Uuid.safeParse(id).success) return badRequest("Invalid document group");
     await assertCorpusOwner(user, id);
     const form = await req.formData();
     const files = form
       .getAll("files")
       .filter((f): f is File => f instanceof File);
     if (!files.length || files.length > 20)
-      return badRequest("Choose between 1 and 20 PDFs");
+      return badRequest("Choose between 1 and 20 PDF or TeX documents");
     let metadata: {
       pages: number;
       nodes: {
@@ -69,23 +71,46 @@ export async function POST(
     } catch {
       return badRequest("Invalid PDF extraction metadata");
     }
-    const ids: string[] = [];
-    for (const [index, file] of files.entries()) {
-      if (file.size > 50 * 1024 * 1024)
+    // Compile and validate the whole batch before creating any records. A bad
+    // source must not leave earlier documents queued without a returned ID.
+    const prepared: { file: File; tex: boolean; bytes: Buffer; pageCount: number }[] = [];
+    for (const file of files) {
+      const tex = isTexUpload(file);
+      if (tex && file.size > 2 * 1024 * 1024)
+        return badRequest("TeX source must be smaller than 2 MB");
+      if (!tex && file.size > 50 * 1024 * 1024)
         return badRequest("PDFs must be smaller than 50 MB");
-      const bytes = Buffer.from(await file.arrayBuffer());
+      if (!tex && !file.name.toLowerCase().endsWith(".pdf"))
+        return badRequest("Choose PDF documents or standalone .tex files");
+      let bytes: Buffer;
+      try {
+        bytes = tex ? await compileTex(Buffer.from(await file.arrayBuffer())) : Buffer.from(await file.arrayBuffer());
+      } catch (error) {
+        if (error instanceof TexCompileError)
+          return Response.json({ error: error.message }, { status: error.status });
+        throw error;
+      }
       if (bytes.subarray(0, 5).toString() !== "%PDF-")
-        return badRequest(`${file.name} is not a PDF`);
+        return badRequest(`${file.name} did not produce a PDF`);
+      let pageCount = 0;
+      if (tex) {
+        try { pageCount = (await PDFDocument.load(bytes, { ignoreEncryption: false })).getPageCount(); }
+        catch { return badRequest(`${file.name} produced an unreadable PDF`); }
+      }
+      prepared.push({ file, tex, bytes, pageCount });
+    }
+    const ids: string[] = [];
+    for (const [index, { file, tex, bytes, pageCount }] of prepared.entries()) {
       const docId = crypto.randomUUID(),
-        meta = metadata[index];
+        meta = tex ? undefined : metadata[index];
       const hash = createHash("sha256").update(bytes).digest("hex");
       const doc = {
         id: docId,
         corpus_id: id,
-        title: file.name.replace(/\.pdf$/i, ""),
+        title: file.name.replace(/\.(?:pdf|tex)$/i, ""),
         filename: file.name,
         file_hash: hash,
-        page_count: meta?.pages ?? 0,
+        page_count: tex ? pageCount : (meta?.pages ?? 0),
         quality: meta?.error ? 0 : 1,
         status: meta?.error ? ("unsupported" as const) : ("ready" as const),
       };

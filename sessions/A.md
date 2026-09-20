@@ -17,7 +17,7 @@ git checkout -b sess/a-ingest
 cp .env.example .env            # fill OPENAI_API_KEY
 pnpm install && pnpm infra:up   # Postgres + Elasticsearch; schema auto-applies
 cd apps/worker && python -m venv .venv && . .venv/Scripts/activate && pip install -e ".[dev]"
-cairn-worker --help
+quod-worker --help
 ```
 
 Pre-vet five candidate demo books before touching code: LaTeX-produced PDFs
@@ -38,9 +38,9 @@ Accept: `pnpm test:contracts` validates every fixture.
 
 ## Phase A1 — Parse layer (90 min)
 
-PyMuPDF extraction into `Span` (`cairn_worker/models.py`): text, page, bbox,
+PyMuPDF extraction into `Span` (`quod_worker/models.py`): text, page, bbox,
 font, size, bold, italic, block, line. Group spans into paragraphs by vertical
-gap and indentation. Emit `parsed/<doc_id>.jsonl` via `cairn-worker parse`.
+gap and indentation. Emit `parsed/<doc_id>.jsonl` via `quod-worker parse`.
 
 Accept: on three test PDFs, span count is within 2% of the PDF's own text
 layer and no page returns zero spans. Log a per-document quality score;
@@ -51,7 +51,7 @@ Fallback: if a book fails, drop it from the demo set rather than fixing the pars
 
 Regex pass first: numbered environment headers, `Proof.` markers, QED
 terminators (~80% of nodes for free). Then Luna over each candidate block,
-batched 20 at a time through `cairn_worker/llm.py`, returning kind, title,
+batched 20 at a time through `quod_worker/llm.py`, returning kind, title,
 clause decomposition, symbols introduced (use `json_schema` for strict JSON).
 Keep the chapter context in `instructions` byte-identical across the batch and
 pass one `prompt_cache_key` per chapter so cached input hits.

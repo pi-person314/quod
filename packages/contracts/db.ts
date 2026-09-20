@@ -1,5 +1,5 @@
 /**
- * Shared Postgres pool. Import as `@cairn/contracts/db` (server-side only —
+ * Shared Postgres pool. Import as `@quod/contracts/db` (server-side only —
  * never from a client component). Reads DATABASE_URL.
  */
 import { Pool } from "pg";

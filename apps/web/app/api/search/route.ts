@@ -1,8 +1,8 @@
 import { assertCorpusOwner, listUserCorpora } from "@/lib/firestore";
 import { requireUser, authErrorResponse } from "@/lib/auth";
 // GET /api/search?q= — owner C (C2). Elasticsearch hybrid BM25 + dense, RRF-fused. -> {hits}
-import { SearchResponse, Uuid } from "@cairn/contracts";
-import { createSearchClient, lexicalSearch } from "@cairn/intel";
+import { SearchResponse, Uuid } from "@quod/contracts";
+import { createSearchClient, lexicalSearch } from "@quod/intel";
 import { badRequest, jsonOf } from "@/lib/http";
 import { fixturesEnabled } from "@/lib/fixtures";
 import { userDataset, scopeDataset } from "@/lib/data";
@@ -19,7 +19,7 @@ export async function GET(req: Request) {
     if (q.length > 2000) return badRequest("search query is too long");
     if (
       fixturesEnabled() ||
-      process.env.CAIRN_INTELLIGENCE_MODE === "deterministic"
+      (process.env.QUOD_INTELLIGENCE_MODE ?? process.env.CAIRN_INTELLIGENCE_MODE) === "deterministic"
     ) {
       const data = await userDataset(user);
       return jsonOf(SearchResponse, {

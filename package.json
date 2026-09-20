@@ -1,18 +1,18 @@
 {
-  "name": "cairn",
+  "name": "quod",
   "private": true,
   "packageManager": "pnpm@10.15.1",
   "scripts": {
-    "dev": "node --env-file-if-exists=.env scripts/web-command.mjs dev",
+    "dev": "node scripts/web-command.mjs dev",
     "dev:live": "node --env-file=.env scripts/dev-live.mjs",
     "test:startup": "node --test scripts/dev-live.test.mjs",
-    "build": "node --env-file-if-exists=.env scripts/web-command.mjs build",
+    "build": "node scripts/web-command.mjs build",
     "typecheck": "pnpm -r --if-present typecheck",
-    "test:contracts": "pnpm --filter @cairn/contracts test",
+    "test:contracts": "pnpm --filter @quod/contracts test",
     "infra:up": "docker compose up -d",
     "infra:down": "docker compose down",
     "db:schema": "docker compose exec -T postgres psql -U cairn -d cairn -v ON_ERROR_STOP=1 -f /contracts/schema.sql",
-    "test:auth": "pnpm --filter @cairn/web exec node --import tsx --test scripts/auth.test.ts",
+    "test:auth": "pnpm --filter @quod/web exec node --import tsx --test scripts/auth.test.ts",
     "reset:corpora": "node --env-file=.env scripts/reset-corpora.mjs"
   },
   "devDependencies": {

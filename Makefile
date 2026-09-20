@@ -7,7 +7,7 @@ DATABASE_URL ?= postgres://cairn:cairn@localhost:5432/cairn
 SCHEMA := packages/contracts/schema.sql
 DUMP := fixtures/demo.dump
 BUDGET := packages/contracts/migrations/001_api_budget.sql
-WORKER := apps/worker/.venv/bin/cairn-worker
+WORKER := apps/worker/.venv/bin/quod-worker
 
 # Prefer a local psql; fall back to the one inside the compose container.
 # Both read the script from stdin so no bind mount is required.

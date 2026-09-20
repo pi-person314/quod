@@ -2,12 +2,12 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
-import { db } from "@cairn/contracts/db";
+import { db } from "@quod/contracts/db";
 import { instantiationCases } from "../../../packages/intel/evals/instantiation-cases";
 
 async function main() {
   if (!process.argv.includes("--live")) throw new Error("Pass --live for provider calls");
-  const base = process.env.CAIRN_BASE_URL ?? "http://127.0.0.1:3003";
+  const base = process.env.QUOD_BASE_URL ?? process.env.CAIRN_BASE_URL ?? "http://127.0.0.1:3003";
   const corpus = randomUUID(), docs = Array.from({ length: 4 }, () => randomUUID());
   const sources: string[] = [], restatements: string[] = [];
   const rank = randomUUID();

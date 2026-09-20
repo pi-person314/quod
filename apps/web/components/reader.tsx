@@ -1,6 +1,8 @@
 "use client";
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { RenameButton } from "./rename-button";
+import { documentColor } from "@/lib/document-colors";
 import { useAuth } from "./auth-provider";
 import { AccountMenu } from "./account-menu";
 import type {
@@ -9,7 +11,7 @@ import type {
   Node,
   ReaderState,
   TraceResponse,
-} from "@cairn/contracts";
+} from "@quod/contracts";
 import type { Dataset } from "@/lib/data";
 import { trace, search } from "@/lib/intelligence";
 import { PdfPage } from "./pdf-page";
@@ -19,15 +21,23 @@ import { MathText } from "./math-text";
 import { CostPanel } from "./cost-panel";
 import { VoiceControl } from "./voice-control";
 import { referenceOverlays } from "@/lib/reference-overlays";
-const STATE_KEY = "cairn.reader.v1";
+const STATE_KEY = "quod.reader.v1";
+// Preserve reading progress from installations before the Quod rename.
+const savedReaderState = () =>
+  localStorage.getItem(STATE_KEY) ?? localStorage.getItem("cairn.reader.v1") ?? "{}";
 export function Reader({
-  data,
+  data: initialData,
   initialDoc,
+  initialSetName = "Your documents",
 }: {
   data: Dataset;
   initialDoc: string;
+  initialSetName?: string;
 }) {
   const { user, loading: authLoading } = useAuth();
+  const [setName,setSetName]=useState(initialSetName);
+  const [titles,setTitles]=useState<Record<string,string>>({});
+  const data=useMemo(()=>({...initialData,docs:initialData.docs.map(d=>titles[d.id] ? {...d,title:titles[d.id]} : d)}),[initialData,titles]);
   const [docId, setDocId] = useState(initialDoc),
     [page, setPage] = useState(1),
     [zoom, setZoom] = useState(1),
@@ -134,7 +144,7 @@ export function Reader({
   );
   useEffect(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem(STATE_KEY) ?? "{}");
+      const saved = JSON.parse(savedReaderState());
       setState(saved.state ?? {});
       setPins(
         (saved.pins ?? [])
@@ -168,7 +178,7 @@ export function Reader({
       url.hash = "";
     history.replaceState({}, "", url);
     try {
-      const saved = JSON.parse(localStorage.getItem(STATE_KEY) ?? "{}");
+      const saved = JSON.parse(savedReaderState());
       localStorage.setItem(
         STATE_KEY,
         JSON.stringify({
@@ -235,7 +245,7 @@ export function Reader({
       const nodes = visible();
       if (closing) {
         try {
-          const saved = JSON.parse(localStorage.getItem(STATE_KEY) ?? "{}");
+          const saved = JSON.parse(savedReaderState());
           for (const n of nodes) {
             const row = saved.state?.[n.id];
             if (row) {
@@ -494,11 +504,11 @@ export function Reader({
     );
     const a = document.createElement("a");
     a.href = url;
-    a.download = "cairn-weak-spots.csv";
+    a.download = "quod-weak-spots.csv";
     a.click();
     URL.revokeObjectURL(url);
   };
-  if (!user || authLoading) return <main className="empty"><h1>Your private library</h1><p>Log in to read this document.</p><AccountMenu /></main>;
+  if (!user || authLoading) return <main className="reader-auth"><span className="eyebrow">PRIVATE LIBRARY</span><h1>{authLoading ? "Connecting your library." : "Your reading stays together."}</h1><p>{authLoading ? "Checking your signed-in session…" : "Log in with Google to open this document and keep your reading progress private."}</p><AccountMenu /></main>;
   if (map)
     return (
       <CorpusMap
@@ -512,18 +522,17 @@ export function Reader({
     <div className="reader">
       <header className="topbar">
         <Link href="/" className="wordmark">
-          cairn<span> / </span>
+          <i aria-hidden="true" />quod<span> / </span>
         </Link>
         <span className="course-name">
-          {doc.corpus_id === "00000000-0000-4000-8000-000000000001"
-            ? "Linear algebra"
-            : "Your corpus"}
+          {setName}
         </span>
+        <RenameButton kind="set" id={doc.corpus_id} name={setName} onRename={setSetName}/>
         <nav>
           <button onClick={() => setPanel("search")}>
             Search <kbd>/</kbd>
           </button>
-          <button onClick={() => setMap(true)}>Corpus map</button>
+          <button onClick={() => setMap(true)}>Document map</button>
           <button onClick={() => setPanel("weak")}>
             Weak spots{weak.length ? ` · ${weak.length}` : ""}
           </button>
@@ -538,10 +547,10 @@ export function Reader({
         </nav>
         <AccountMenu />
       </header>
-      <div className="reader-body">
+      <div className={`reader-body ${outline ? "" : "outline-hidden"}`}>
         {outline && (
           <aside className="outline-rail">
-            <span className="eyebrow">YOUR CORPUS</span>
+            <span className="eyebrow">YOUR DOCUMENTS</span>
             <div className="doc-list">
               {data.docs.map((d, i) => (
                 <button
@@ -549,7 +558,7 @@ export function Reader({
                   className={d.id === docId ? "active" : ""}
                   onClick={() => jump(d.id, 1)}
                 >
-                  <i style={{ background: `var(--doc-${(i % 4) + 1})` }} />
+                  <i style={{ background: documentColor(d.id,data.docs) }} />
                   <span>{d.title}</span>
                   <small>{d.page_count}</small>
                 </button>
@@ -565,7 +574,7 @@ export function Reader({
                   {(i === 0 || documentNodes[i - 1].page !== n.page) && <h3 className="outline-page-label">Page {n.page}</h3>}
                   <button
                     data-node={n.id}
-                    className={n.page === page ? "current" : ""}
+                    className={`${n.page === page ? "current" : ""} ${focus?.id === n.id ? "selected" : ""}`}
                     onClick={() => jump(n.doc_id, n.page, n.id)}
                   >
                     <span className="eyebrow">
@@ -576,7 +585,7 @@ export function Reader({
                           ? "· read"
                           : ""}
                     </span>
-                    <span>{n.title}</span>
+                    {n.title?.trim() && <span className="outline-title">{n.title}</span>}
                     <small>p. {n.page}</small>
                   </button>
                 </Fragment>
@@ -597,7 +606,8 @@ export function Reader({
             >
               ☰
             </button>
-            <span className="document-title">{doc.title}</span>
+            <span className="document-title"><i className="document-dot" style={{background:documentColor(doc.id,data.docs)}}/>{doc.title}</span>
+            <RenameButton kind="document" id={doc.id} name={doc.title} onRename={title=>setTitles(old=>({...old,[doc.id]:title}))}/>
             <div className="page-controls">
               <button
                 aria-label="Previous page"
@@ -689,8 +699,8 @@ export function Reader({
             <VoiceControl docId={docId} page={page} nodes={pageNodes} onJump={jump} />
             <span>
               {doc.id.startsWith("b000")
-                ? "Demonstration corpus"
-                : "Your corpus"}{" "}
+                ? "Demo documents"
+                : "Your documents"}{" "}
               · {anchors.length} references on this page
             </span>
             <span>
@@ -699,8 +709,7 @@ export function Reader({
             </span>
           </footer>
         </main>
-        {pins.length > 0 && (
-          <aside className="pin-rail">
+        <aside className="pin-rail">
             <div className="rail-heading">
               <span className="eyebrow">IN THE MARGIN</span>
               <span>{pins.length} / 3</span>
@@ -720,8 +729,12 @@ export function Reader({
                 }
               />
             ))}
+            <div className="page-progress">
+              <span className="eyebrow">THIS PAGE</span>
+              <div><span>read</span><strong>{pageNodes.filter((n) => state[n.id]?.seen || state[n.id]?.known).length} / {pageNodes.length}</strong></div>
+              <i><b style={{ width: `${pageNodes.length ? (pageNodes.filter((n) => state[n.id]?.seen || state[n.id]?.known).length / pageNodes.length) * 100 : 0}%` }} /></i>
+            </div>
           </aside>
-        )}
       </div>
       {floating && (
         <div
@@ -743,7 +756,7 @@ export function Reader({
             onPin={() => pin(floating.card!)}
           /> : <article className="reference-card" aria-label="Unmatched reference">
             <h3>{floating.reference}</h3>
-            <p>This reference has not been matched to a result in this corpus.</p>
+            <p>This reference has not been matched to a result in these documents.</p>
             <p className="muted">The referenced document may be missing, or it may use a different name.</p>
           </article>}
           {pins.length === 3 && (
@@ -840,7 +853,7 @@ export function Reader({
               <>
                 <input
                   autoFocus
-                  aria-label="Search corpus"
+                  aria-label="Search documents"
                   placeholder="Theorem, concept, or notation…"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
@@ -860,7 +873,7 @@ export function Reader({
                   }}
                 />
                 {busy ? (
-                  <p className="skeleton">Searching the corpus…</p>
+                  <p className="skeleton">Searching the documents…</p>
                 ) : (
                   hits.map((n, index) => (
                     <button
@@ -921,9 +934,9 @@ export function Reader({
               <>
                 <h2>Stay with the page.</h2>
                 {[
-                  ["/ or Ctrl K", "Search the corpus"],
+                  ["/ or Ctrl K", "Search the documents"],
                   ["← / →", "Previous / next page"],
-                  ["M", "Open corpus map"],
+                  ["M", "Open document map"],
                   ["P", "Change paper"],
                   ["[", "Toggle outline"],
                   ["Esc", "Close panel or card"],

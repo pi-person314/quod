@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
-import { Confidence, Node, Uuid, type Edge, type Entity, type ResolveResponse } from "@cairn/contracts";
+import { Confidence, Node, Uuid, type Edge, type Entity, type ResolveResponse } from "@quod/contracts";
 import { mapConcurrent } from "./concurrency";
 
 export const Adjudication = z.object({ node_id: Uuid, candidate_id: Uuid,

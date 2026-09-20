@@ -1,4 +1,5 @@
-import { userDataset, scopeDataset } from "@/lib/data";
+import { assertCorpusOwner } from "@/lib/firestore";
+import { userDataset, scopeDataset, corpora } from "@/lib/data";
 import { Reader } from "@/components/reader";
 import { notFound, redirect } from "next/navigation";
 import { requireUser, AuthError } from "@/lib/auth";
@@ -18,7 +19,9 @@ export default async function ReadPage({
   const data = await userDataset(user);
   const doc = data.docs.find((d) => d.id === doc_id);
   if (!doc) notFound();
+  const set = await assertCorpusOwner(user, doc.corpus_id);
+  const setName = (await corpora()).find(record => record.id === set.id)?.name ?? set.name;
   return (
-    <Reader data={scopeDataset(data, doc.corpus_id)} initialDoc={doc_id} />
+    <Reader data={scopeDataset(data, doc.corpus_id)} initialDoc={doc_id} initialSetName={setName === "New course corpus" ? "New documents" : setName} />
   );
 }

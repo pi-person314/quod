@@ -1,4 +1,4 @@
-"""cairn-worker CLI. `python -m cairn_worker --help` also works."""
+"""quod-worker CLI. `python -m quod_worker --help` also works."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ import sys
 from pathlib import Path
 from uuid import UUID
 
-from cairn_worker import db
-from cairn_worker.pipeline import PipelineContext, ensure_corpus, register_document, run_document
+from quod_worker import db
+from quod_worker.pipeline import PipelineContext, ensure_corpus, register_document, run_document
 
 
 def _pdfs(target: Path) -> list[Path]:
@@ -45,7 +45,7 @@ def cmd_ingest(args: argparse.Namespace) -> int:
 
 def cmd_load_fixtures(args: argparse.Namespace) -> int:
     """A5: load fixtures/golden/* straight into Postgres, skipping the parser."""
-    from cairn_worker.fixtures import GOLDEN_DIR, load_golden
+    from quod_worker.fixtures import GOLDEN_DIR, load_golden
 
     golden = Path(getattr(args, "golden_dir", None) or GOLDEN_DIR)
     with db.connect() as conn:
@@ -57,7 +57,7 @@ def cmd_load_fixtures(args: argparse.Namespace) -> int:
 
 def cmd_dump_demo(args: argparse.Namespace) -> int:
     """A5: snapshot the current corpora to fixtures/demo.dump as plain SQL."""
-    from cairn_worker.fixtures import DEMO_DUMP, write_dump
+    from quod_worker.fixtures import DEMO_DUMP, write_dump
 
     out = Path(args.out) if args.out else DEMO_DUMP
     with db.connect() as conn:
@@ -68,7 +68,7 @@ def cmd_dump_demo(args: argparse.Namespace) -> int:
 
 def cmd_parse(args: argparse.Namespace) -> int:
     """A1 only: parse one PDF and emit parsed/<stem>.jsonl without touching Postgres."""
-    from cairn_worker.stages.parse import parse_pdf
+    from quod_worker.stages.parse import parse_pdf
 
     pdf = Path(args.pdf)
     spans, quality, page_count = parse_pdf(pdf)
@@ -91,7 +91,7 @@ def cmd_db_init(_args: argparse.Namespace) -> int:
 
 def main(argv: list[str] | None = None) -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
-    p = argparse.ArgumentParser(prog="cairn-worker", description="Cairn ingest pipeline (Session A)")
+    p = argparse.ArgumentParser(prog="quod-worker", description="Quod ingest pipeline")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     ingest = sub.add_parser("ingest", help="ingest a PDF or a directory of PDFs into Postgres")

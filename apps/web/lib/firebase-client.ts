@@ -1,19 +1,43 @@
 "use client";
 
-import { getApp, getApps, initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getApp, getApps, initializeApp, type FirebaseOptions } from "firebase/app";
+import { getAuth, type Auth } from "firebase/auth";
 
-export function firebaseAuth() {
-  const config = {
-    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  };
-  if (!config.apiKey || !config.authDomain || !config.projectId || !config.appId) {
-    throw new Error("Google login is not configured. Add the Firebase environment variables and restart the server.");
+type PublicFirebaseConfig = Pick<FirebaseOptions, "apiKey" | "authDomain" | "projectId" | "storageBucket" | "messagingSenderId" | "appId">;
+
+let authPromise: Promise<Auth> | null = null;
+
+function unavailable() {
+  return new Error("Google login is not configured for this site. Please try again later.");
+}
+
+function validConfig(value: unknown): value is PublicFirebaseConfig {
+  if (!value || typeof value !== "object") return false;
+  const config = value as Record<string, unknown>;
+  return ["apiKey", "authDomain", "projectId", "appId"].every(key => typeof config[key] === "string" && config[key]);
+}
+
+async function publicConfig(): Promise<PublicFirebaseConfig> {
+  let response: Response;
+  try {
+    response = await fetch("/api/auth/config", { cache: "no-store", credentials: "same-origin" });
+  } catch {
+    throw unavailable();
   }
-  return getAuth(getApps().length ? getApp() : initializeApp(config));
+  if (!response.ok) throw unavailable();
+  const payload = await response.json().catch(() => null);
+  if (!validConfig(payload?.config)) throw unavailable();
+  return payload.config;
+}
+
+/** Initializes Firebase from the running server's public configuration. */
+export async function firebaseAuth(): Promise<Auth> {
+  if (!authPromise) authPromise = publicConfig().then(config => getAuth(getApps().length ? getApp() : initializeApp(config)));
+  try {
+    return await authPromise;
+  } catch (cause) {
+    // Let a later login attempt retry after a transient configuration fetch.
+    authPromise = null;
+    throw cause;
+  }
 }

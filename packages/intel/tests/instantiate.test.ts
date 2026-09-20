@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { Card } from "@cairn/contracts";
+import { Card } from "@quod/contracts";
 import { instantiationCases } from "../evals/instantiation-cases.js";
 import { instantiateCard } from "../prompts/instantiate.js";
 

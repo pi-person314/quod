@@ -1,5 +1,5 @@
 import { requireUser, authErrorResponse } from "@/lib/auth";
-import { mintVoiceToken } from "@cairn/intel/voice";
+import { mintVoiceToken } from "@quod/intel/voice";
 import { sameOrigin } from "@/lib/http";
 
 export async function POST(req: Request) {

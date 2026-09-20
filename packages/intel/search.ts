@@ -1,4 +1,4 @@
-import { Node, Uuid } from "@cairn/contracts";
+import { Node, Uuid } from "@quod/contracts";
 import { z } from "zod";
 import { createHash } from "node:crypto";
 import { callModel, embed, MODELS } from "./llm";

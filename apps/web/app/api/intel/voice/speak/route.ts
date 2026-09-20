@@ -1,9 +1,9 @@
 import { requireDocumentOwner } from "@/lib/data";
 import { requireUser, authErrorResponse } from "@/lib/auth";
 import { z } from "zod";
-import { synthesizeSpeech } from "@cairn/intel/voice";
+import { synthesizeSpeech } from "@quod/intel/voice";
 import { parseBody, sameOrigin } from "@/lib/http";
-import { Uuid } from "@cairn/contracts";
+import { Uuid } from "@quod/contracts";
 import { userDataset } from "@/lib/data";
 
 export async function POST(req: Request) {

@@ -1,7 +1,7 @@
 """Bound model batches while keeping progress and graph mutations on the caller thread."""
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from cairn_worker import db
+from quod_worker import db
 
 
 def run_batches(ctx, items, batch_size, stage, label, run):

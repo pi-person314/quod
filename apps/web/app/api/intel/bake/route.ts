@@ -2,8 +2,8 @@ import { authErrorResponse } from "@/lib/auth";
 // POST /api/intel/bake — owner C (C1). {doc_id} -> {cards_done}
 // Called by the worker at stage 5. For every anchor in the doc with a target,
 // run the instantiation prompt and write a cards row + anchors.card_id.
-import { BakeRequest, BakeResponse } from "@cairn/contracts";
-import { bakeDocument, documentCorpus } from "@cairn/intel";
+import { BakeRequest, BakeResponse } from "@quod/contracts";
+import { bakeDocument, documentCorpus } from "@quod/intel";
 import { jsonOf, notFound, parseBody, sameOrigin } from "@/lib/http";
 import { fixturesEnabled, loadGoldenCorpus } from "@/lib/fixtures";
 

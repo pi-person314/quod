@@ -7,8 +7,8 @@ from uuid import UUID
 
 import psycopg
 
-from cairn_worker.config import SCHEMA_SQL, settings
-from cairn_worker.models import Anchor, Card, Doc, Edge, Entity, IngestStage, Node
+from quod_worker.config import SCHEMA_SQL, settings
+from quod_worker.models import Anchor, Card, Doc, Edge, Entity, IngestStage, Node
 
 
 def connect() -> psycopg.Connection:

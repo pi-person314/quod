@@ -13,8 +13,8 @@ from uuid import UUID, uuid4
 
 import psycopg
 
-from cairn_worker import db
-from cairn_worker.config import settings
+from quod_worker import db
+from quod_worker.config import settings
 
 log = logging.getLogger(__name__)
 
@@ -64,7 +64,7 @@ def run_document(ctx: PipelineContext, force: bool = False) -> None:
     key = f"cairn:ingest:{ctx.corpus_id}"
     if not force and db.doc_status(ctx.conn, ctx.doc_id) == "ready":
         return
-    db.set_progress(ctx.conn, ctx.doc_id, "queued", message="Waiting for other documents in this corpus.")
+    db.set_progress(ctx.conn, ctx.doc_id, "queued", message="Waiting for the other documents to finish.")
     ctx.conn.execute("SELECT pg_advisory_lock(hashtextextended(%s,0))", (key,))
     try:
         _run_document(ctx, force)
@@ -79,7 +79,7 @@ def _run_document(ctx: PipelineContext, force: bool = False) -> None:
     ``force`` to rebuild its graph in place (A5 idempotency).
     """
     # Imported here so stage modules can import PipelineContext without a cycle.
-    from cairn_worker.stages import anchors, edges, parse, remote, segment
+    from quod_worker.stages import anchors, edges, parse, remote, segment
 
     conn, doc_id = ctx.conn, ctx.doc_id
     if not force and db.doc_status(conn, doc_id) == "ready":
@@ -108,7 +108,7 @@ def _run_document(ctx: PipelineContext, force: bool = False) -> None:
         db.set_progress(conn, doc_id, "edges", nodes_done=len(nodes), total=len(nodes), message=f"Connecting {len(nodes)} results and {len(found)} references…")
         edges.extract_edges(ctx, nodes, found)
 
-        db.set_progress(conn, doc_id, "resolve", nodes_done=len(nodes), total=len(nodes), message="Preparing the corpus search index…")
+        db.set_progress(conn, doc_id, "resolve", nodes_done=len(nodes), total=len(nodes), message="Preparing document search…")
         remote.resolve(ctx.corpus_id, [n.id for n in nodes])
 
         db.set_progress(conn, doc_id, "bake", nodes_done=len(nodes), total=len(nodes))

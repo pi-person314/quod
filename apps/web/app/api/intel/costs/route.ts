@@ -1,7 +1,7 @@
 import { assertCorpusOwner } from "@/lib/firestore";
 import { requireUser, authErrorResponse } from "@/lib/auth";
-import { Uuid } from "@cairn/contracts";
-import { db } from "@cairn/contracts/db";
+import { Uuid } from "@quod/contracts";
+import { db } from "@quod/contracts/db";
 import { fixturesEnabled } from "@/lib/fixtures";
 
 export async function GET(req: Request) {
@@ -13,7 +13,7 @@ export async function GET(req: Request) {
     await assertCorpusOwner(user, corpusId!);
     if (
       fixturesEnabled() &&
-      (process.env.CAIRN_LIVE_API !== "1" || !process.env.DATABASE_URL)
+      ((process.env.QUOD_LIVE_API ?? process.env.CAIRN_LIVE_API) !== "1" || !process.env.DATABASE_URL)
     )
       return Response.json({ stages: [], total_usd: 0, measured: false });
     const result = await db().query(

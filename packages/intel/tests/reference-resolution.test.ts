@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test from "node:test";
-import type { Anchor, Node } from "@cairn/contracts";
+import type { Anchor, Node } from "@quod/contracts";
 import { matchReferences } from "../reference-resolution";
 
 const doc = randomUUID();

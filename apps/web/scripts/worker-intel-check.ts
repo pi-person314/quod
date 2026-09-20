@@ -1,5 +1,5 @@
 // In-process route harness for worker integration checks; no listening socket.
-import { db } from "@cairn/contracts/db";
+import { db } from "@quod/contracts/db";
 async function main() {
   let input = "";
   for await (const chunk of process.stdin) input += chunk;

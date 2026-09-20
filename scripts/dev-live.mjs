@@ -7,16 +7,23 @@ import { spawn } from "node:child_process";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 export function liveEnvironment(source, platform = process.platform, exists = existsSync) {
-  if (!source.OPENAI_API_KEY?.trim()) throw new Error("Set OPENAI_API_KEY in the root .env before running pnpm dev:live.");
+  if (!source.OPENAI_API_KEY?.trim()) throw new Error("Set OPENAI_API_KEY in the process environment before running pnpm dev:live.");
   const port = source.PORT ?? "3003";
   if (!/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535) throw new Error("PORT must be between 1 and 65535.");
-  const executable = platform === "win32" ? "Scripts/cairn-worker.exe" : "bin/cairn-worker";
-  const worker = [resolve(root, ".venv", executable), resolve(root, ".session-tools/worker-venv", executable)].find(exists);
-  if (!source.CAIRN_WORKER_COMMAND && !worker) throw new Error("Install apps/worker in .venv or .session-tools/worker-venv, or set CAIRN_WORKER_COMMAND.");
-  return { ...source, PORT: port, USE_FIXTURES: "0", CAIRN_LIVE_API: "1", CAIRN_INTELLIGENCE_MODE: "live",
+  const executables = platform === "win32"
+    ? ["Scripts/quod-worker.exe", "Scripts/cairn-worker.exe"]
+    : ["bin/quod-worker", "bin/cairn-worker"];
+  const worker = executables.flatMap(executable => [
+    resolve(root, ".venv", executable),
+    resolve(root, ".session-tools/worker-venv", executable),
+  ]).find(exists);
+  const workerCommand = source.QUOD_WORKER_COMMAND ?? source.CAIRN_WORKER_COMMAND ?? worker;
+  if (!workerCommand) throw new Error("Install apps/worker in .venv or .session-tools/worker-venv, or set QUOD_WORKER_COMMAND (CAIRN_WORKER_COMMAND is also supported).");
+  return { ...source, PORT: port, USE_FIXTURES: "0", QUOD_LIVE_API: "1", CAIRN_LIVE_API: "1", QUOD_INTELLIGENCE_MODE: "live", CAIRN_INTELLIGENCE_MODE: "live",
     DATABASE_URL: source.DATABASE_URL || "postgres://cairn:cairn@127.0.0.1:5432/cairn",
     ELASTICSEARCH_URL: source.ELASTICSEARCH_URL || "http://127.0.0.1:9200",
-    WEB_BASE_URL: `http://127.0.0.1:${port}`, CAIRN_WORKER_COMMAND: source.CAIRN_WORKER_COMMAND || worker };
+    WEB_BASE_URL: `http://127.0.0.1:${port}`, QUOD_WORKER_COMMAND: workerCommand,
+    CAIRN_WORKER_COMMAND: workerCommand };
 }
 
 async function main() {

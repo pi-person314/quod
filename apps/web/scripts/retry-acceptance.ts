@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
-import { db } from "@cairn/contracts/db";
+import { db } from "@quod/contracts/db";
 import { LOCAL } from "../lib/data";
 import { retryDocument } from "../lib/retry-document";
 

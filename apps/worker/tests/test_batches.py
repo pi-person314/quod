@@ -3,7 +3,7 @@ from threading import Lock, get_ident
 from time import sleep
 from types import SimpleNamespace
 
-from cairn_worker import batches
+from quod_worker import batches
 
 
 def test_parallel_batches_use_separate_connections_and_ordered_results(monkeypatch):

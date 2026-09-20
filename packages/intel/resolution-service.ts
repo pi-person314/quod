@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
-import { Anchor, Entity, Node, ResolveRequest, ResolveResponse } from "@cairn/contracts";
-import { db } from "@cairn/contracts/db";
+import { Anchor, Entity, Node, ResolveRequest, ResolveResponse } from "@quod/contracts";
+import { db } from "@quod/contracts/db";
 import { callModel, MODELS } from "./llm";
 import { createSearchClient } from "./search";
 import { mapConcurrent } from "./concurrency";

@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import { readFile, writeFile } from "node:fs/promises";
-import { db } from "@cairn/contracts/db";
+import { db } from "@quod/contracts/db";
 
 async function main() {
-  const base = process.env.CAIRN_BASE_URL ?? "http://127.0.0.1:3003";
+  const base = process.env.QUOD_BASE_URL ?? process.env.CAIRN_BASE_URL ?? "http://127.0.0.1:3003";
   const { corpus_id: corpus, docId } = JSON.parse(await readFile("../../.cairn-sessions/current-browser/transport-results.json", "utf8"));
   try {
     const nodes = (await db().query("SELECT * FROM nodes WHERE doc_id=$1 ORDER BY id", [docId])).rows;

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import type { Anchor, Node } from "@cairn/contracts";
+import type { Anchor, Node } from "@quod/contracts";
 export async function pdfjs() {
   const lib = await import("pdfjs-dist");
   lib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
@@ -70,13 +70,16 @@ export function PdfPage({
     let task:
       ReturnType<Awaited<ReturnType<typeof pdfjs>>["getDocument"]> | undefined;
     let render: { cancel: () => void } | undefined;
+    let textLayer: { cancel: () => void } | undefined;
     setLoading(true);
     setError("");
     (async () => {
       try {
         const lib = await pdfjs();
+        if (dead) return;
         task = lib.getDocument(`/api/doc/${docId}/pdf`);
         const pdf = await task.promise;
+        if (dead) return;
         const p = await pdf.getPage(page);
         const base = p.getViewport({ scale: 1, rotation: 0 });
         const scale = (width / base.width) * zoom;
@@ -99,6 +102,7 @@ export function PdfPage({
           container: text.current!,
           viewport,
         });
+        textLayer = layer;
         const rendering = p.render({
           canvasContext: c.getContext("2d")!,
           viewport,
@@ -120,7 +124,10 @@ export function PdfPage({
     return () => {
       dead = true;
       render?.cancel();
-      void task?.destroy();
+      textLayer?.cancel();
+      // Navigation can terminate the worker while its initialization is pending.
+      // This effect is already disposed; handle the teardown promise as well.
+      void task?.destroy().catch(() => {});
     };
   }, [docId, page, width, zoom]);
 

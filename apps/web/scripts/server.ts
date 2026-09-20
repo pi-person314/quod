@@ -3,7 +3,7 @@ import { requireUser } from "../lib/auth";
 import { requireDocumentOwner } from "../lib/data";
 import { createServer } from "node:http";
 import next from "next";
-import { attachVoiceRelay } from "@cairn/intel/voice/relay";
+import { attachVoiceRelay } from "@quod/intel/voice/relay";
 import { dataset } from "../lib/data";
 async function main() {
 const args = process.argv.slice(2);
@@ -13,7 +13,9 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error("Invali
 const hostname = "127.0.0.1";
 const app = next({ dev: args.includes("--dev"), hostname, port, dir: process.cwd() });
 await app.prepare();
-process.env.CAIRN_VOICE_RELAY = "1";
+process.env.QUOD_VOICE_RELAY = "1";
+process.env.QUOD_VOICE_RELAY ??= process.env.CAIRN_VOICE_RELAY ?? "1";
+process.env.CAIRN_VOICE_RELAY ??= process.env.QUOD_VOICE_RELAY;
 const handle = app.getRequestHandler();
 const server = createServer((request, response) => { void handle(request, response); });
 attachVoiceRelay(server, async (input, request) => {
@@ -31,6 +33,6 @@ const upgrade = app.getUpgradeHandler();
 server.on("upgrade", (request, socket, head) => {
   if (request.url?.split("?")[0] !== "/api/intel/voice/stream") void upgrade(request, socket, head);
 });
-server.listen(port, hostname, () => console.log(`Cairn ready at http://${hostname}:${port}`));
+server.listen(port, hostname, () => console.log(`Quod ready at http://${hostname}:${port}`));
 }
 void main().catch(error => { console.error(error.message); process.exitCode = 1; });

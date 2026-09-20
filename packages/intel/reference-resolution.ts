@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Uuid, type Anchor, type Node } from "@cairn/contracts";
+import { Uuid, type Anchor, type Node } from "@quod/contracts";
 import { mapConcurrent } from "./concurrency";
 
 const Link = z.object({ anchor_id: Uuid, target_node_id: Uuid.nullable(), confidence: z.number().min(0).max(1), evidence: z.string() }).strict();

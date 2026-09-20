@@ -8,11 +8,11 @@ import os
 import re
 from uuid import UUID, uuid5
 
-from cairn_worker import db
-from cairn_worker.batches import run_batches
-from cairn_worker.llm import call_model
-from cairn_worker.models import Clause, Node, NodeKind, Span, SymbolEntry
-from cairn_worker.pipeline import PipelineContext
+from quod_worker import db
+from quod_worker.batches import run_batches
+from quod_worker.llm import call_model
+from quod_worker.models import Clause, Node, NodeKind, Span, SymbolEntry
+from quod_worker.pipeline import PipelineContext
 
 log = logging.getLogger(__name__)
 

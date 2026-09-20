@@ -1,4 +1,4 @@
-import type { Anchor, Node } from "@cairn/contracts";
+import type { Anchor, Node } from "@quod/contracts";
 import type { InstantiationInput, InstantiationOutput } from "../prompts/instantiate.js";
 
 const sourceDoc = "00000000-0000-4000-8000-000000000101";

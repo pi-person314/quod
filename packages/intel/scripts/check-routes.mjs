@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { BakeResponse, ResolveResponse } from "@cairn/contracts";
+import { BakeResponse, ResolveResponse } from "@quod/contracts";
 import { POST as bake } from "../../../apps/web/app/api/intel/bake/route";
 import { POST as resolve } from "../../../apps/web/app/api/intel/resolve/route";
 import { POST as trace } from "../../../apps/web/app/api/intel/trace/route";

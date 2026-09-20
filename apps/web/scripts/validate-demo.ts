@@ -1,4 +1,4 @@
-﻿import { GoldenFixture, TraceResponse } from "@cairn/contracts";
+﻿import { GoldenFixture, TraceResponse } from "@quod/contracts";
 import { readFileSync, readdirSync } from "node:fs";
 import assert from "node:assert/strict";
 const fixtures = readdirSync("demo")

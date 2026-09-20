@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { Edge, Node } from "@cairn/contracts";
+import type { Edge, Node } from "@quod/contracts";
 import { forwardGraph } from "../forward";
 import { matchTraceRoots, matchSelectionRoots, traceGraph, traceSelection } from "../trace";
 

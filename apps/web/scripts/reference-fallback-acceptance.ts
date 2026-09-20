@@ -3,10 +3,10 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { chromium } from "@playwright/test";
 import { PDFDocument, StandardFonts } from "pdf-lib";
-import { db } from "@cairn/contracts/db";
+import { db } from "@quod/contracts/db";
 
 async function main() {
-  const base = process.env.CAIRN_BASE_URL ?? "http://127.0.0.1:3003";
+  const base = process.env.QUOD_BASE_URL ?? process.env.CAIRN_BASE_URL ?? "http://127.0.0.1:3003";
   const corpus = randomUUID(), doc = randomUUID(), node = randomUUID();
   const known = randomUUID(), unknown = randomUUID();
   const pdf = await PDFDocument.create(), sheet = pdf.addPage([612, 792]);

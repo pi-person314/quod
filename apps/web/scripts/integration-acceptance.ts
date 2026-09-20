@@ -32,7 +32,7 @@ async function main() {
   } finally { await rm(join(LOCAL, "docs", `${docId}.json`), { force: true }); }
 
   process.env.USE_FIXTURES = "0";
-  const { db } = await import("@cairn/contracts/db");
+  const { db } = await import("@quod/contracts/db");
   try {
     await db().query("INSERT INTO corpora(id,name) VALUES($1,'Isolated reader integration test')", [corpus]);
     await db().query("INSERT INTO documents(id,corpus_id,title,filename,pdf_bytes,status) VALUES($1,$2,'test','test.pdf',$3,'ready')", [docId, corpus, Buffer.from("%PDF-test")]);

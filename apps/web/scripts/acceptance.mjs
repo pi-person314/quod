@@ -7,7 +7,7 @@ const browser = await chromium.launch({ channel: "chrome" });
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
 const errors = [];
 page.on("pageerror", (e) => errors.push(e.message));
-const base = process.env.CAIRN_BASE_URL ?? "http://127.0.0.1:3003";
+const base = process.env.QUOD_BASE_URL ?? process.env.CAIRN_BASE_URL ?? "http://127.0.0.1:3003";
 const data = await (await page.request.get(base + "/api/library")).json();
 const demo = data.docs.filter((d) => d.id.startsWith("b000"));
 let checked = 0,

@@ -1,8 +1,8 @@
 from uuid import uuid4
 
-from cairn_worker.models import Node, Span
-from cairn_worker.stages.edges import extract_edges_offline
-from cairn_worker.stages.segment import nodes_from_spans
+from quod_worker.models import Node, Span
+from quod_worker.stages.edges import extract_edges_offline
+from quod_worker.stages.segment import nodes_from_spans
 
 DOC = uuid4()
 
@@ -95,8 +95,8 @@ def test_problem_sets_segment_and_page_boxes_do_not_include_other_pages():
 
 def test_pdf_anchor_uses_reference_geometry_instead_of_entire_line(tmp_path):
     import pymupdf
-    from cairn_worker.stages.parse import parse_pdf
-    from cairn_worker.stages.anchors import find_anchors
+    from quod_worker.stages.parse import parse_pdf
+    from quod_worker.stages.anchors import find_anchors
     path = tmp_path / "geometry.pdf"
     with pymupdf.open() as pdf:
         page = pdf.new_page()

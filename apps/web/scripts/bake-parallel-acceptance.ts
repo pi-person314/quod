@@ -4,12 +4,12 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { writeFile } from "node:fs/promises";
 import { chromium } from "@playwright/test";
-import { db } from "@cairn/contracts/db";
+import { db } from "@quod/contracts/db";
 
 async function main() {
   const source = process.argv[2];
   assert(source, "Pass the ID of an existing parsed document");
-  const base = process.env.CAIRN_BASE_URL ?? "http://127.0.0.1:3003";
+  const base = process.env.QUOD_BASE_URL ?? process.env.CAIRN_BASE_URL ?? "http://127.0.0.1:3003";
   const corpus = randomUUID(), doc = randomUUID();
   const browser = await chromium.launch({ channel: "chrome" });
   let request: Promise<Response> | undefined;

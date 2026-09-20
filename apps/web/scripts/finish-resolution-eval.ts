@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { readFile, writeFile } from "node:fs/promises";
-import { db } from "@cairn/contracts/db";
+import { db } from "@quod/contracts/db";
 
 async function main() {
   if (!process.argv.includes("--live")) throw new Error("Pass --live for live search verification");
-  const base = process.env.CAIRN_BASE_URL ?? "http://127.0.0.1:3003";
+  const base = process.env.QUOD_BASE_URL ?? process.env.CAIRN_BASE_URL ?? "http://127.0.0.1:3003";
   const path = "../../.cairn-sessions/current-quality/resolution-live.json";
   const report = JSON.parse(await readFile(path, "utf8"));
   try {

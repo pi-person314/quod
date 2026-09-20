@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Node, PageNumber, Uuid } from "@cairn/contracts";
+import { Node, PageNumber, Uuid } from "@quod/contracts";
 import { callModel, MODELS } from "../llm";
 import { requireLiveBudget, reserveApiSpend, settleApiSpend } from "../budget";
 import { logCall } from "../llm";

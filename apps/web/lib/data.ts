@@ -1,5 +1,5 @@
-import { db } from "@cairn/contracts/db";
-import { Doc as DocSchema } from "@cairn/contracts";
+import { db } from "@quod/contracts/db";
+import { Doc as DocSchema } from "@quod/contracts";
 import { readFile, writeFile, mkdir, readdir } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import type {
@@ -10,7 +10,7 @@ import type {
   Anchor,
   Card,
   Entity,
-} from "@cairn/contracts";
+} from "@quod/contracts";
 import { fixturesEnabled, loadGoldenCorpus } from "./fixtures";
 import { AuthError, type AuthUser } from "./auth";
 import { listUserCorpora, assertCorpusOwner } from "./firestore";
@@ -57,8 +57,12 @@ export async function dataset(): Promise<Dataset> {
   if (fixturesEnabled()) {
     const g = loadGoldenCorpus();
     const uploads = await localRecords<{ doc: Doc; nodes: Node[] }>("docs");
+    // Golden documents have no local upload record. Keep a title-only overlay
+    // so renaming one never copies its fixture nodes into writable storage.
+    const titles = new Map((await localRecords<{ id: string; title: string }>("doc-titles"))
+      .map(({ id, title }) => [id, title]));
     return {
-      docs: [...g.docs, ...uploads.map((x) => x.doc)],
+      docs: [...g.docs, ...uploads.map((x) => x.doc)].map(doc => titles.has(doc.id) ? { ...doc, title: titles.get(doc.id)! } : doc),
       nodes: [...g.nodes, ...uploads.flatMap((x) => x.nodes)],
       edges: g.edges,
       anchors: g.anchors,
@@ -90,14 +94,14 @@ export async function corpora(): Promise<Corpus[]> {
   if (!fixturesEnabled())
     return (await db().query("SELECT * FROM corpora ORDER BY created_at DESC"))
       .rows;
-  return [
+  const defaults = [
     {
       id: "00000000-0000-4000-8000-000000000001",
       name: "Linear algebra · Demonstration",
       created_at: "2026-09-19T00:00:00Z",
     },
-    ...(await localRecords<Corpus>("corpora")),
   ];
+  return [...new Map([...defaults, ...(await localRecords<Corpus>("corpora"))].map(record => [record.id, record])).values()];
 }
 export async function pdfBytes(id: string) {
   if (fixturesEnabled()) {
@@ -131,4 +135,16 @@ export async function requireDocumentOwner(user: AuthUser, docId: string): Promi
   if (!doc) throw new AuthError(404, "Document not found.");
   await assertCorpusOwner(user, doc.corpus_id);
   return doc;
+}
+
+/** Rename metadata only; a fixture title overlay deliberately contains no nodes. */
+export async function renameDocumentTitle(id: string, title: string): Promise<boolean> {
+  if (fixturesEnabled()) {
+    const exists = (await dataset()).docs.some(doc => doc.id === id);
+    if (!exists) return false;
+    await saveLocal("doc-titles", id, { id, title });
+    return true;
+  }
+  const result = await db().query("UPDATE documents SET title=$2 WHERE id=$1", [id, title]);
+  return result.rowCount === 1;
 }

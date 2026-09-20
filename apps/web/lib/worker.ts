@@ -1,5 +1,5 @@
 ﻿import { spawn } from "node:child_process";
-import { db } from "@cairn/contracts/db";
+import { db } from "@quod/contracts/db";
 /** Native local-worker adapter. Never invokes a shell; IDs and file paths are arguments. */
 export function dispatchWorker(
   pdfPath: string,
@@ -7,7 +7,7 @@ export function dispatchWorker(
   docId: string,
 ) {
   const child = spawn(
-    process.env.CAIRN_WORKER_COMMAND ?? "cairn-worker",
+    process.env.QUOD_WORKER_COMMAND ?? process.env.CAIRN_WORKER_COMMAND ?? "quod-worker",
     ["ingest", pdfPath, "--corpus-id", corpusId],
     { windowsHide: true, stdio: "ignore", shell: false },
   );
@@ -22,7 +22,7 @@ export function dispatchWorker(
   };
   child.on("error", () => {
     void fail(
-      "The ingest worker could not be started. Configure CAIRN_WORKER_COMMAND on the web server.",
+      "The ingest worker could not be started. Configure QUOD_WORKER_COMMAND on the web server.",
     ).catch(() => {});
   });
   child.on("exit", (code) => {

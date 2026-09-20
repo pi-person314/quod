@@ -1,5 +1,5 @@
-import { Anchor, Edge, Node, Uuid, type TraceRequest } from "@cairn/contracts";
-import { db } from "@cairn/contracts/db";
+import { Anchor, Edge, Node, Uuid, type TraceRequest } from "@quod/contracts";
+import { db } from "@quod/contracts/db";
 import { matchSelectionRoots, traceGraph } from "./trace";
 
 /** Corpus boundaries are applied before passing data to pure graph functions. */

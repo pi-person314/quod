@@ -13,20 +13,20 @@ session absorbs the sponsor work.
 git checkout -b sess/c-intel
 cp .env.example .env            # fill OPENAI_API_KEY
 pnpm install && pnpm infra:up   # Postgres (schema auto-applied) + Elasticsearch
-pnpm --filter @cairn/intel typecheck
+pnpm --filter @quod/intel typecheck
 ```
 
 `packages/intel/llm.ts` already has `callModel()` (OpenAI Responses API, strict
 JSON via `jsonSchema`, `promptCacheKey`), `embed()`, `logCall()` and a pricing
 table; `scripts/cost-report.ts` is the C0 acceptance script. Your route
 handlers are shells in `apps/web/app/api/intel/*/route.ts`; they validate the
-request against `@cairn/contracts` and return 501. Fixture mode
+request against `@quod/contracts` and return 501. Fixture mode
 (`USE_FIXTURES=1`) must keep working in your handlers too — read
 `apps/web/lib/fixtures.ts`.
 
 Note the worker <-> web seam in CONTRACTS.md: the Python worker calls your
 `POST /api/intel/resolve` and `POST /api/intel/bake`; your handlers read and
-write Postgres directly. A's Luna calls go through `cairn_worker/llm.py`,
+write Postgres directly. A's Luna calls go through `quod_worker/llm.py`,
 which writes the same `llm_calls` rows.
 
 ## Phase C0 — LLM wrapper and cost ledger (45 min)
@@ -37,7 +37,7 @@ split, ledger insert. Build this before any prompt, because retrofitting
 instrumentation at hour 20 is how the Token Company submission gets dropped.
 Skip the Batch API despite its 50% discount: it can take 24 hours.
 
-Accept: `pnpm --filter @cairn/intel cost-report` prints total cost grouped by
+Accept: `pnpm --filter @quod/intel cost-report` prints total cost grouped by
 stage, and a synthetic run of 50 calls (use `logCall` directly) is logged
 accurately.
 

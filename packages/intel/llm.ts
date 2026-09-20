@@ -6,12 +6,12 @@
  * OpenAI Responses API. Cached input is automatic on a stable prefix; pass a
  * `promptCacheKey` per chapter so batched calls route to the same cache (C5).
  *
- * C0 owns this file. Phase C0 acceptance: `pnpm --filter @cairn/intel cost-report`
+ * C0 owns this file. Phase C0 acceptance: `pnpm --filter @quod/intel cost-report`
  * prints totals by stage, and a synthetic run of 50 calls is logged accurately.
  */
 import OpenAI from "openai";
 import { createHash } from "node:crypto";
-import { db } from "@cairn/contracts/db";
+import { db } from "@quod/contracts/db";
 import { requireLiveBudget, reserveApiSpend, settleApiSpend } from "./budget";
 
 /** Stage tag on every ledger row. Extend freely; keep names stable once used. */

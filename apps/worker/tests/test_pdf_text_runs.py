@@ -1,7 +1,7 @@
 from uuid import uuid4
 
-from cairn_worker.stages.parse import _extract_spans
-from cairn_worker.stages.segment import nodes_from_spans
+from quod_worker.stages.parse import _extract_spans
+from quod_worker.stages.segment import nodes_from_spans
 
 
 class Page:
@@ -29,8 +29,8 @@ def test_separate_whitespace_runs_preserve_words_and_reference_lines_are_not_hea
 
 def test_named_reference_wraps_across_lines_with_separate_hit_boxes(tmp_path):
     import pymupdf
-    from cairn_worker.stages.parse import parse_pdf
-    from cairn_worker.stages.anchors import find_anchors
+    from quod_worker.stages.parse import parse_pdf
+    from quod_worker.stages.anchors import find_anchors
     path = tmp_path / "wrapped-name.pdf"
     with pymupdf.open() as pdf:
         page = pdf.new_page()

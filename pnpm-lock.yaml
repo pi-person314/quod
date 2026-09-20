@@ -14,12 +14,6 @@ importers:
 
   apps/web:
     dependencies:
-      '@cairn/contracts':
-        specifier: workspace:*
-        version: link:../../packages/contracts
-      '@cairn/intel':
-        specifier: workspace:*
-        version: link:../../packages/intel
       '@fontsource/ibm-plex-mono':
         specifier: ^5.3.0
         version: 5.3.0
@@ -29,6 +23,12 @@ importers:
       '@pdf-lib/fontkit':
         specifier: ^1.1.1
         version: 1.1.1
+      '@quod/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      '@quod/intel':
+        specifier: workspace:*
+        version: link:../../packages/intel
       d3-force:
         specifier: ^3.0.0
         version: 3.0.0
@@ -127,7 +127,7 @@ importers:
 
   packages/intel:
     dependencies:
-      '@cairn/contracts':
+      '@quod/contracts':
         specifier: workspace:*
         version: link:../contracts
       openai:

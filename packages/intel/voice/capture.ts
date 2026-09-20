@@ -6,7 +6,7 @@ export async function createPcmCapture(stream: MediaStream, send: (bytes: ArrayB
     if (context.sampleRate < 16000) throw new Error("Microphone sample rate is unsupported");
     await context.audioWorklet.addModule("/voice-pcm-worklet.js");
     const source = context.createMediaStreamSource(stream);
-    const worklet = new AudioWorkletNode(context, "cairn-pcm", { numberOfInputs: 1, numberOfOutputs: 1, channelCount: 1 });
+    const worklet = new AudioWorkletNode(context, "quod-pcm", { numberOfInputs: 1, numberOfOutputs: 1, channelCount: 1 });
     const silent = context.createGain();
     silent.gain.value = 0;
     source.connect(worklet).connect(silent).connect(context.destination);

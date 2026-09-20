@@ -6,7 +6,7 @@
  * optional fields if logged in INTEGRATION.md.
  *
  * Each schema is exported twice under the same name: as a zod value and as
- * the inferred TypeScript type. `import { Node } from "@cairn/contracts"`
+ * the inferred TypeScript type. `import { Node } from "@quod/contracts"`
  * gives you both.
  */
 import { z } from "zod";

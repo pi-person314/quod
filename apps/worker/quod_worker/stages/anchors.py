@@ -6,9 +6,9 @@ import re
 from pathlib import Path
 from uuid import uuid4
 
-from cairn_worker import db
-from cairn_worker.models import Anchor, Node, Span
-from cairn_worker.pipeline import PipelineContext
+from quod_worker import db
+from quod_worker.models import Anchor, Node, Span
+from quod_worker.pipeline import PipelineContext
 
 EXPLICIT_RE = re.compile(
     r"\b(?P<kind>Definition|Theorem|Lemma|Proposition|Corollary|Example|Notation)\s+"

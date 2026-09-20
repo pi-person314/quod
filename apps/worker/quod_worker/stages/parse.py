@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pymupdf as fitz
 
-from cairn_worker.models import Span
+from quod_worker.models import Span
 
 log = logging.getLogger(__name__)
 

@@ -1,4 +1,4 @@
-import type { Anchor } from "@cairn/contracts";
+import type { Anchor } from "@quod/contracts";
 
 /** One hit target for nested detections such as "By Theorem 2" / "Theorem 2". */
 export function referenceOverlays(anchors: readonly Anchor[]): Anchor[] {

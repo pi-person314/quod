@@ -21,7 +21,7 @@ import psycopg
 from openai import OpenAI
 from openai.types.responses import Response, ResponseInputParam
 
-from cairn_worker.config import settings
+from quod_worker.config import settings
 
 # USD per million tokens, from the OpenAI pricing page on 2026-09-19. Sol is on
 # promotional pricing through at least 2026-11-21; re-pull at the venue. Cache
@@ -100,7 +100,7 @@ def call_model(
     ``json_schema`` = {"name": ..., "schema": {...}} enables strict JSON output.
     """
     model = model or settings.model_fast
-    if os.environ.get("CAIRN_LIVE_API") != "1":
+    if os.environ.get("QUOD_LIVE_API", os.environ.get("CAIRN_LIVE_API")) != "1":
         raise RuntimeError("Live API calls are disabled")
     if conn is None or not conn.autocommit:
         raise RuntimeError("Paid calls require an autocommit ledger connection")

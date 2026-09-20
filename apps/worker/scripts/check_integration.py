@@ -7,10 +7,10 @@ import json
 import os
 import subprocess
 from uuid import uuid4
-from cairn_worker import db
-from cairn_worker.config import REPO_ROOT
-from cairn_worker.pipeline import PipelineContext, ensure_corpus, register_document, run_document
-from cairn_worker.stages import remote
+from quod_worker import db
+from quod_worker.config import REPO_ROOT
+from quod_worker.pipeline import PipelineContext, ensure_corpus, register_document, run_document
+from quod_worker.stages import remote
 
 corpus_id = uuid4()
 environment = {**os.environ, "USE_FIXTURES": "0", "CAIRN_INTELLIGENCE_MODE": "deterministic", "CAIRN_LIVE_API": "0",

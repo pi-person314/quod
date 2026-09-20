@@ -13,7 +13,7 @@ import {
   type Edge,
   type Entity,
   type Node,
-} from "@cairn/contracts";
+} from "@quod/contracts";
 
 export function fixturesEnabled(): boolean {
   return process.env.USE_FIXTURES !== "0";

@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 export default async function Benchmark() {
   if (
     process.env.NODE_ENV === "production" &&
-    process.env.CAIRN_ACCEPTANCE !== "1"
+    (process.env.QUOD_ACCEPTANCE ?? process.env.CAIRN_ACCEPTANCE) !== "1"
   )
     notFound();
   const data = await dataset();

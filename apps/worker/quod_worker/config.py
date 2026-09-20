@@ -14,6 +14,8 @@ FIXTURES_DIR = REPO_ROOT / "fixtures"
 
 @dataclass(frozen=True)
 class Settings:
+    # This deliberately retains the initialized Cairn database identity. Changing
+    # it would point a renamed deployment at an empty database.
     database_url: str = os.environ.get("DATABASE_URL", "postgres://cairn:cairn@localhost:5432/cairn")
     web_base_url: str = os.environ.get("WEB_BASE_URL", "http://localhost:3000")
     model_fast: str = os.environ.get("MODEL_FAST", "gpt-5.6-luna")

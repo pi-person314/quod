@@ -1,5 +1,5 @@
-import { Anchor, Card, Node, Uuid, type SymbolEntry } from "@cairn/contracts";
-import { db } from "@cairn/contracts/db";
+import { Anchor, Card, Node, Uuid, type SymbolEntry } from "@quod/contracts";
+import { db } from "@quod/contracts/db";
 import { instantiateCard, INSTANTIATION_PROMPT_VERSION, type InstantiationModel } from "./prompts/instantiate";
 import { callModel, MODELS } from "./llm";
 import { mapConcurrent } from "./concurrency";

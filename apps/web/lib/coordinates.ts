@@ -1,4 +1,4 @@
-﻿import type { BBox } from "@cairn/contracts";
+﻿import type { BBox } from "@quod/contracts";
 /** PyMuPDF points: top-left origin, y down. Page numbers stay 1-indexed. */
 export function pdfToViewport(
   box: BBox,

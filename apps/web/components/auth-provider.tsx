@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { GoogleAuthProvider, onIdTokenChanged, signInWithPopup, signOut, type User } from "firebase/auth";
+import { GoogleAuthProvider, onIdTokenChanged, signInWithPopup, signOut, type Auth, type User } from "firebase/auth";
 import { firebaseAuth } from "@/lib/firebase-client";
 
 interface AuthState {
@@ -26,10 +26,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const sessionQueue = useRef<Promise<void>>(Promise.resolve());
-  const syncSession = useCallback((nextUser: User | null) => {
+  const mounted = useRef(false);
+  const subscribedAuth = useRef<Auth | null>(null);
+  const stopSubscription = useRef<() => void>(() => {});
+  const syncSession = useCallback((auth: Auth, nextUser: User | null) => {
     const task = sessionQueue.current.catch(() => {}).then(async () => {
       // Token events can arrive while a popup or logout is still completing.
-      if (firebaseAuth().currentUser?.uid !== nextUser?.uid) return;
+      if (auth.currentUser?.uid !== nextUser?.uid) return;
       const response = await fetch("/api/auth/session", nextUser ? {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken: await nextUser.getIdToken() }),
@@ -38,58 +41,81 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const body = await response.json().catch(() => ({}));
         throw new Error(body.error || "Could not establish your login session. Please try again.");
       }
-      if (firebaseAuth().currentUser?.uid === nextUser?.uid) setUser(nextUser);
+      if (mounted.current && auth.currentUser?.uid === nextUser?.uid) setUser(nextUser);
     });
     sessionQueue.current = task;
     return task;
   }, []);
 
-  useEffect(() => {
-    try {
-      const auth = firebaseAuth();
-      const unsubscribe = onIdTokenChanged(auth, (nextUser) => {
-        setUser(current => current?.uid === nextUser?.uid ? current : null);
-        setLoading(true);
-        void syncSession(nextUser).catch(cause => {
-          setUser(null);
-          setError(authMessage(cause));
-        }).finally(() => setLoading(false));
-      });
-      // Refresh even on an idle tab so the server cookie never outlives its ID token.
-      const refresh = () => { if (auth.currentUser) void auth.currentUser.getIdToken(true).catch(cause => setError(authMessage(cause))); };
-      const interval = window.setInterval(refresh, 45 * 60 * 1000);
-      const onVisible = () => { if (document.visibilityState === "visible") refresh(); };
-      document.addEventListener("visibilitychange", onVisible);
-      return () => { unsubscribe(); window.clearInterval(interval); document.removeEventListener("visibilitychange", onVisible); };
-    } catch (cause) {
-      setError(authMessage(cause));
-      setLoading(false);
-    }
+  const ensureSubscription = useCallback((auth: Auth) => {
+    if (!mounted.current || subscribedAuth.current === auth) return;
+    stopSubscription.current();
+    subscribedAuth.current = auth;
+    const unsubscribeToken = onIdTokenChanged(auth, (nextUser) => {
+      if (!mounted.current) return;
+      setUser(current => current?.uid === nextUser?.uid ? current : null);
+      setLoading(true);
+      void syncSession(auth, nextUser).catch(cause => {
+        if (mounted.current) { setUser(null); setError(authMessage(cause)); }
+      }).finally(() => { if (mounted.current) setLoading(false); });
+    });
+    // Refresh even on an idle tab so the server cookie never outlives its ID token.
+    const refresh = () => { if (auth.currentUser) void auth.currentUser.getIdToken(true).catch(cause => { if (mounted.current) setError(authMessage(cause)); }); };
+    const interval = window.setInterval(refresh, 45 * 60 * 1000);
+    const onVisible = () => { if (document.visibilityState === "visible") refresh(); };
+    document.addEventListener("visibilitychange", onVisible);
+    stopSubscription.current = () => {
+      unsubscribeToken();
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+      if (subscribedAuth.current === auth) subscribedAuth.current = null;
+    };
   }, [syncSession]);
+
+  useEffect(() => {
+    mounted.current = true;
+    void (async () => {
+      try {
+        ensureSubscription(await firebaseAuth());
+      } catch {
+        // Do not surface an error simply because a public page has no login config.
+        if (mounted.current) setLoading(false);
+      }
+    })();
+    return () => {
+      mounted.current = false;
+      stopSubscription.current();
+      stopSubscription.current = () => {};
+    };
+  }, [ensureSubscription]);
 
   const login = useCallback(async () => {
     setError("");
     setLoading(true);
     try {
-      const result = await signInWithPopup(firebaseAuth(), new GoogleAuthProvider());
-      await syncSession(result.user);
+      const auth = await firebaseAuth();
+      ensureSubscription(auth);
+      const result = await signInWithPopup(auth, new GoogleAuthProvider());
+      await syncSession(auth, result.user);
     } catch (cause) {
       setError(authMessage(cause));
       throw cause;
     } finally { setLoading(false); }
-  }, [syncSession]);
+  }, [ensureSubscription, syncSession]);
   const logout = useCallback(async () => {
     setError("");
     setUser(null);
     setLoading(true);
     try {
-      await signOut(firebaseAuth());
-      await syncSession(null);
+      const auth = await firebaseAuth();
+      ensureSubscription(auth);
+      await signOut(auth);
+      await syncSession(auth, null);
     } catch (cause) {
       setError(authMessage(cause));
       throw cause;
     } finally { setLoading(false); }
-  }, [syncSession]);
+  }, [ensureSubscription, syncSession]);
 
   return <AuthContext.Provider value={{ user, loading, login, logout }}>
     {children}

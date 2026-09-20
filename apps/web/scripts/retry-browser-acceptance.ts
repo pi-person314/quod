@@ -4,10 +4,10 @@ import { randomUUID, createHash } from "node:crypto";
 import { writeFile } from "node:fs/promises";
 import { chromium } from "@playwright/test";
 import { PDFDocument } from "pdf-lib";
-import { db } from "@cairn/contracts/db";
+import { db } from "@quod/contracts/db";
 
 async function main() {
-  const base = process.env.CAIRN_BASE_URL ?? "http://127.0.0.1:3003";
+  const base = process.env.QUOD_BASE_URL ?? process.env.CAIRN_BASE_URL ?? "http://127.0.0.1:3003";
   const corpus = randomUUID(), doc = randomUUID();
   const pdf = await PDFDocument.create(); pdf.addPage([595, 842]);
   const bytes = Buffer.from(await pdf.save());

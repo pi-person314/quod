@@ -1,3 +1,5 @@
+# Preserve the existing named volumes after the repository directory is renamed.
+name: cairn
 # Local infra for all three sessions. `pnpm infra:up`.
 # Postgres applies packages/contracts/schema.sql on first boot; re-apply after
 # schema edits with `pnpm db:schema` (the file is idempotent).

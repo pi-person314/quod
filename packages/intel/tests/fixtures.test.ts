@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { GoldenFixture } from "@cairn/contracts";
+import { GoldenFixture } from "@quod/contracts";
 import { developmentCorpus } from "../evals/development-corpus";
 
 test("development fixtures validate and cross-document references are complete", async () => {

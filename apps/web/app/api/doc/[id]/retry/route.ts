@@ -1,6 +1,6 @@
 import { requireDocumentOwner } from "@/lib/data";
 import { requireUser, authErrorResponse } from "@/lib/auth";
-import { Uuid } from "@cairn/contracts";
+import { Uuid } from "@quod/contracts";
 import { fixturesEnabled } from "@/lib/fixtures";
 import { badRequest, notFound, sameOrigin } from "@/lib/http";
 import { retryDocument } from "@/lib/retry-document";

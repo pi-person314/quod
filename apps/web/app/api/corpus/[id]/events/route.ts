@@ -1,7 +1,7 @@
 import { assertCorpusOwner } from "@/lib/firestore";
 import { requireUser, authErrorResponse } from "@/lib/auth";
-import { IngestEvent, Uuid } from "@cairn/contracts";
-import { db } from "@cairn/contracts/db";
+import { IngestEvent, Uuid } from "@quod/contracts";
+import { db } from "@quod/contracts/db";
 import { dataset } from "@/lib/data";
 import { fixturesEnabled } from "@/lib/fixtures";
 export const dynamic = "force-dynamic";
@@ -13,7 +13,7 @@ export async function GET(
     const user = await requireUser(req);
     const { id } = await params;
     if (!Uuid.safeParse(id).success)
-      return new Response("Invalid corpus", { status: 400 });
+      return new Response("Invalid document group", { status: 400 });
     await assertCorpusOwner(user, id);
     const encoder = new TextEncoder();
     let timer: ReturnType<typeof setTimeout>;

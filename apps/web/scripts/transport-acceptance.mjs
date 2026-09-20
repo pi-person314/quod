@@ -2,9 +2,9 @@
 import { chromium } from "@playwright/test";
 import { readFile, mkdir, writeFile } from "node:fs/promises";
 import assert from "node:assert/strict";
-const base = process.env.CAIRN_BASE_URL ?? "http://127.0.0.1:3005";
+const base = process.env.QUOD_BASE_URL ?? process.env.CAIRN_BASE_URL ?? "http://127.0.0.1:3005";
 const live = process.argv.includes("--live");
-const existingCorpus = process.env.CAIRN_TEST_CORPUS;
+const existingCorpus = process.env.QUOD_TEST_CORPUS ?? process.env.CAIRN_TEST_CORPUS;
 const response = existingCorpus ? undefined : await fetch(base + "/api/corpus", { method: "POST", headers: { "content-type": "application/json" },
   body: JSON.stringify({ name: `Transport acceptance ${crypto.randomUUID()}` }) });
 if (response) assert.equal(response.status, 200);

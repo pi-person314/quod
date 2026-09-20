@@ -1,4 +1,5 @@
 "use client";
+import { documentColor } from "@/lib/document-colors";
 import { useEffect, useRef, useState } from "react";
 import {
   forceSimulation,
@@ -13,7 +14,7 @@ import {
 import { select } from "d3-selection";
 import { zoom, zoomIdentity } from "d3-zoom";
 import type { Dataset } from "@/lib/data";
-import type { Node, ReaderState } from "@cairn/contracts";
+import type { Node, ReaderState } from "@quod/contracts";
 interface Dot extends SimulationNodeDatum {
   id: string;
   node: Node;
@@ -81,10 +82,10 @@ export function CorpusMap({
     const lineLayer = group.append("g");
     const lines = lineLayer.append("path")
       .attr("fill", "none")
-      .attr("stroke", "#42424b")
+      .attr("stroke", "#1e3b59")
       .attr("stroke-width", 0.8);
     const highlightedLines = lineLayer.append("path").attr("fill", "none")
-      .attr("stroke", "#42424b").attr("stroke-width", 0.8).attr("opacity", 0.8);
+      .attr("stroke", "#6c97c4").attr("stroke-width", 0.8).attr("opacity", 0.8);
     const edgePath = (edges: typeof links) => edges.map((edge: any) =>
       `M${edge.source.x},${edge.source.y}L${edge.target.x},${edge.target.y}`).join("");
     const circles = group
@@ -96,11 +97,9 @@ export function CorpusMap({
       .attr(
         "fill",
         (n) =>
-          ["#e2b25a", "#6fc7bd", "#b79cf0", "#e58fc4"][
-            data.docs.findIndex((d) => d.id === n.node.doc_id) % 4
-          ],
+          documentColor(n.node.doc_id,data.docs),
       )
-      .attr("stroke", "#0b0b0d")
+      .attr("stroke", "#04070b")
       .attr("stroke-width", 2)
       .attr("tabindex", 0)
       .attr("role", "button")
@@ -112,9 +111,9 @@ export function CorpusMap({
       .data(dots)
       .join("text")
       .text((n) => n.node.title ?? n.node.label)
-      .attr("fill", "#ececf1")
+      .attr("fill", "#f4f1de")
       .attr("font-size", 11)
-      .attr("font-family", "IBM Plex Sans")
+      .attr("font-family", "Instrument Sans, sans-serif")
       .attr("pointer-events", "none");
     let fitScale = 1;
     const visibleLabels = new Set<string>();
@@ -255,7 +254,7 @@ export function CorpusMap({
     };
   }, [data, state, onJump, viewport]);
   return (
-    <section className="map-view" aria-label="Corpus map">
+    <section className="map-view" aria-label="Document map">
       <header className="map-heading">
         <div>
           <span className="eyebrow">THE SHAPE OF THE COURSE</span>
@@ -275,7 +274,7 @@ export function CorpusMap({
       <div className="map-legend">
         {data.docs.map((d, i) => (
           <span key={d.id}>
-            <i style={{ background: `var(--doc-${(i % 4) + 1})` }} />
+            <i style={{ background: documentColor(d.id,data.docs) }} />
             {d.title.split(" · ")[0]}
           </span>
         ))}

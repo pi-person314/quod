@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { randomUUID } from "node:crypto";
-import type { Card } from "@cairn/contracts";
+import type { Card } from "@quod/contracts";
 import { bakeDocument, extractInvokingContext, type BakeRepository } from "../bake";
 import { instantiationCases } from "../evals/instantiation-cases";
 

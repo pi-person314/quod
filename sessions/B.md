@@ -22,7 +22,7 @@ pnpm dev                        # http://localhost:3000
 Route shells are in `app/api/**/route.ts`, each returning 501 with its owner
 and phase. `lib/fixtures.ts` loads `fixtures/golden/*` into one corpus.
 `lib/http.ts` has `jsonOf(schema, data)` so every response is validated
-against `@cairn/contracts` before it leaves.
+against `@quod/contracts` before it leaves.
 
 Until A0 lands, `fixtures/golden/` is empty. Build the shell and the PDF.js
 transform against any LaTeX PDF and a hand-written anchor or two; swap in the

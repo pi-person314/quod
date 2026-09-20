@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { GoldenFixture } from "@cairn/contracts";
-import { db } from "@cairn/contracts/db";
+import { GoldenFixture } from "@quod/contracts";
+import { db } from "@quod/contracts/db";
 import { developmentCorpus } from "../evals/development-corpus";
 import { bakeDocument } from "../bake";
 import { estimateCostUsd, logCall, toLedgerUsage } from "../llm";

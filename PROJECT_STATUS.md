@@ -1,4 +1,4 @@
-# Cairn integration audit — 2026-09-19
+# Quod integration audit — 2026-09-19
 
 ## Parallel card preparation — 2026-09-20
 
@@ -216,14 +216,14 @@ process `DATABASE_URL`; search uses `ELASTICSEARCH_URL` or localhost:9200.
 ```text
 pnpm typecheck
 pnpm test:contracts
-pnpm --filter @cairn/intel test
-pnpm --filter @cairn/intel test:db
-pnpm --filter @cairn/intel test:search
-pnpm --filter @cairn/intel test:budget
+pnpm --filter @quod/intel test
+pnpm --filter @quod/intel test:db
+pnpm --filter @quod/intel test:search
+pnpm --filter @quod/intel test:budget
 python -m pytest apps/worker/tests -q
 python apps/worker/scripts/check_integration.py
 python apps/worker/scripts/prepare_demo.py
-pnpm --filter @cairn/web exec tsx scripts/integration-acceptance.ts
+pnpm --filter @quod/web exec tsx scripts/integration-acceptance.ts
 node apps/web/scripts/isolated-verification.mjs build
 ```
 
@@ -236,8 +236,8 @@ python apps/worker/scripts/eval_golden.py all fixtures/golden/analysis-ch3.pdf f
 ```
 
 Database-backed offline mode: `USE_FIXTURES=0`,
-`CAIRN_INTELLIGENCE_MODE=deterministic`, `DATABASE_URL`,
-`CAIRN_WORKER_COMMAND` pointing to the installed executable, and `WEB_BASE_URL`
+`QUOD_INTELLIGENCE_MODE=deterministic`, `DATABASE_URL`,
+`QUOD_WORKER_COMMAND` pointing to the installed executable, and `WEB_BASE_URL`
 pointing to the web server. This means lexical search, exact-statement equivalence
 and original-statement cards. Default fixtures prefer A's two golden documents;
 set `FIXTURES_DIR` to absolute `apps/web/demo` for B's four-document demonstration.
@@ -246,13 +246,13 @@ Apply `packages/contracts/migrations/001_api_budget.sql` after the core schema.
 Worker `db-init` and new Docker databases apply it automatically; existing Docker
 databases need it applied explicitly. The shared row defaults disabled and cannot
 exceed $500. Reconcile its opening balance with any spending outside `llm_calls`
-before enabling. Paid operation additionally requires process `CAIRN_LIVE_API=1`
+before enabling. Paid operation additionally requires process `QUOD_LIVE_API=1`
 and `OPENAI_API_KEY`. This is an application guard, not a provider-account hard cap.
 Unknown outcomes retain reservations until reconciled. Speech now uses a bounded
 server relay. The local budget row was enabled under the recorded $500
 authorization after verifying zero calls, reservations and opening balance;
 the ceiling was preserved. Paid calls still require explicit process opt-in and
-credentials. Testing servers use `CAIRN_LIVE_API=0`.
+credentials. Testing servers use `QUOD_LIVE_API=0`.
 
 No credential-file access, deployment, submission or push was performed during
 this audit. Live API tests now produce actual ledger rows; consult the Costs panel

@@ -6,7 +6,9 @@ import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const web = resolve(root, "apps/web");
-const state = resolve(root, ".session-tools/current-verification.json");
+const state = process.env.QUOD_VERIFICATION_STATE
+  ? resolve(process.env.QUOD_VERIFICATION_STATE)
+  : resolve(root, ".session-tools/current-verification.json");
 const command = process.argv[2] ?? "build";
 let isolated;
 if (command === "build") {
@@ -36,7 +38,9 @@ for (const directory of [isolated, resolve(isolated, "../..")]) for (const name 
 const args = command === "build" ? [resolve(web, "node_modules/next/dist/bin/next"), command]
   : ["--import", "tsx", resolve(isolated, "scripts/server.ts"), process.argv[3] ?? "3003"];
 const child = spawn(process.execPath, args, {
-  cwd: isolated, env: { ...process.env, CAIRN_LIVE_API: command === "build" ? "0" : process.env.CAIRN_LIVE_API ?? "0",
+  cwd: isolated, env: { ...process.env,
+    QUOD_LIVE_API: command === "build" ? "0" : process.env.QUOD_LIVE_API ?? process.env.CAIRN_LIVE_API ?? "0",
+    CAIRN_LIVE_API: command === "build" ? "0" : process.env.CAIRN_LIVE_API ?? process.env.QUOD_LIVE_API ?? "0",
     FIXTURES_DIR: process.env.FIXTURES_DIR ?? resolve(root, "apps/web/demo") }, stdio: "inherit", windowsHide: true,
 });
 child.on("error", error => { console.error(error.message); process.exit(1); });

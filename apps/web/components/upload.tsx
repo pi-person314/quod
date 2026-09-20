@@ -1,10 +1,12 @@
 "use client";
+import { documentColor } from "@/lib/document-colors";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "./auth-provider";
 import { AccountMenu } from "./account-menu";
-import { IngestEvent, type NodeSummary } from "@cairn/contracts";
+import { Brand } from "./brand";
+import { IngestEvent, type NodeSummary } from "@quod/contracts";
 import { pdfjs } from "./pdf-page";
 interface Column {
   id: string;
@@ -13,8 +15,10 @@ interface Column {
   nodes: NodeSummary[];
   message?: string;
 }
-const PENDING_UPLOAD = "cairn.pending-upload";
-export function Upload() {
+const isTex = (file: File) => file.name.toLowerCase().endsWith(".tex");
+const isPdf = (file: File) => file.name.toLowerCase().endsWith(".pdf");
+const PENDING_UPLOAD = "quod.pending-upload";
+export function Upload({ initialFiles }: { initialFiles?: File[] }) {
   const router = useRouter();
   const { user, loading, login } = useAuth();
   const pendingKey = user ? `${PENDING_UPLOAD}.${user.uid}` : "";
@@ -22,15 +26,19 @@ export function Upload() {
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [columns, setColumns] = useState<Column[]>([]),
-    [finished, setFinished] = useState(false);
+    [finished, setFinished] = useState(false),
+    [uploaded, setUploaded] = useState(false);
   const input = useRef<HTMLInputElement>(null),
-    source = useRef<EventSource | null>(null);
+    source = useRef<EventSource | null>(null),
+    consumedInitialFiles = useRef(false);
   const [corpus, setCorpus] = useState("");
   const redirect = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     // The server already owns the PDFs: restore progress after a reload.
     if (!pendingKey) return;
-    const saved = sessionStorage.getItem(pendingKey);
+    const legacyKey = `cairn.pending-upload.${user!.uid}`;
+    const saved = sessionStorage.getItem(pendingKey) ?? sessionStorage.getItem(legacyKey);
+    if (saved) { sessionStorage.setItem(pendingKey, saved); sessionStorage.removeItem(legacyKey); }
     if (saved) {
       try {
         const pending = JSON.parse(saved) as { corpus: string; columns: Column[] };
@@ -108,13 +116,14 @@ export function Upload() {
     if (!user) { await login().catch(() => {}); return; }
     setError("");
     setFinished(false);
+    setUploaded(false);
     if (!files.length) return;
-    if (files.length > 20 || files.some((f) => f.size > 50 * 1024 * 1024)) {
-      setError("Choose up to 20 PDFs, each smaller than 50 MB.");
+    if (files.length > 20 || files.some((f) => isPdf(f) ? f.size > 50 * 1024 * 1024 : f.size > 2 * 1024 * 1024)) {
+      setError("Choose up to 20 files: PDFs up to 50 MB and .tex sources up to 2 MB.");
       return;
     }
-    if (files.some((f) => !f.name.toLowerCase().endsWith(".pdf"))) {
-      setError("Please choose PDF documents. Other formats are not supported.");
+    if (files.some((f) => !isPdf(f) && !isTex(f))) {
+      setError("Choose PDF documents or standalone .tex source files.");
       return;
     }
     source.current?.close();
@@ -130,7 +139,7 @@ export function Upload() {
       })),
     );
     try {
-      const lib = await pdfjs();
+      const lib = files.some(isPdf) ? await pdfjs() : undefined;
       const metadata: {
         pages: number;
         nodes: {
@@ -143,12 +152,18 @@ export function Upload() {
         error?: string;
       }[] = [];
       for (const file of files) {
+        // TeX is compiled and inspected on the server. Keep the source-order
+        // placeholder so `metadata` stays aligned with the submitted files.
+        if (isTex(file)) {
+          metadata.push({ pages: 0, nodes: [] });
+          continue;
+        }
         const nodes = [];
         let pages = 0,
           characters = 0,
           parseError = "";
         try {
-          const task = lib.getDocument({
+          const task = lib!.getDocument({
             data: new Uint8Array(await file.arrayBuffer()),
           });
           const pdf = await task.promise;
@@ -199,13 +214,13 @@ export function Upload() {
         body: JSON.stringify({
           name:
             files.length === 1
-              ? files[0].name.replace(/\.pdf$/i, "")
-              : "New course corpus",
+              ? files[0].name.replace(/\.(pdf|tex)$/i, "")
+              : "New documents",
         }),
       });
       if (!create.ok) {
         const failure = await create.json().catch(() => ({}));
-        throw new Error(failure.message ?? failure.error ?? "Could not create the corpus.");
+        throw new Error(failure.message ?? failure.error ?? "Could not add the documents.");
       }
       const { corpus_id } = await create.json();
       const form = new FormData();
@@ -220,6 +235,7 @@ export function Upload() {
         throw new Error(body.message ?? body.error ?? "Upload failed. Please try again.");
       }
       const { doc_ids } = await res.json();
+      setUploaded(true);
       setColumns(
         files.map((f, i) => ({
           id: doc_ids[i],
@@ -234,25 +250,29 @@ export function Upload() {
       setBusy(false);
     }
   };
+  useEffect(() => {
+    if (!initialFiles?.length || consumedInitialFiles.current || !user || loading) return;
+    consumedInitialFiles.current = true;
+    void upload(initialFiles);
+  }, [initialFiles, user, loading]);
+  const ready = columns.filter((column) => column.stage === "done").length;
   return (
     <main className="upload-page">
       <header>
-        <Link className="wordmark" href="/">
-          cairn<span> / </span>
-        </Link>
-        <div className="header-actions"><Link href="/">Your corpora ↗</Link><AccountMenu /></div>
+        <Brand trail="Add documents" />
+        <div className="header-actions"><Link href="/library">Your documents ↗</Link><AccountMenu /></div>
       </header>
       <div className="upload-intro">
         <span className="eyebrow">BRING THE COURSE TOGETHER</span>
         <h1>Start with what you’re reading.</h1>
-        <p>Textbooks, lecture notes, problem sets. One connected corpus.</p>
+        <p>Textbooks, lecture notes, problem sets. All your documents, connected.</p>
       </div>
       <input
         ref={input}
         hidden
         type="file"
         multiple
-        accept="application/pdf,.pdf"
+        accept="application/pdf,.pdf,text/x-tex,application/x-tex,.tex"
         onChange={(e) => void upload(Array.from(e.target.files ?? []))}
       />
       <button
@@ -272,13 +292,22 @@ export function Upload() {
       >
         <span className="drop-symbol">+</span>
         <strong>
-          {busy ? "Reading your documents…" : user ? "Drop your PDFs here" : "Log in with Google to add PDFs"}
+          {busy ? "Reading your documents…" : user ? "Drop PDFs or .tex files here" : "Log in with Google to add files"}
         </strong>
         <span>
           {busy
-            ? "The results will appear below as they are found."
-            : "or choose files · up to 20 PDFs, 50 MB each"}
+            ? uploaded
+              ? "The PDFs are safely uploaded. Results will appear below as they are found."
+              : "Checking each PDF before upload. Keep this tab open."
+            : "or choose files · PDFs up to 50 MB, .tex sources up to 2 MB"}
         </span>
+        {columns.length > 0 && (
+          <span className="upload-progress" aria-live="polite">
+            <span>{columns.length} document{columns.length === 1 ? "" : "s"}</span>
+            <b>{ready} of {columns.length} ready</b>
+            <i><i style={{ width: `${(ready / columns.length) * 100}%` }} /></i>
+          </span>
+        )}
       </button>
       {error && (
         <p className="error" role="alert">
@@ -289,7 +318,7 @@ export function Upload() {
         {columns.map((c, i) => (
           <section key={c.id}>
             <header>
-              <i style={{ background: `var(--doc-${(i % 4) + 1})` }} />
+              <i style={{ background: documentColor(c.id,columns) }} />
               <h3>{c.name}</h3>
               <span className={c.stage === "error" ? "error" : "stage"}>
                 {(
@@ -356,7 +385,7 @@ export function Upload() {
         </p>
       )}
       <p className="upload-footnote">
-        PDFs with selectable text work best. Scanned pages are not supported.
+        PDFs with selectable text work best. Standalone .tex files compile to a PDF before they are prepared; scanned PDFs are not supported.
       </p>
     </main>
   );

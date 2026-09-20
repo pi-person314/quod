@@ -4,10 +4,10 @@ from uuid import uuid4
 
 import httpx
 import pytest
-from cairn_worker import llm
-from cairn_worker.models import Node
-from cairn_worker.stages import remote
-from cairn_worker.stages.edges import extract_edges_offline
+from quod_worker import llm
+from quod_worker.models import Node
+from quod_worker.stages import remote
+from quod_worker.stages.edges import extract_edges_offline
 
 def node(label, statement, page=1, kind="theorem"):
     return Node(id=uuid4(), doc_id=DOC, kind=kind, label=label, title=None,
@@ -49,8 +49,8 @@ def test_missing_usage_and_unknown_prices_are_not_free():
 
 
 def test_node_ids_survive_reingest_but_remain_document_scoped():
-    from cairn_worker.models import Span
-    from cairn_worker.stages.segment import nodes_from_spans
+    from quod_worker.models import Span
+    from quod_worker.stages.segment import nodes_from_spans
     spans = [Span(text="Theorem 91.1. A documented mathematical statement.", page=1,
                   bbox=[20, 30.125, 400, 50.875], font="Times", size=12,
                   bold=False, italic=False, block=0, line=0)]

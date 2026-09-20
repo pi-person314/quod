@@ -1,4 +1,4 @@
-# @cairn/intel — Session C
+# @quod/intel — Session C
 
 Everything that makes the graph smart, plus the cost instrumentation and the
 voice layer. Route handlers under `apps/web/app/api/intel/*` import from here
@@ -7,9 +7,9 @@ and stay thin.
 ## Offline verification
 
 ```sh
-pnpm --filter @cairn/intel test
-pnpm --filter @cairn/intel eval:offline
-pnpm --filter @cairn/intel fixtures:generate
+pnpm --filter @quod/intel test
+pnpm --filter @quod/intel eval:offline
+pnpm --filter @quod/intel fixtures:generate
 pnpm typecheck
 ```
 
@@ -56,8 +56,8 @@ process environment. The examples are synthetic, not source PDFs.
 
 ```sh
 COMPOSE_DISABLE_ENV_FILE=1 docker compose --env-file /dev/null up -d
-DATABASE_URL=postgres://cairn:cairn@localhost:5432/cairn pnpm --filter @cairn/intel test:db
-ELASTICSEARCH_URL=http://localhost:9200 pnpm --filter @cairn/intel test:search
+DATABASE_URL=postgres://cairn:cairn@localhost:5432/cairn pnpm --filter @quod/intel test:db
+ELASTICSEARCH_URL=http://localhost:9200 pnpm --filter @quod/intel test:search
 ```
 
 The DB check creates/removes its own UUID-isolated corpus and synthetic ledger

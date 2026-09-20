@@ -1,7 +1,7 @@
 import { chromium } from '@playwright/test';
 import assert from 'node:assert/strict';
 import { readFile,writeFile } from 'node:fs/promises';
-const browser=await chromium.launch({channel:'chrome'});const page=await browser.newPage({viewport:{width:1280,height:800},acceptDownloads:true});const errors=[];page.on('pageerror',e=>errors.push(e.message));const base=process.env.CAIRN_BASE_URL ?? 'http://127.0.0.1:3004';
+const browser=await chromium.launch({channel:'chrome'});const page=await browser.newPage({viewport:{width:1280,height:800},acceptDownloads:true});const errors=[];page.on('pageerror',e=>errors.push(e.message));const base=process.env.QUOD_BASE_URL ?? process.env.CAIRN_BASE_URL ?? 'http://127.0.0.1:3004';
 const ready=async()=>{await page.locator('.pdf-page[data-loading="false"]').waitFor({timeout:60000});await page.waitForTimeout(150);};
 await page.goto(base+'/read/b0000000-0000-4000-8000-000000000003?page=1');await ready();
 for(let i=0;i<3;i++){await page.getByRole('button',{name:'Reference: the dimension theorem',exact:true}).hover();await page.locator('.floating-card').waitFor();if(i===0){await page.mouse.move(10,10);await page.waitForTimeout(150);assert(await page.locator('.floating-card').isVisible());await page.waitForTimeout(250);assert.equal(await page.locator('.floating-card').count(),0);}else await page.keyboard.press('Escape');await page.mouse.move(10,10);}

@@ -12,10 +12,10 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from cairn_worker.stages.anchors import find_anchors
-from cairn_worker.stages.edges import extract_edges_offline
-from cairn_worker.stages.parse import parse_pdf, text_layer_span_count
-from cairn_worker.stages.segment import nodes_from_spans
+from quod_worker.stages.anchors import find_anchors
+from quod_worker.stages.edges import extract_edges_offline
+from quod_worker.stages.parse import parse_pdf, text_layer_span_count
+from quod_worker.stages.segment import nodes_from_spans
 
 GOLDEN = REPO / "fixtures" / "golden" / "analysis-ch3.json"
 PDF = REPO / "fixtures" / "golden" / "analysis-ch3.pdf"

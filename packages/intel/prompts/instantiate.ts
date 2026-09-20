@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { Anchor, Card, Node, SymbolEntry } from "@cairn/contracts";
+import { Anchor, Card, Node, SymbolEntry } from "@quod/contracts";
 
 export const INSTANTIATION_PROMPT_VERSION = "conservative-v1";
 

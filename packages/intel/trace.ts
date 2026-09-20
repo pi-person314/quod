@@ -1,4 +1,4 @@
-import type { Anchor, Edge, Node, TraceHop, TraceRequest, TraceResponse } from "@cairn/contracts";
+import type { Anchor, Edge, Node, TraceHop, TraceRequest, TraceResponse } from "@quod/contracts";
 
 function normalized(text: string): string {
   return text.normalize("NFKC").toLowerCase().replace(/[‐‑–—]/g, "-").replace(/\s+/g, " ").trim();

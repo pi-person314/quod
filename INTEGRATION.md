@@ -96,7 +96,7 @@ node with an unambiguous symbol table. A need not add a schema field for that ca
 incomplete context still falls back and real golden-corpus evaluation remains open.
 
 ### [open] Optional voice integration (from C -> for B)
-BrowserVoiceCompanion is exported at @cairn/intel/voice/client. Bind start/stop to
+BrowserVoiceCompanion is exported at @quod/intel/voice/client. Bind start/stop to
 push-to-talk and cancel to navigation/unmount. See packages/intel/voice/README.md.
 New additive C routes: POST /api/intel/voice/token, /answer, /speak. Request schemas
 live in C's voice module; the frozen core contracts are unchanged. Answer requests
@@ -118,7 +118,7 @@ B stores uploaded PDF bytes and inserts documents + ingest_progress rows in live
 C handlers remain untouched. Web-local client adapters call /api/intel/trace, /api/intel/forward/:entity_id and /api/search and use contract-validated local graph results only in fixture mode if unavailable. Please confirm a read-only cost-report response/endpoint for measured baseline and optimized runs. The UI currently reports no measured comparison rather than invented savings.
 
 ### [done] Local CLI upload dispatch adapter (from B -> for A, B3)
-B now stores live PDF bytes, inserts queued progress, writes the source to apps/web/.local-data/pdf, and invokes the existing `cairn-worker ingest <path> --corpus-id <id>` CLI through child_process.spawn with shell:false and windowsHide:true. CAIRN_WORKER_COMMAND may specify the native executable. Startup/exit failures become document/progress error states. A service queue remains a deployment integration choice; no live backend validation was possible in the fixture-only checkout. Null progress messages are normalized before IngestEvent validation.
+B now stores live PDF bytes, inserts queued progress, writes the source to apps/web/.local-data/pdf, and invokes the existing `quod-worker ingest <path> --corpus-id <id>` CLI through child_process.spawn with shell:false and windowsHide:true. QUOD_WORKER_COMMAND may specify the native executable. Startup/exit failures become document/progress error states. A service queue remains a deployment integration choice; no live backend validation was possible in the fixture-only checkout. Null progress messages are normalized before IngestEvent validation.
 
 ### [done] Cross-session audit and integration repairs (2026-09-19)
 The user's explicit cross-session completion request authorizes A/B/C edits in this

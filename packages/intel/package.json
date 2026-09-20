@@ -1,5 +1,5 @@
 {
-  "name": "@cairn/intel",
+  "name": "@quod/intel",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -23,7 +23,7 @@
     "cost-compare": "node --import tsx scripts/compare-costs.ts"
   },
   "dependencies": {
-    "@cairn/contracts": "workspace:*",
+    "@quod/contracts": "workspace:*",
     "openai": "^5.0.0",
     "ws": "^8.21.3",
     "zod": "^3.23.8"

@@ -1,5 +1,5 @@
 import { requireUser, authErrorResponse } from "@/lib/auth";
-import { CardResponse } from "@cairn/contracts";
+import { CardResponse } from "@quod/contracts";
 import { userDataset } from "@/lib/data";
 import { jsonOf, notFound } from "@/lib/http";
 export async function GET(

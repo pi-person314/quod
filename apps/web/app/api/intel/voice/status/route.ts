@@ -1,11 +1,11 @@
 import { requireUser, authErrorResponse } from "@/lib/auth";
-import { requireLiveBudget } from "@cairn/intel";
+import { requireLiveBudget } from "@quod/intel";
 export async function GET(req: Request) {
   try {
     const user = await requireUser(req);
     let available = false;
     if (
-      process.env.CAIRN_VOICE_RELAY === "1" &&
+      (process.env.QUOD_VOICE_RELAY ?? process.env.CAIRN_VOICE_RELAY) === "1" &&
       process.env.DEEPGRAM_API_KEY &&
       (process.env.USE_FIXTURES !== "0" || process.env.OPENAI_API_KEY)
     ) {

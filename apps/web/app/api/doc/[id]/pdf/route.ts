@@ -1,7 +1,7 @@
 import { requireDocumentOwner } from "@/lib/data";
 import { requireUser, authErrorResponse } from "@/lib/auth";
 import { pdfBytes } from "@/lib/data";
-import { Uuid } from "@cairn/contracts";
+import { Uuid } from "@quod/contracts";
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> },

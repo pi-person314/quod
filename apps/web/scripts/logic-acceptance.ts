@@ -2,7 +2,7 @@
 import { pdfToViewport, viewportToPdf } from "../lib/coordinates";
 import { demoProofTrace } from "../lib/demo-trace";
 import { readFileSync, readdirSync } from "node:fs";
-import { GoldenFixture } from "@cairn/contracts";
+import { GoldenFixture } from "@quod/contracts";
 import type { Dataset } from "../lib/data";
 // The authored trace belongs to this demo, regardless of incoming A0 fixtures.
 const fixtures = readdirSync("demo")

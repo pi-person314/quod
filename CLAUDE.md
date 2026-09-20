@@ -1,6 +1,6 @@
-# Cairn — brief for every Claude Code session
+# Quod — brief for every Claude Code session
 
-Cairn ingests a student's course corpus (textbook, lecture notes, psets,
+Quod ingests a student's course corpus (textbook, lecture notes, psets,
 slides) into one dependency graph and makes reading adaptive: hover a
 reference and see the cited theorem restated in the invoking page's notation;
 select a line and get the prerequisite chain; a pset's "the dimension theorem"
@@ -34,7 +34,7 @@ If you are on `main`, ask the user which session this is, then
    `INTEGRATION.md`.
 3. **`USE_FIXTURES=1` must keep working to the end.** It is the demo fallback.
 4. **Every model call is logged** to `llm_calls` — via `packages/intel/llm.ts`
-   in TypeScript, `cairn_worker/llm.py` in Python. No bare SDK calls.
+   in TypeScript, `quod_worker/llm.py` in Python. No bare SDK calls.
 5. **Merge to `main` only at checkpoints** (hour 6, 12, 17). Between them,
    pull `main` into your branch freely; never block on another session.
 6. **Each phase ends with its acceptance test.** Do not advance until it
@@ -57,7 +57,7 @@ pnpm db:schema               # re-apply packages/contracts/schema.sql (idempoten
 pnpm test:contracts          # validate fixtures/golden/* against the zod schemas
 pnpm typecheck               # all TS packages
 pnpm dev                     # Next.js on :3000 (USE_FIXTURES=1 from .env needs no backend)
-cd apps/worker && pip install -e ".[dev]" && cairn-worker --help
+cd apps/worker && pip install -e ".[dev]" && quod-worker --help
 ```
 
 ## Layout
@@ -69,6 +69,6 @@ sessions/{A,B,C}.md     per-session phases, budgets, acceptance tests
 packages/contracts/     types.ts (zod), schema.sql, db.ts, test.ts
 packages/intel/         llm.ts wrapper + ledger, prompts/, scripts/cost-report.ts
 apps/web/               Next.js 15 / React 19 / Tailwind 4; app/api/** route shells
-apps/worker/            Python: cairn_worker/{cli,pipeline,models,db,llm}.py, stages/
+apps/worker/            Python: quod_worker/{cli,pipeline,models,db,llm}.py, stages/
 fixtures/golden/        A0 golden corpus (empty until A0 lands)
 ```

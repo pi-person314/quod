@@ -1,4 +1,4 @@
-import { GoldenFixture, type Node } from "@cairn/contracts";
+import { GoldenFixture, type Node } from "@quod/contracts";
 import { instantiationCases } from "./instantiation-cases";
 import { instantiateCard } from "../prompts/instantiate";
 

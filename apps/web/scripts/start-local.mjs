@@ -4,20 +4,23 @@ import { existsSync, watchFile, unwatchFile } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const port = process.argv[2] ?? "3003";
+const { Client } = createRequire(resolve(root, "packages/contracts/package.json"))("pg");
 if (!/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535) throw new Error("Invalid port");
 const missing = ["OPENAI_API_KEY", "DEEPGRAM_API_KEY"].filter(name => !process.env[name]);
 if (missing.length) throw new Error(`Missing process configuration: ${missing.join(", ")}. No credential file was opened by this launcher.`);
-const localWorker = resolve(root, ".session-tools/worker-venv", process.platform === "win32" ? "Scripts/cairn-worker.exe" : "bin/cairn-worker");
+const localQuodWorker = resolve(root, ".session-tools/worker-venv", process.platform === "win32" ? "Scripts/quod-worker.exe" : "bin/quod-worker");
+const localCairnWorker = resolve(root, ".session-tools/worker-venv", process.platform === "win32" ? "Scripts/cairn-worker.exe" : "bin/cairn-worker");
 const env = { ...process.env,
   DATABASE_URL: process.env.DATABASE_URL ?? "postgres://cairn:cairn@127.0.0.1:5432/cairn",
   ELASTICSEARCH_URL: process.env.ELASTICSEARCH_URL ?? "http://127.0.0.1:9200",
-  USE_FIXTURES: "0", CAIRN_LIVE_API: "1", CAIRN_INTELLIGENCE_MODE: "live",
+  USE_FIXTURES: "0", QUOD_LIVE_API: "1", CAIRN_LIVE_API: "1", QUOD_INTELLIGENCE_MODE: "live", CAIRN_INTELLIGENCE_MODE: "live",
   WEB_BASE_URL: `http://127.0.0.1:${port}`,
-  CAIRN_WORKER_COMMAND: process.env.CAIRN_WORKER_COMMAND ?? (existsSync(localWorker) ? localWorker : "cairn-worker"),
+  QUOD_WORKER_COMMAND: process.env.QUOD_WORKER_COMMAND ?? process.env.CAIRN_WORKER_COMMAND ?? (existsSync(localQuodWorker) ? localQuodWorker : existsSync(localCairnWorker) ? localCairnWorker : "quod-worker"),
 };
-console.log("Starting database-backed Cairn with live providers and the shared spending guard.");
+console.log("Starting database-backed Quod with live providers and the shared spending guard.");
 const state = resolve(root, ".session-tools/current-verification.json");
 let child, stopping = false, restarting = false;
 function launch() {
@@ -26,7 +29,7 @@ function launch() {
   child.on("error", error => { console.error(error.message); unwatchFile(state); process.exitCode = 1; });
   child.on("exit", code => {
     if (!restarting && !stopping) {
-      console.log(`Cairn stopped (${code ?? "signal"}). Restart this launcher after resolving the reported error.`);
+      console.log(`Quod stopped (${code ?? "signal"}). Restart this launcher after resolving the reported error.`);
       unwatchFile(state); process.exitCode = code ?? 1;
     }
   });
@@ -50,17 +53,23 @@ watchFile(state, { interval: 1000 }, (current, previous) => {
     // A successful build must not kill an ingestion worker halfway through a job.
     let announced = false;
     while (!stopping && child?.exitCode === null) {
-      const library = await fetch(`http://127.0.0.1:${port}/api/library`, { signal: AbortSignal.timeout(5000) })
-        .then(response => response.ok ? response.json() : null).catch(() => null);
-      // A timeout or failed status request is not evidence that workers are idle.
-      // Builds can briefly contend with the running server for CPU and connections.
-      if (Array.isArray(library?.docs) && !library.docs.some(doc => ["queued", "ingesting"].includes(doc.status))) break;
+      // Private HTTP routes now require a signed-in user. Check worker activity
+      // through the launcher's existing database connection settings instead.
+      const status = new Client({ connectionString: env.DATABASE_URL, connectionTimeoutMillis: 5000 });
+      let idle = false;
+      try {
+        await status.connect();
+        const result = await status.query("SELECT EXISTS (SELECT 1 FROM documents WHERE status IN ('queued','ingesting')) AS busy");
+        idle = result.rows[0]?.busy === false;
+      } catch { /* Unavailable status is not evidence that workers are idle. */ }
+      finally { await status.end().catch(() => {}); }
+      if (idle) break;
       if (!announced) { console.log("Verified build ready; waiting for ingestion to finish before restarting."); announced = true; }
       await new Promise(resolve => setTimeout(resolve, 2000));
     }
     if (stopping) return;
     restarting = true;
-    console.log("Verified build changed; restarting Cairn with the existing private process configuration.");
+    console.log("Verified build changed; restarting Quod with the existing private process configuration.");
     await stopChild(); restarting = false;
     if (!stopping) launch();
   }).catch(error => { restarting = false; console.error(`Build reload failed: ${error.message}`); });

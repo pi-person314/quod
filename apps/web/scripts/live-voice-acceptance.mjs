@@ -5,7 +5,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import assert from "node:assert/strict";
 import ts from "typescript";
 if (!process.argv.includes("--live")) throw new Error("Pass --live to authorize provider-backed verification");
-const base = process.env.CAIRN_BASE_URL ?? "http://127.0.0.1:3003";
+const base = process.env.QUOD_BASE_URL ?? process.env.CAIRN_BASE_URL ?? "http://127.0.0.1:3003";
 const library = await (await fetch(base + "/api/library")).json();
 const node = library.nodes.find(node => node.kind === "theorem"); assert(node);
 const viewport = { doc_id: node.doc_id, page: node.page, visible_node_ids: [node.id] };

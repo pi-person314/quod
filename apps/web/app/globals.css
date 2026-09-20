@@ -1,27 +1,29 @@
 ﻿@import "tailwindcss";
-@import "@fontsource/ibm-plex-sans/400.css";
-@import "@fontsource/ibm-plex-sans/500.css";
-@import "@fontsource/ibm-plex-sans/600.css";
-@import "@fontsource/ibm-plex-mono/400.css";
+@import "./fonts.css";
 @import "katex/dist/katex.min.css";
 :root {
   color-scheme: dark;
-  --bg: #0b0b0d;
-  --surface: #141417;
-  --surface-2: #1c1c21;
-  --line: #2a2a31;
-  --ink: #ececf1;
-  --ink-2: #a3a3ad;
-  --ink-3: #8a8a96;
-  --accent: #e2b25a;
-  --accent-2: #8fb8ff;
-  --danger: #ef5b4d;
-  --doc-1: #e2b25a;
-  --doc-2: #6fc7bd;
-  --doc-3: #b79cf0;
-  --doc-4: #e58fc4;
-  --paper: #17171b;
-  --paper-ink: #e6e2d8;
+  --bg: #0d1b2a;
+  --surface: #091320;
+  --surface-2: #12253a;
+  --line: #1e3146;
+  --line-strong: #2f4760;
+  --ink: #f4f1de;
+  --ink-2: #a9b8c9;
+  --ink-3: #7f93a8;
+  --accent: #db935f;
+  --accent-2: #6c97c4;
+  --danger: #d9614c;
+  --doc-1: #db935f;
+  --doc-2: #e0b45a;
+  --doc-3: #6c97c4;
+  --doc-4: #7fa88a;
+  --paper: #0a1118;
+  --paper-ink: #f4f1de;
+  --font-ui: "Instrument Sans", sans-serif;
+  --font-display: "Bricolage Grotesque", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --font-reading: "Newsreader", serif;
 }
 * {
   box-sizing: border-box;
@@ -30,7 +32,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: var(--font-ui);
   font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -97,6 +99,7 @@ p {
 h1,
 h2,
 h3 {
+  font-family: var(--font-display);
   font-weight: 500;
   letter-spacing: -0.035em;
 }
@@ -106,7 +109,7 @@ p {
 .eyebrow,
 kbd,
 .stage {
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.075em;
   color: var(--ink-2);

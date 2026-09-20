@@ -30,7 +30,7 @@ Rules:
 
 ## demo.dump
 
-A5 snapshot of the ingested demo corpus, written by `cairn-worker dump-demo`.
+A5 snapshot of the ingested demo corpus, written by `quod-worker dump-demo`.
 Plain SQL rather than `pg_dump` output, so restoring never depends on a client
 whose version matches the server. It opens by deleting the corpora it is about
 to insert, so applying it twice is safe.

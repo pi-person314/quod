@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
-import { db } from "@cairn/contracts/db";
+import { db } from "@quod/contracts/db";
 
 // Test in a temporary schema within one transaction, never enable the app's budget.
 const connection = await db().connect();

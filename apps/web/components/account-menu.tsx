@@ -15,7 +15,7 @@ export function AccountMenu() {
   </div>;
 }
 
-export function AddCorpusButton({ className, children = "Add a corpus ↗" }: { className?: string; children?: React.ReactNode }) {
+export function AddCorpusButton({ className, children = "Add documents ↗" }: { className?: string; children?: React.ReactNode }) {
   const { user, loading, login } = useAuth();
   const router = useRouter();
   return <button className={className} disabled={loading} onClick={() => {
