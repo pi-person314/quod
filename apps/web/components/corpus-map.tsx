@@ -309,13 +309,21 @@ export function CorpusMap({
         />
         <button onClick={onClose}>Back to reading ×</button>
       </header>
-      <div className="map-legend">
+      <div className="map-legend" role="group" aria-label="Map legend">
         {data.docs.map((d, i) => (
           <span key={d.id}>
             <i style={{ background: documentColor(d.id,data.docs) }} />
             {d.title.split(" · ")[0]}
           </span>
         ))}
+        <span className="map-line-key" title="Solid arrows point toward the dependency, notation used, or more general result.">
+          <span className="map-line-sample directed" aria-hidden="true" />
+          Arrow: points to prerequisite
+        </span>
+        <span className="map-line-key">
+          <span className="map-line-sample equivalent" aria-hidden="true" />
+          Dashed: equivalent results
+        </span>
       </div>
       <svg ref={svg} />
       {!data.nodes.length && (

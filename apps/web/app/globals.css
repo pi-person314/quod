@@ -989,8 +989,10 @@ th {
 .map-legend {
   position: absolute;
   left: 36px;
+  right: 36px;
   top: 157px;
   display: flex;
+  flex-wrap: wrap;
   gap: 18px;
   z-index: 2;
   font-size: 11px;
@@ -1000,6 +1002,29 @@ th {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+.map-legend .map-line-key {
+  color: var(--ink);
+}
+.map-legend .map-line-sample {
+  display: inline-block;
+  position: relative;
+  width: 32px;
+  height: 0;
+  flex: 0 0 32px;
+  border-top: 2px solid #a9cbed;
+}
+.map-line-sample.directed::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  top: -5px;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-left: 7px solid #a9cbed;
+}
+.map-legend .map-line-sample.equivalent {
+  border-top-style: dashed;
 }
 .map-view svg {
   width: 100%;
