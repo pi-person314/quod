@@ -123,6 +123,26 @@ Open the Render URL and:
 The Render `/health` endpoint checks the hosted app itself. `/api/backend/status`
 checks whether the local server is reachable; it does not check every provider.
 
+## Publishing later updates
+
+There are two running copies: Render's hosted frontend and your local backend.
+Commit and push the changed source files to the branch linked to Render. Check
+the `quod` service's Events page for that commit and wait until its deployment
+is Live. If automatic deployment is disabled, use **Manual Deploy → Deploy latest
+commit**. Refresh the browser after deployment to load the new frontend code.
+
+For backend changes, also build the current source locally from the project root:
+
+```powershell
+node apps/web/scripts/isolated-verification.mjs build
+```
+
+The running `start-local.mjs` launcher detects a successful build and reloads
+after active ingestion finishes. If the launcher is stopped, start it again with
+`node --env-file=.env apps/web/scripts/start-local.mjs`. Environment-variable
+changes require restarting it as well. Restart the gateway only when its code
+or environment changes; ordinary UI updates do not require restarting ngrok.
+
 ## Keeping it running
 
 Keep the computer powered, awake, connected to the internet, and all three

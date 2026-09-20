@@ -28,6 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const sessionQueue = useRef<Promise<void>>(Promise.resolve());
   const mounted = useRef(false);
   const subscribedAuth = useRef<Auth | null>(null);
+  const settledUid = useRef<string | null | undefined>(undefined);
   const stopSubscription = useRef<() => void>(() => {});
   const syncSession = useCallback((auth: Auth, nextUser: User | null) => {
     const task = sessionQueue.current.catch(() => {}).then(async () => {
@@ -41,7 +42,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const body = await response.json().catch(() => ({}));
         throw new Error(body.error || "Could not establish your login session. Please try again.");
       }
-      if (mounted.current && auth.currentUser?.uid === nextUser?.uid) setUser(nextUser);
+      if (mounted.current && auth.currentUser?.uid === nextUser?.uid) {
+        settledUid.current = nextUser?.uid ?? null;
+        // Keep the same object for token-only changes so library effects and
+        // reader state are not reset during background session renewal.
+        setUser(current => current?.uid === nextUser?.uid ? current : nextUser);
+      }
     });
     sessionQueue.current = task;
     return task;
@@ -53,15 +59,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     subscribedAuth.current = auth;
     const unsubscribeToken = onIdTokenChanged(auth, (nextUser) => {
       if (!mounted.current) return;
-      setUser(current => current?.uid === nextUser?.uid ? current : null);
-      setLoading(true);
+      const background = settledUid.current === (nextUser?.uid ?? null);
+      if (!background) {
+        setUser(current => current?.uid === nextUser?.uid ? current : null);
+        setLoading(true);
+      }
       void syncSession(auth, nextUser).catch(cause => {
-        if (mounted.current) { setUser(null); setError(authMessage(cause)); }
-      }).finally(() => { if (mounted.current) setLoading(false); });
+        if (mounted.current) { if (!background) setUser(null); setError(authMessage(cause)); }
+      }).finally(() => { if (mounted.current && !background) setLoading(false); });
     });
     // Refresh even on an idle tab so the server cookie never outlives its ID token.
-    const refresh = () => { if (auth.currentUser) void auth.currentUser.getIdToken(true).catch(cause => { if (mounted.current) setError(authMessage(cause)); }); };
-    const interval = window.setInterval(refresh, 45 * 60 * 1000);
+    const refresh = (force = false) => { if (auth.currentUser) void auth.currentUser.getIdToken(force).catch(cause => { if (mounted.current) setError(authMessage(cause)); }); };
+    const interval = window.setInterval(() => refresh(true), 45 * 60 * 1000);
     const onVisible = () => { if (document.visibilityState === "visible") refresh(); };
     document.addEventListener("visibilitychange", onVisible);
     stopSubscription.current = () => {

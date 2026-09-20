@@ -1,5 +1,6 @@
 "use client";
 import { documentColor } from "@/lib/document-colors";
+import { nodeLabel, nodeDescription } from "@/lib/node-label";
 import { useEffect, useRef, useState } from "react";
 import {
   forceSimulation,
@@ -103,14 +104,14 @@ export function CorpusMap({
       .attr("stroke-width", 2)
       .attr("tabindex", 0)
       .attr("role", "button")
-      .attr("aria-label", (n) => `${n.node.label}: ${n.node.title}`)
+      .attr("aria-label", (n) => nodeDescription(n.node))
       .style("cursor", "pointer");
     const labels = group
       .append("g")
       .selectAll("text")
       .data(dots)
       .join("text")
-      .text((n) => n.node.title ?? n.node.label)
+      .text((n) => nodeLabel(n.node))
       .attr("fill", "#f4f1de")
       .attr("font-size", 11)
       .attr("font-family", "Instrument Sans, sans-serif")
@@ -120,7 +121,7 @@ export function CorpusMap({
     const reset = () => {
       const q = queryRef.current.toLowerCase();
       circles.attr("opacity", (n) =>
-        q && !`${n.node.title} ${n.node.label}`.toLowerCase().includes(q)
+        q && !nodeDescription(n.node).toLowerCase().includes(q)
           ? 0.12
           : state[n.id]?.seen
             ? 1
@@ -128,14 +129,14 @@ export function CorpusMap({
       );
       labels.attr("opacity", (n) =>
         q
-          ? `${n.node.title} ${n.node.label}`.toLowerCase().includes(q)
+          ? nodeDescription(n.node).toLowerCase().includes(q)
             ? 1
             : 0
           : visibleLabels.has(n.id)
             ? 0.9
             : 0,
       );
-      labels.style("display", (n) => (q ? `${n.node.title} ${n.node.label}`.toLowerCase().includes(q) : visibleLabels.has(n.id)) ? null : "none");
+      labels.style("display", (n) => (q ? nodeDescription(n.node).toLowerCase().includes(q) : visibleLabels.has(n.id)) ? null : "none");
       lines.attr("opacity", 0.45);
       highlightedLines.attr("d", "");
     };
@@ -289,7 +290,7 @@ export function CorpusMap({
       <footer>
         <span>
           {hover
-            ? `${hover.label} · ${hover.title}`
+            ? nodeDescription(hover)
             : "Hover to follow two steps of connection. Click to read the source."}
         </span>
         <span>Size: PageRank · Opacity: reading state · Scroll to zoom</span>
