@@ -6,6 +6,7 @@ import { callModel, MODELS } from "./llm";
 import { createSearchClient } from "./search";
 import { mapConcurrent } from "./concurrency";
 import { matchReferences, type ReferenceModel } from "./reference-resolution";
+import { syncReferenceEdges } from "./reference-edges";
 import { adjudicatePairs, planResolution, type CandidatePair, type ResolutionPlan } from "./resolve";
 
 export interface ResolutionSnapshot { nodes: Node[]; entities: Entity[]; anchors: Anchor[] }
@@ -185,6 +186,10 @@ export function postgresResolutionRepository(): ResolutionRepository {
         await connection.query(`UPDATE entities old SET canonical_node_id=canonical.canonical_node_id
           FROM nodes n JOIN entities canonical ON canonical.id=n.entity_id
           WHERE old.corpus_id=$1 AND old.canonical_node_id=n.id AND old.id<>canonical.id`, [corpusId]);
+        // Edge extraction precedes cross-document resolution. Materialize newly
+        // resolved citations for ALL documents, including earlier uploads.
+        const resolved = await loadSnapshot((text, values) => connection.query(text, values), corpusId);
+        await syncReferenceEdges((text, values) => connection.query(text, values), resolved.nodes, resolved.anchors);
         await connection.query("COMMIT");
       } catch (error) { await connection.query("ROLLBACK"); throw error; }
       finally { connection.release(); }
