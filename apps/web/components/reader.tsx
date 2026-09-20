@@ -101,7 +101,7 @@ export function Reader({
     events.onmessage = event => {
       const progress = JSON.parse(event.data);
       if (progress.doc_id !== doc.id) return;
-      setIngestStage(progress.stage);
+      setIngestStage(progress.message ?? progress.stage);
       if (["done", "error"].includes(progress.stage)) { events.close(); location.reload(); }
     };
     return () => events.close();

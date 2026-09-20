@@ -78,3 +78,28 @@ test("large resolution sets use bounded batches and reject missing decisions bef
   });
   assert.deepEqual(counts, [24, 24, 1]); assert.equal(decisions.length, 49);
 });
+
+test("resolution runs four batches concurrently with monotonic progress and stable output", async () => {
+  const [chapter] = await developmentCorpus();
+  const pairs = Array.from({ length: 97 }, (_, i) => ({
+    node: { ...chapter.nodes[0], id: `d0000000-0000-4000-8000-${String(i).padStart(12, "0")}` }, candidate: chapter.nodes[1],
+  }));
+  let active = 0, peak = 0;
+  const progress: number[] = [];
+  const result = await adjudicatePairs(pairs, async request => {
+    peak = Math.max(peak, ++active);
+    const batch = JSON.parse(request.input);
+    await new Promise(resolve => setTimeout(resolve, batch[0].node_id === pairs[0].node.id ? 20 : 5));
+    active--;
+    return { decisions: batch.map((pair: { node_id: string; candidate_id: string }) => ({
+      node_id: pair.node_id, candidate_id: pair.candidate_id, verdict: "different", confidence: 0.9 })) };
+  }, async (done, total) => {
+    assert.equal(total, 97);
+    await new Promise(resolve => setTimeout(resolve, done % 2 ? 1 : 5));
+    progress.push(done);
+  });
+  assert.equal(peak, 4);
+  assert.equal(progress.at(-1), 97);
+  assert(progress.every((done, i) => i === 0 || done > progress[i - 1]));
+  assert.deepEqual(result.map(decision => decision.node_id), pairs.map(pair => pair.node.id));
+});

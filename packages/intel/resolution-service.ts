@@ -32,9 +32,11 @@ export async function resolveCorpus(input: ResolveInput, deps: {
   const byId = new Map(snapshot.nodes.map((node) => [node.id, node]));
   const requested = [...new Set(request.node_ids)];
   if (requested.some((id) => !byId.has(id))) throw new Error("Requested node is outside the corpus");
+  await deps.progress?.(`Indexing ${snapshot.nodes.length} results for search…`);
   await deps.search.indexNodes(request.corpus_id, snapshot.nodes);
   await deps.search.removeStaleNodes?.(request.corpus_id, snapshot.nodes.map(node => node.id));
   await deps.progress?.(`Finding related results for ${requested.length} statements…`);
+  let retrieved = 0, retrievalProgress = Promise.resolve();
   const groups = await mapConcurrent(requested, 4, async id => {
     const pairs: CandidatePair[] = [];
     const node = byId.get(id)!;
@@ -48,6 +50,9 @@ export async function resolveCorpus(input: ResolveInput, deps: {
       // Use fresh Postgres text, never an outdated search copy, for adjudication.
       pairs.push({ node, candidate });
     }
+    const done = ++retrieved;
+    retrievalProgress = retrievalProgress.then(() => deps.progress?.(`Finding related results: ${done} / ${requested.length}`));
+    await retrievalProgress;
     return pairs;
   });
   const pairs = groups.flat();
@@ -64,10 +69,12 @@ export async function resolveCorpus(input: ResolveInput, deps: {
       await deps.progress?.(`Matching ${unresolved.length} citations to source results…`);
       plan.anchorTargets = await matchReferences(unresolved, snapshot.nodes, async context =>
         (await deps.search.resolutionCandidates(context, request.corpus_id))
-          .flatMap(hit => byId.has(hit.node.id) ? [byId.get(hit.node.id)!] : []), deps.referenceModel);
+          .flatMap(hit => byId.has(hit.node.id) ? [byId.get(hit.node.id)!] : []), deps.referenceModel,
+        (done, total) => deps.progress?.(`Matching citations: ${done} / ${total}`) ?? Promise.resolve());
     }
   }
   await deps.repository.save(request.corpus_id, snapshot, plan);
+  await deps.progress?.("Refreshing the search index with resolved results…");
   const refreshed = await deps.repository.load(request.corpus_id);
   await deps.search.indexNodes(request.corpus_id, refreshed.nodes);
   return ResolveResponse.parse({ decisions: plan.decisions });

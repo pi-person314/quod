@@ -279,8 +279,8 @@ export function Upload() {
                 <div className="detected-nodes">
                   {c.nodes.map((n) => (
                     <div key={n.id}>
-                      <span className="eyebrow">{n.label}</span>
-                      <span>{n.title ?? "Untitled result"}</span>
+                      {n.title?.trim() && n.label && <span className="eyebrow">{n.label}</span>}
+                      <span>{n.title?.trim() || n.label?.trim() || (n.kind[0].toUpperCase() + n.kind.slice(1))}</span>
                       <small>p. {n.page}</small>
                     </div>
                   ))}

@@ -2,6 +2,7 @@ import { Anchor, Card, Node, Uuid, type SymbolEntry } from "@cairn/contracts";
 import { db } from "@cairn/contracts/db";
 import { instantiateCard, INSTANTIATION_PROMPT_VERSION, type InstantiationModel } from "./prompts/instantiate";
 import { callModel, MODELS } from "./llm";
+import { mapConcurrent } from "./concurrency";
 
 export interface BakeRepository {
   anchors(docId: string): Promise<Anchor[]>;
@@ -9,6 +10,7 @@ export interface BakeRepository {
   existing(anchorId: string): Promise<Card | undefined>;
   context(anchor: Anchor): Promise<{ invokingParagraph: string; localSymbols: SymbolEntry[] } | undefined>;
   save(card: Card): Promise<Card>;
+  progress?(docId: string, done: number, total: number): Promise<void>;
 }
 
 /** Accept context only when the anchor occurs once inside a containing parsed node. */
@@ -41,24 +43,37 @@ export function instrumentedInstantiationModel(docId: string): InstantiationMode
 /** Dependency seam lets A supply paragraph context without changing the frozen Anchor. */
 export async function bakeDocument(docId: string, repository: BakeRepository = postgresBakeRepository(), model?: InstantiationModel) {
   Uuid.parse(docId);
+  const anchors = (await repository.anchors(docId)).map(raw => Anchor.parse(raw));
+  if (anchors.some(anchor => anchor.doc_id !== docId)) throw new Error("Anchor outside requested document");
+  const resolved = (await mapConcurrent(anchors, 4, async anchor => ({ anchor, target: await repository.target(anchor) })))
+    .filter((item): item is { anchor: Anchor; target: Node } => !!item.target);
   let cardsDone = 0;
-  for (const raw of await repository.anchors(docId)) {
-    const anchor = Anchor.parse(raw);
-    if (anchor.doc_id !== docId) throw new Error("Anchor outside requested document");
-    const target = await repository.target(anchor);
-    if (!target) continue;
+  await repository.progress?.(docId, 0, resolved.length);
+  // Serialize notifications so delayed database writes cannot move the counter backwards.
+  let progress = Promise.resolve();
+  await mapConcurrent(resolved, 4, async ({ anchor, target }) => {
     const existing = await repository.existing(anchor.id);
     const context = await repository.context(anchor);
     const { card } = await instantiateCard({ target, anchor, ...context, cardId: existing?.id }, model ?? instrumentedInstantiationModel(docId));
     // This compares the entire output; stale source text/citations never survive re-baking.
     if (!existing || JSON.stringify(existing) !== JSON.stringify(card)) await repository.save(card);
     cardsDone++;
-  }
+    const done = cardsDone;
+    progress = progress.then(() => repository.progress?.(docId, done, resolved.length));
+    await progress;
+  });
   return { cards_done: cardsDone };
 }
 
 export function postgresBakeRepository(): BakeRepository {
   return {
+    async progress(docId, done, total) {
+      // Backfilling cards in an earlier document is still work for the active upload.
+      await db().query(`UPDATE ingest_progress p SET message=
+        CASE WHEN p.doc_id=$1 THEN 'Preparing cards: ' ELSE 'Preparing linked-document cards: ' END || $2::text || ' / ' || $3::text,
+        updated_at=now() FROM documents d WHERE p.doc_id=d.id AND p.stage='bake' AND d.status='ingesting'
+        AND d.corpus_id=(SELECT corpus_id FROM documents WHERE id=$1)`, [docId, done, total]);
+    },
     async anchors(docId) {
       const { rows } = await db().query("SELECT * FROM anchors WHERE doc_id = $1 ORDER BY page, id", [docId]);
       return rows.map((row) => Anchor.parse(row));

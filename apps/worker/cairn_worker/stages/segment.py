@@ -8,6 +8,7 @@ import re
 from uuid import UUID, uuid5
 
 from cairn_worker import db
+from cairn_worker.batches import run_batches
 from cairn_worker.llm import call_model
 from cairn_worker.models import Clause, Node, NodeKind, Span, SymbolEntry
 from cairn_worker.pipeline import PipelineContext
@@ -193,15 +194,13 @@ def _luna_enrich(ctx: PipelineContext | None, cands: list[dict]) -> None:
         return
     batch_size = 20
     chapter_key = f"segment:{ctx.doc_id if ctx else 'eval'}"
-    for off in range(0, len(cands), batch_size):
-        chunk = cands[off : off + batch_size]
+    def enrich(conn, chunk, off):
         payload = [
             {"index": i, "label": c.get("label"), "kind_guess": c["kind"], "text": c["statement"][:2000]}
             for i, c in enumerate(chunk)
         ]
         user = "Classify these candidate environments.\n" + json.dumps(payload, ensure_ascii=False)
         try:
-            conn = ctx.conn if ctx is not None else None
             text, _ = call_model(
                 conn,
                 stage="segment",
@@ -218,7 +217,11 @@ def _luna_enrich(ctx: PipelineContext | None, cands: list[dict]) -> None:
             by_i = {int(n["index"]): n for n in parsed.get("nodes", [])}
         except Exception as e:  # noqa: BLE001 — regex remains source of labels
             log.warning("Luna segment batch failed (%s); using regex kinds", e)
-            continue
+            return {}
+        return by_i
+
+    for off, by_i in run_batches(ctx, cands, batch_size, "segment", "Analyzing result details", enrich):
+        chunk = cands[off : off + batch_size]
         for i, c in enumerate(chunk):
             n = by_i.get(i)
             if not n:
@@ -273,5 +276,5 @@ def segment(ctx: PipelineContext, spans: list[Span]) -> list[Node]:
     total = len(nodes)
     for i, n in enumerate(nodes, start=1):
         db.insert_node(ctx.conn, n)
-        db.set_progress(ctx.conn, ctx.doc_id, "segment", nodes_done=i, total=total, message=n.label or n.kind)
+        db.set_progress(ctx.conn, ctx.doc_id, "segment", nodes_done=i, total=total, message=f"Saving results: {i} / {total} — {n.label or n.kind}")
     return nodes

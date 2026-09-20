@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { randomUUID } from "node:crypto";
 import type { Card } from "@cairn/contracts";
 import { bakeDocument, extractInvokingContext, type BakeRepository } from "../bake";
 import { instantiationCases } from "../evals/instantiation-cases";
@@ -59,4 +60,48 @@ test("unresolved anchors skip, mismatched document and failed writes reject", as
   h.repository.target = async () => sample.input.target;
   h.repository.save = async () => { throw new Error("write failed"); };
   await assert.rejects(bakeDocument(sample.input.anchor.doc_id, h.repository), /write failed/);
+});
+
+test("bake runs four model calls at a time and reports persisted cards in order", async () => {
+  const h = harness();
+  const anchors = Array.from({ length: 10 }, () => ({ ...sample.input.anchor, id: randomUUID() }));
+  h.repository.anchors = async () => anchors;
+  h.repository.target = async anchor => anchor.id === anchors[9].id ? undefined : sample.input.target;
+  h.repository.context = async () => ({ invokingParagraph: sample.input.invokingParagraph!, localSymbols: sample.input.localSymbols! });
+  let active = 0, peak = 0;
+  const notifications: number[] = [];
+  h.repository.progress = async (_docId, done, total) => {
+    assert.equal(total, 9);
+    assert(h.saved.size >= done, "progress must follow successful persistence");
+    await new Promise(resolve => setTimeout(resolve, done % 2 ? 5 : 1));
+    notifications.push(done);
+  };
+  const result = await bakeDocument(sample.input.anchor.doc_id, h.repository, async () => {
+    peak = Math.max(peak, ++active);
+    await new Promise(resolve => setTimeout(resolve, 10));
+    active--;
+    return sample.expected;
+  });
+  assert.equal(peak, 4);
+  assert.deepEqual(result, { cards_done: 9 });
+  assert.deepEqual(notifications, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  assert.equal(h.saved.size, 9);
+  assert([...h.saved.values()].every(card => card.instantiated_md === sample.expected.instantiated_md));
+});
+
+test("failed persistence stops scheduling and drains in-flight cards before rejecting", async () => {
+  const h = harness();
+  const anchors = Array.from({ length: 10 }, () => ({ ...sample.input.anchor, id: randomUUID() }));
+  h.repository.anchors = async () => anchors;
+  let saves = 0, drained = 0;
+  h.repository.save = async card => {
+    saves++;
+    if (card.anchor_id === anchors[0].id) throw new Error("write failed");
+    await new Promise(resolve => setTimeout(resolve, 15));
+    drained++;
+    return card;
+  };
+  await assert.rejects(bakeDocument(sample.input.anchor.doc_id, h.repository), /write failed/);
+  assert.equal(saves, 4);
+  assert.equal(drained, 3);
 });

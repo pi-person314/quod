@@ -8,6 +8,7 @@ import re
 from uuid import UUID
 
 from cairn_worker import db
+from cairn_worker.batches import run_batches
 from cairn_worker.llm import call_model
 from cairn_worker.models import Anchor, Edge, Node
 from cairn_worker.pipeline import PipelineContext
@@ -285,27 +286,34 @@ def _llm_named(
 ) -> None:
     catalog = [{"id": str(n.id), "label": n.label, "title": n.title, "kind": n.kind, "statement": n.statement_md} for n in nodes]
     refs = [{"surface": a.surface, "page": a.page, "src": str(source.id)} for a in named if (source := _node_containing(nodes, a))]
-    try:
-        text, _ = call_model(
-            ctx.conn,
-            stage="edges",
-            input=json.dumps({"nodes": catalog, "references": refs}, ensure_ascii=False),
-            instructions=EDGE_INSTRUCTIONS,
-            prompt_cache_key=f"edges:{ctx.doc_id}",
-            json_schema=EDGE_SCHEMA,
-            max_output_tokens=2048,
-            doc_id=ctx.doc_id,
-            corpus_id=ctx.corpus_id,
-        )
-        parsed = json.loads(text)
+    def resolve(conn, chunk, off):
+        try:
+            text, _ = call_model(
+                conn,
+                stage="edges",
+                input=json.dumps({"nodes": catalog, "references": chunk}, ensure_ascii=False),
+                instructions=EDGE_INSTRUCTIONS,
+                prompt_cache_key=f"edges:{ctx.doc_id}",
+                json_schema=EDGE_SCHEMA,
+                max_output_tokens=2048,
+                doc_id=ctx.doc_id,
+                corpus_id=ctx.corpus_id,
+            )
+            parsed = json.loads(text)
+            return parsed.get("edges", [])
+        except Exception as error:
+            log.warning("Luna edge batch failed (%s)", error)
+            return []
+
+    for off, candidates in run_batches(ctx, refs, 6, "edges", "Checking dependency references", resolve):
         known = {n.id for n in nodes}
         by_id = {n.id: n for n in nodes}
-        for e in parsed.get("edges", []):
+        for e in candidates:
             try:
                 src, dst = UUID(e["src"]), UUID(e["dst"])
             except (KeyError, ValueError):
                 continue
-            if src not in known or dst not in known or str(src) not in {ref["src"] for ref in refs}:
+            if src not in known or dst not in known or str(src) not in {ref["src"] for ref in refs[off:off + 6]}:
                 continue
             kind = e.get("kind", "depends_on")
             if kind not in ("depends_on", "uses_notation", "specialises", "restates"):
@@ -313,12 +321,11 @@ def _llm_named(
             if _would_cycle(edges, src, dst, kind):
                 continue
             _add(edges, claimed, src, dst, kind, "llm", 0.7)
-    except Exception as e:  # noqa: BLE001
-        log.warning("Luna edge batch failed (%s)", e)
 
 
 def extract_edges(ctx: PipelineContext, nodes: list[Node], anchors: list[Anchor]) -> list[Edge]:
     edges = extract_edges_offline(nodes, anchors, ctx)
     for e in edges:
         db.insert_edge(ctx.conn, e)
+    db.set_progress(ctx.conn, ctx.doc_id, "edges", message=f"Saved {len(edges)} dependency connections")
     return edges

@@ -1,5 +1,46 @@
 # Cairn integration audit — 2026-09-19
 
+## Parallel card preparation — 2026-09-20
+
+### Other ingest stages and progress
+
+Segmentation and named dependency analysis now run up to three bounded model batches
+concurrently, each with its own budget/ledger connection. Results are applied in
+input order; graph cycle checks remain on the caller thread. Resolution allows four
+adjudication batches concurrently. Repeated PDF reference searches reuse rectangles
+within the same parse. Models, prompts, and validation thresholds remain unchanged.
+
+Progress now reports PDF pages read, result details analyzed, results saved, references
+located, dependency references checked, search retrieval counts, pair comparisons,
+citation matching and index refresh. Concurrent completion notifications are serialized.
+
+A fresh **browser upload** of the supplied textbook completed in 169.912 seconds,
+including redirect and PDF render: segmentation about 18.2s, dependency analysis 2.3s,
+resolution 71.5s, baking 64.3s. This run generated 29 card-model calls, compared with
+21 in the earlier isolated bake check; live inference and enrichment vary, so the
+22-second bake measurement below is not a guaranteed duration. The upload displayed
+the detailed counters and reached the reader without runtime errors. All 20 worker
+tests and 87 intelligence tests, database integration, typechecks and production build
+pass. Evidence: `.session-tools/ingest-progress-results.json`; runner:
+`apps/web/scripts/ingest-progress-acceptance.ts`. The disposable verification corpus
+was deleted while its cost records were retained.
+
+Baking now runs at most four cards concurrently and publishes a completed/total
+counter after successful persistence. Progress writes are ordered; failures stop
+scheduling new cards and drain in-flight work. Unresolved references are excluded
+from the total. Both upload progress and the waiting reader display the counter,
+including linked-document backfills. Model prompts and card validation are unchanged.
+
+Fresh live verification on a disposable copy of the latest textbook prepared all
+41 cards in **21.896 seconds**, with 21 provider calls totaling 75.654 seconds of
+provider latency and $0.117384 recorded cost. The previous sequential upload spent
+roughly 77 seconds on the same textbook's card preparation; these are separate live
+runs, not a controlled provider-latency benchmark. Browser/SSE progress reached
+41/41 with no runtime errors. The verification corpus was removed; spending records
+remain. All 86 intelligence tests, workspace typecheck and isolated production build
+pass. The reproducible runner is `apps/web/scripts/bake-parallel-acceptance.ts`;
+local measurements are in `.session-tools/bake-parallel-results.json`.
+
 ## Reported PDF and reader repairs — 2026-09-19
 
 The supplied textbook and pset exposed gaps that fixture acceptance did not cover.

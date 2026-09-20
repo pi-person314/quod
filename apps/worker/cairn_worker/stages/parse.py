@@ -41,7 +41,7 @@ def _is_italic(font: str, flags: int) -> bool:
     return bool(flags & _FLAG_ITALIC) or "italic" in fl or "oblique" in fl
 
 
-def _extract_spans(doc: fitz.Document) -> list[Span]:
+def _extract_spans(doc: fitz.Document, progress=None) -> list[Span]:
     spans: list[Span] = []
     line_global = 0
     for page_i, page in enumerate(doc):
@@ -75,6 +75,8 @@ def _extract_spans(doc: fitz.Document) -> list[Span]:
                         )
                     )
                 line_global += 1
+        if progress:
+            progress(page_no, doc.page_count)
     return spans
 
 
@@ -122,12 +124,12 @@ def quality_score(spans: list[Span], page_count: int, raw_chars: int) -> float:
     return max(0.0, min(1.0, 0.55 * coverage + 0.25 * density + 0.20 * empty_pen))
 
 
-def parse_pdf(pdf_path: Path) -> tuple[list[Span], float, int]:
+def parse_pdf(pdf_path: Path, progress=None) -> tuple[list[Span], float, int]:
     """Returns (spans, quality_score in [0, 1], page_count)."""
     path = Path(pdf_path)
     doc = fitz.open(path)
     raw_chars = sum(len(page.get_text()) for page in doc)
-    spans = _extract_spans(doc)
+    spans = _extract_spans(doc, progress)
     page_count = doc.page_count
     doc.close()
     _group_paragraphs(spans)

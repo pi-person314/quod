@@ -67,7 +67,7 @@ def _bbox_for_match(text: str, start: int, end: int, ssp: list[Span]) -> tuple[f
     )
 
 
-def find_anchors(spans: list[Span], nodes: list[Node], doc_id, pdf_path: Path | None = None) -> list[Anchor]:
+def find_anchors(spans: list[Span], nodes: list[Node], doc_id, pdf_path: Path | None = None, progress=None) -> list[Anchor]:
     by_label = {n.label.lower(): n for n in nodes if n.label}
 
     found: list[Anchor] = []
@@ -116,6 +116,14 @@ def find_anchors(spans: list[Span], nodes: list[Node], doc_id, pdf_path: Path | 
         # Span boxes cover entire text runs. Use the PDF's character geometry for
         # each matched reference so an underline does not cover the whole line.
         with pymupdf.open(pdf_path) as pdf:
+            matches = {}
+
+            def rectangles(page_index, surface):
+                key = (page_index, surface)
+                if key not in matches:
+                    matches[key] = pdf[page_index].search_for(surface)
+                return matches[key]
+
             # Named citations may wrap across lines ("dimension\ntheorem").
             # Keep a separate hit box on each line instead of covering the intervening page.
             for page in pdf:
@@ -124,19 +132,23 @@ def find_anchors(spans: list[Span], nodes: list[Node], doc_id, pdf_path: Path | 
                     if match.group("name").lower() in GENERIC_NAMES or re.match(r"\s*\d", page_text[match.end():]):
                         continue
                     surface = re.sub(r"\s+", " ", match.group(0))
-                    for rect in page.search_for(surface):
+                    for rect in rectangles(page.number, surface):
                         add(page.number + 1, surface, tuple(rect), False)
-            for anchor in found:
-                candidates = pdf[anchor.page - 1].search_for(anchor.surface)
+            for index, anchor in enumerate(found, 1):
+                candidates = rectangles(anchor.page - 1, anchor.surface)
                 inside = [r for r in candidates if r.x0 >= anchor.bbox[0] - 2 and r.y0 >= anchor.bbox[1] - 2
                           and r.x1 <= anchor.bbox[2] + 2 and r.y1 <= anchor.bbox[3] + 2]
                 if len(inside) == 1:
                     anchor.bbox = tuple(inside[0])
+                if progress and (index % 10 == 0 or index == len(found)):
+                    progress(index, len(found))
     return found
 
 
 def detect_anchors(ctx: PipelineContext, spans: list[Span], nodes: list[Node]) -> list[Anchor]:
-    found = find_anchors(spans, nodes, ctx.doc_id, ctx.pdf_path)
+    found = find_anchors(spans, nodes, ctx.doc_id, ctx.pdf_path, lambda done, total:
+        db.set_progress(ctx.conn, ctx.doc_id, "anchors", message=f"Locating references: {done} / {total}"))
     for a in found:
         db.insert_anchor(ctx.conn, a)
+    db.set_progress(ctx.conn, ctx.doc_id, "anchors", message=f"Saved {len(found)} references")
     return found

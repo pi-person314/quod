@@ -88,8 +88,9 @@ def _run_document(ctx: PipelineContext, force: bool = False) -> None:
     # A second pass must replace the old graph, not stack a new one beside it.
     try:
         db.clear_doc_graph(conn, doc_id)
-        db.set_progress(conn, doc_id, "parse")
-        spans, quality, page_count = parse.parse_pdf(ctx.pdf_path)
+        db.set_progress(conn, doc_id, "parse", message="Opening PDF and reading its text layer…")
+        spans, quality, page_count = parse.parse_pdf(ctx.pdf_path, lambda done, total:
+            db.set_progress(conn, doc_id, "parse", message=f"Reading PDF pages: {done} / {total}"))
         conn.execute(
             "UPDATE documents SET quality = %s, page_count = %s, status = %s WHERE id = %s",
             (quality, page_count, "ingesting" if quality >= settings.min_parse_quality else "unsupported", doc_id),
@@ -98,16 +99,16 @@ def _run_document(ctx: PipelineContext, force: bool = False) -> None:
             db.set_progress(conn, doc_id, "error", message=f"parse quality {quality:.2f} < {settings.min_parse_quality}")
             return
 
-        db.set_progress(conn, doc_id, "segment")
+        db.set_progress(conn, doc_id, "segment", message=f"Finding results in {page_count} pages…")
         nodes = segment.segment(ctx, spans)
 
-        db.set_progress(conn, doc_id, "anchors", nodes_done=len(nodes), total=len(nodes))
+        db.set_progress(conn, doc_id, "anchors", nodes_done=len(nodes), total=len(nodes), message=f"Finding references across {page_count} pages…")
         found = anchors.detect_anchors(ctx, spans, nodes)
 
-        db.set_progress(conn, doc_id, "edges", nodes_done=len(nodes), total=len(nodes))
+        db.set_progress(conn, doc_id, "edges", nodes_done=len(nodes), total=len(nodes), message=f"Connecting {len(nodes)} results and {len(found)} references…")
         edges.extract_edges(ctx, nodes, found)
 
-        db.set_progress(conn, doc_id, "resolve", nodes_done=len(nodes), total=len(nodes))
+        db.set_progress(conn, doc_id, "resolve", nodes_done=len(nodes), total=len(nodes), message="Preparing the corpus search index…")
         remote.resolve(ctx.corpus_id, [n.id for n in nodes])
 
         db.set_progress(conn, doc_id, "bake", nodes_done=len(nodes), total=len(nodes))
