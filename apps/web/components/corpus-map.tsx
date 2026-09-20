@@ -1,7 +1,7 @@
 "use client";
 import { documentColor } from "@/lib/document-colors";
 import { nodeLabel, nodeDescription } from "@/lib/node-label";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   forceSimulation,
   forceManyBody,
@@ -33,6 +33,7 @@ export function CorpusMap({
   onClose: () => void;
 }) {
   const svg = useRef<SVGSVGElement>(null);
+  const markerId = `map-arrow-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const [query, setQuery] = useState(""),
     [hover, setHover] = useState<Node | null>(null),
     [viewport, setViewport] = useState(0);
@@ -64,8 +65,8 @@ export function CorpusMap({
     }));
     const index = new Map(dots.map((n) => [n.id, n]));
     const links = data.edges
-      .filter((e) => index.has(e.src) && index.has(e.dst))
-      .map((e) => ({ source: e.src, target: e.dst }));
+      .filter((e) => e.src !== e.dst && index.has(e.src) && index.has(e.dst))
+      .map((e) => ({ source: e.src, target: e.dst, kind: e.kind }));
     for (let iteration = 0; iteration < 24; iteration++) {
       const next = new Map(dots.map((n) => [n.id, 0.15 / dots.length]));
       for (const n of dots) {
@@ -82,22 +83,39 @@ export function CorpusMap({
       }
       for (const n of dots) n.rank = next.get(n.id)!;
     }
+    const defs = root.append("defs");
+    for (const [suffix, color] of [["", "#587b9d"], ["-active", "#a9cbed"]]) {
+      defs.append("marker").attr("id", `${markerId}${suffix}`)
+        .attr("viewBox", "0 -4 8 8").attr("refX", 8).attr("refY", 0)
+        .attr("markerWidth", 8).attr("markerHeight", 8)
+        .attr("markerUnits", "userSpaceOnUse").attr("orient", "auto")
+        .append("path").attr("d", "M0,-3.5L8,0L0,3.5Z").attr("fill", color);
+    }
+    const radius = (n: Dot) => 4 + Math.sqrt(n.rank) * 28;
     const group = root.append("g");
-    const lineLayer = group.append("g");
-    const lines = lineLayer.append("path")
-      .attr("fill", "none")
-      .attr("stroke", "#1e3b59")
-      .attr("stroke-width", 0.8);
-    const highlightedLines = lineLayer.append("path").attr("fill", "none")
-      .attr("stroke", "#6c97c4").attr("stroke-width", 0.8).attr("opacity", 0.8);
-    const edgePath = (edges: typeof links) => edges.map((edge: any) =>
-      `M${edge.source.x},${edge.source.y}L${edge.target.x},${edge.target.y}`).join("");
+    const lines = group.append("g").attr("class", "map-edges")
+      .selectAll("path").data(links).join("path")
+      .attr("data-kind", edge => edge.kind)
+      .attr("fill", "none").attr("stroke", "#587b9d").attr("stroke-width", 1)
+      .attr("stroke-dasharray", edge => edge.kind === "restates" ? "5 4" : null)
+      .attr("marker-end", edge => edge.kind === "restates" ? null : `url(#${markerId})`)
+      .attr("pointer-events", "none");
+    const edgePath = (edge: typeof links[number]) => {
+      // D3 replaces link IDs with Dot objects when the simulation initializes.
+      const source = edge.source as unknown as Dot, target = edge.target as unknown as Dot;
+      const dx = target.x! - source.x!, dy = target.y! - source.y!;
+      const distance = Math.hypot(dx, dy);
+      const start = radius(source) + 2, end = radius(target) + 3;
+      if (distance <= start + end) return "";
+      return `M${source.x! + dx * start / distance},${source.y! + dy * start / distance}`
+        + `L${target.x! - dx * end / distance},${target.y! - dy * end / distance}`;
+    };
     const circles = group
       .append("g")
       .selectAll("circle")
       .data(dots)
       .join("circle")
-      .attr("r", (n) => 4 + Math.sqrt(n.rank) * 28)
+      .attr("r", radius)
       .attr(
         "fill",
         (n) =>
@@ -145,8 +163,8 @@ export function CorpusMap({
           : 0.9,
       );
       labels.style("display", (n) => (!q || captions.get(n.id)!.description.toLowerCase().includes(q)) ? null : "none");
-      lines.attr("opacity", 0.45);
-      highlightedLines.attr("d", "");
+      lines.attr("opacity", 0.7).attr("stroke", "#587b9d")
+        .attr("marker-end", edge => edge.kind === "restates" ? null : `url(#${markerId})`);
     };
     circles
       .on("mouseenter", (_, n) => {
@@ -162,8 +180,12 @@ export function CorpusMap({
         circles.attr("opacity", (d) => (near.has(d.id) ? 1 : 0.08));
         labels.attr("opacity", (d) => (near.has(d.id) ? 1 : 0.35));
         labels.style("display", null);
-        lines.attr("opacity", 0.05);
-        highlightedLines.attr("d", edgePath(links.filter((edge: any) => near.has(edge.source.id) && near.has(edge.target.id))));
+        const connected = (edge: typeof links[number]) => near.has((edge.source as unknown as Dot).id)
+          && near.has((edge.target as unknown as Dot).id);
+        lines.attr("opacity", edge => connected(edge) ? 1 : 0.06)
+          .attr("stroke", edge => connected(edge) ? "#a9cbed" : "#587b9d")
+          .attr("marker-end", edge => edge.kind === "restates" ? null
+            : `url(#${markerId}${connected(edge) ? "-active" : ""})`);
       })
       .on("mouseleave", () => {
         setHover(null);
@@ -199,7 +221,7 @@ export function CorpusMap({
       .force("vertical", forceY(height / 2).strength(0.1))
       .force("collision", forceCollide(dots.length > 100 ? 14 : 42));
     const draw = () => {
-      lines.attr("d", edgePath(links));
+      lines.attr("d", edgePath);
       circles.attr("cx", (d) => d.x!).attr("cy", (d) => d.y!);
       labels.attr("x", (d) => d.x! + 10).attr("y", (d) => d.y! + 4);
     };
@@ -268,7 +290,7 @@ export function CorpusMap({
       clearInterval(interval);
       root.on(".zoom", null);
     };
-  }, [data, state, onJump, viewport, captions]);
+  }, [data, state, onJump, viewport, captions, markerId]);
   return (
     <section className="map-view" aria-label="Document map">
       <header className="map-heading">
