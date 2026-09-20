@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 from uuid import UUID
 
@@ -244,7 +245,7 @@ def extract_edges_offline(nodes: list[Node], anchors: list[Anchor], ctx: Pipelin
 
     # 4. llm — only unclaimed named surfaces
     named = [a for a in anchors if a.target_node_id is None and a.id not in claimed_anchors and _node_containing(ordered, a)]
-    if named and ctx is not None:
+    if named and ctx is not None and os.environ.get("CAIRN_INTELLIGENCE_MODE") != "deterministic":
         _llm_named(ctx, nodes, named, edges, claimed)
 
     return edges
@@ -302,8 +303,7 @@ def _llm_named(
             parsed = json.loads(text)
             return parsed.get("edges", [])
         except Exception as error:
-            log.warning("Luna edge batch failed (%s)", error)
-            return []
+            raise RuntimeError(f"Model relation extraction failed: {error}") from error
 
     for off, candidates in run_batches(ctx, refs, 6, "edges", "Checking dependency references", resolve):
         known = {n.id for n in nodes}

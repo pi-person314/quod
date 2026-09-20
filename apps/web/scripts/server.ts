@@ -1,4 +1,6 @@
 // Custom server provides same-origin, bounded streaming audio beside Next routes.
+import { requireUser } from "../lib/auth";
+import { requireDocumentOwner } from "../lib/data";
 import { createServer } from "node:http";
 import next from "next";
 import { attachVoiceRelay } from "@cairn/intel/voice/relay";
@@ -14,7 +16,11 @@ await app.prepare();
 process.env.CAIRN_VOICE_RELAY = "1";
 const handle = app.getRequestHandler();
 const server = createServer((request, response) => { void handle(request, response); });
-attachVoiceRelay(server, async input => {
+attachVoiceRelay(server, async (input, request) => {
+  const user = await requireUser(new Request(`http://${hostname}:${port}${request.url}`, {
+    headers: { cookie: request.headers.cookie ?? "" },
+  }));
+  await requireDocumentOwner(user, input.doc_id);
   const data = await dataset();
   const ids = new Set(input.visible_node_ids);
   const nodes = data.nodes.filter(node => node.doc_id === input.doc_id && node.page === input.page && ids.has(node.id));

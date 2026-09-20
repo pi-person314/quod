@@ -3,13 +3,17 @@
   "private": true,
   "packageManager": "pnpm@10.15.1",
   "scripts": {
-    "dev": "pnpm --filter @cairn/web dev",
-    "build": "pnpm --filter @cairn/web build",
+    "dev": "node --env-file-if-exists=.env scripts/web-command.mjs dev",
+    "dev:live": "node --env-file=.env scripts/dev-live.mjs",
+    "test:startup": "node --test scripts/dev-live.test.mjs",
+    "build": "node --env-file-if-exists=.env scripts/web-command.mjs build",
     "typecheck": "pnpm -r --if-present typecheck",
     "test:contracts": "pnpm --filter @cairn/contracts test",
     "infra:up": "docker compose up -d",
     "infra:down": "docker compose down",
-    "db:schema": "docker compose exec -T postgres psql -U cairn -d cairn -v ON_ERROR_STOP=1 -f /contracts/schema.sql"
+    "db:schema": "docker compose exec -T postgres psql -U cairn -d cairn -v ON_ERROR_STOP=1 -f /contracts/schema.sql",
+    "test:auth": "pnpm --filter @cairn/web exec node --import tsx --test scripts/auth.test.ts",
+    "reset:corpora": "node --env-file=.env scripts/reset-corpora.mjs"
   },
   "devDependencies": {
     "typescript": "^5.6.0"

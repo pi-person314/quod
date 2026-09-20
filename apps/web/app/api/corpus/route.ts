@@ -1,25 +1,36 @@
-﻿import { CreateCorpusRequest, CreateCorpusResponse } from "@cairn/contracts";
+import { CreateCorpusRequest, CreateCorpusResponse } from "@cairn/contracts";
 import { db } from "@cairn/contracts/db";
 import { fixturesEnabled } from "@/lib/fixtures";
-import { corpora, saveLocal } from "@/lib/data";
+import { saveLocal, LOCAL } from "@/lib/data";
 import { jsonOf, parseBody } from "@/lib/http";
-export async function GET() {
-  return Response.json({ corpora: await corpora() });
+import { authErrorResponse, AuthError, requireUser } from "@/lib/auth";
+import { createUserCorpus, listUserCorpora } from "@/lib/firestore";
+import { rm } from "node:fs/promises";
+import { join } from "node:path";
+export async function GET(req: Request) {
+  try {
+    return Response.json({ corpora: await listUserCorpora(await requireUser(req)) }, { headers: { "Cache-Control": "no-store" } });
+  } catch (error) { return authErrorResponse(error); }
 }
 export async function POST(req: Request) {
-  const body = await parseBody(req, CreateCorpusRequest);
-  if (body instanceof Response) return body;
-  const id = crypto.randomUUID();
-  if (fixturesEnabled())
-    await saveLocal("corpora", id, {
-      id,
-      name: body.name,
-      created_at: new Date().toISOString(),
-    });
-  else
-    await db().query("INSERT INTO corpora(id,name) VALUES($1,$2)", [
-      id,
-      body.name,
-    ]);
-  return jsonOf(CreateCorpusResponse, { corpus_id: id });
+  try {
+    const user = await requireUser(req);
+    const body = await parseBody(req, CreateCorpusRequest);
+    if (body instanceof Response) return body;
+    const name = body.name.trim();
+    if (!name || name.length > 200) throw new AuthError(400, "Corpus names must contain 1–200 characters.");
+    const record = { id: crypto.randomUUID(), name, created_at: new Date().toISOString() };
+    // Persist processing metadata first. If Firestore fails, remove the local row
+    // so the API never reports a corpus that cannot be retrieved on next login.
+    const fixture = fixturesEnabled();
+    if (fixture) await saveLocal("corpora", record.id, record);
+    else await db().query("INSERT INTO corpora(id,name,created_at) VALUES($1,$2,$3)", [record.id, name, record.created_at]);
+    try { await createUserCorpus(user, record); }
+    catch (error) {
+      if (fixture) await rm(join(LOCAL, "corpora", `${record.id}.json`), { force: true });
+      else await db().query("DELETE FROM corpora WHERE id=$1", [record.id]);
+      throw error;
+    }
+    return jsonOf(CreateCorpusResponse, { corpus_id: record.id });
+  } catch (error) { return authErrorResponse(error); }
 }

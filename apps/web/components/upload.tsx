@@ -1,6 +1,9 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "./auth-provider";
+import { AccountMenu } from "./account-menu";
 import { IngestEvent, type NodeSummary } from "@cairn/contracts";
 import { pdfjs } from "./pdf-page";
 interface Column {
@@ -10,7 +13,11 @@ interface Column {
   nodes: NodeSummary[];
   message?: string;
 }
+const PENDING_UPLOAD = "cairn.pending-upload";
 export function Upload() {
+  const router = useRouter();
+  const { user, loading, login } = useAuth();
+  const pendingKey = user ? `${PENDING_UPLOAD}.${user.uid}` : "";
   const [drag, setDrag] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
@@ -19,8 +26,86 @@ export function Upload() {
   const input = useRef<HTMLInputElement>(null),
     source = useRef<EventSource | null>(null);
   const [corpus, setCorpus] = useState("");
-  useEffect(() => () => source.current?.close(), []);
+  const redirect = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    // The server already owns the PDFs: restore progress after a reload.
+    if (!pendingKey) return;
+    const saved = sessionStorage.getItem(pendingKey);
+    if (saved) {
+      try {
+        const pending = JSON.parse(saved) as { corpus: string; columns: Column[] };
+        if (pending.corpus && Array.isArray(pending.columns) && pending.columns.length) {
+          setColumns(pending.columns);
+          setCorpus(pending.corpus);
+          setBusy(true);
+        }
+      } catch { sessionStorage.removeItem(pendingKey); }
+    }
+    return () => {
+      source.current?.close();
+      if (redirect.current) clearTimeout(redirect.current);
+    };
+  }, [pendingKey]);
+  useEffect(() => {
+    if (!user) { setCorpus(""); setColumns([]); setBusy(false); setFinished(false); }
+  }, [user]);
+  useEffect(() => {
+    if (!user || !corpus) return;
+    let disposed = false;
+    const events = new EventSource(`/api/corpus/${corpus}/events`);
+    source.current = events;
+    events.onmessage = (event) => {
+      let value: unknown;
+      try { value = JSON.parse(event.data); } catch { return; }
+      const parsed = IngestEvent.safeParse(value);
+      if (!parsed.success) return;
+      const e = parsed.data;
+      setError("");
+      setColumns(old => old.map(c => c.id === e.doc_id ? {
+        ...c, stage: e.stage, message: e.message,
+        nodes: e.node && !c.nodes.some(n => n.id === e.node!.id) ? [...c.nodes, e.node] : c.nodes,
+      } : c));
+    };
+    // EventSource reconnects automatically. Poll durable status as a fallback
+    // when a deployment or network interruption closes the progress stream.
+    const recover = async () => {
+      try {
+        const response = await fetch("/api/library");
+        if (!response.ok) return;
+        const data = await response.json();
+        if (disposed) return;
+        setColumns(old => old.map(c => {
+          const doc = data.docs.find((d: { id: string }) => d.id === c.id);
+          if (!doc) return c;
+          const stage = doc.status === "ready" ? "done" : ["error", "unsupported"].includes(doc.status) ? "error" : c.stage;
+          return { ...c, stage,
+            message: c.message ?? (stage === "error" ? "Document processing failed. Open the document to retry." : undefined),
+            nodes: data.nodes.filter((n: { doc_id: string }) => n.doc_id === c.id) };
+        }));
+      } catch { /* Leave the saved upload available for the next reconnect. */ }
+    };
+    events.onerror = () => { void recover(); };
+    const timer = setInterval(() => void recover(), 5000);
+    return () => { disposed = true; events.close(); clearInterval(timer); };
+  }, [corpus, user]);
+  useEffect(() => {
+    if (!pendingKey || !corpus) return;
+    if (!columns.length) { sessionStorage.removeItem(pendingKey); return; }
+    sessionStorage.setItem(pendingKey, JSON.stringify({ corpus, columns: columns.map(c => ({ ...c, nodes: [] })) }));
+    if (!columns.every(c => c.stage === "done" || c.stage === "error")) return;
+    source.current?.close();
+    setBusy(false);
+    setFinished(true);
+    if (columns.every(c => c.stage === "done")) {
+      redirect.current = setTimeout(() => {
+        sessionStorage.removeItem(pendingKey);
+        router.push(`/read/${columns[0].id}`);
+      }, 1300);
+      return () => { if (redirect.current) clearTimeout(redirect.current); };
+    }
+  }, [corpus, columns, router, pendingKey]);
   const upload = async (files: File[]) => {
+    if (!user) { await login().catch(() => {}); return; }
     setError("");
     setFinished(false);
     if (!files.length) return;
@@ -32,6 +117,9 @@ export function Upload() {
       setError("Please choose PDF documents. Other formats are not supported.");
       return;
     }
+    source.current?.close();
+    setCorpus("");
+    sessionStorage.removeItem(pendingKey);
     setBusy(true);
     setColumns(
       files.map((f, i) => ({
@@ -115,9 +203,11 @@ export function Upload() {
               : "New course corpus",
         }),
       });
-      if (!create.ok) throw new Error("Could not create the corpus.");
+      if (!create.ok) {
+        const failure = await create.json().catch(() => ({}));
+        throw new Error(failure.message ?? failure.error ?? "Could not create the corpus.");
+      }
       const { corpus_id } = await create.json();
-      setCorpus(corpus_id);
       const form = new FormData();
       files.forEach((f) => form.append("files", f));
       form.append("metadata", JSON.stringify(metadata));
@@ -127,7 +217,7 @@ export function Upload() {
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body.message ?? "Upload failed. Please try again.");
+        throw new Error(body.message ?? body.error ?? "Upload failed. Please try again.");
       }
       const { doc_ids } = await res.json();
       setColumns(
@@ -138,55 +228,7 @@ export function Upload() {
           nodes: [],
         })),
       );
-      const events = new EventSource(`/api/corpus/${corpus_id}/events`);
-      source.current = events;
-      const terminal = new Set<string>();
-      const failed = new Set<string>();
-      let firstReady = "";
-      events.onmessage = (event) => {
-        const e = IngestEvent.parse(JSON.parse(event.data));
-        if (e.stage === "done" || e.stage === "error") {
-          terminal.add(e.doc_id);
-          if (e.stage === "error") failed.add(e.doc_id);
-          if (e.stage === "done" && !firstReady) firstReady = e.doc_id;
-        }
-        setColumns((old) =>
-          old.map((c) =>
-            c.id === e.doc_id
-              ? {
-                  ...c,
-                  stage: e.stage,
-                  message: e.message,
-                  nodes:
-                    e.node && !c.nodes.some((n) => n.id === e.node!.id)
-                      ? [...c.nodes, e.node]
-                      : c.nodes,
-                }
-              : c,
-          ),
-        );
-        if (terminal.size === doc_ids.length) {
-          events.close();
-          setBusy(false);
-          setFinished(true);
-          if (
-            firstReady &&
-            failed.size === 0 &&
-            terminal.size === doc_ids.length &&
-            !metadata.some((m) => m.error)
-          )
-            setTimeout(() => location.assign(`/read/${firstReady}`), 1300);
-        }
-      };
-      events.onerror = () => {
-        if (terminal.size !== doc_ids.length) {
-          setError(
-            "The progress stream disconnected. Reopen the corpus to check completed documents.",
-          );
-          setBusy(false);
-        }
-        events.close();
-      };
+      setCorpus(corpus_id);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed");
       setBusy(false);
@@ -198,7 +240,7 @@ export function Upload() {
         <Link className="wordmark" href="/">
           cairn<span> / </span>
         </Link>
-        <Link href="/">Your corpora ↗</Link>
+        <div className="header-actions"><Link href="/">Your corpora ↗</Link><AccountMenu /></div>
       </header>
       <div className="upload-intro">
         <span className="eyebrow">BRING THE COURSE TOGETHER</span>
@@ -215,8 +257,8 @@ export function Upload() {
       />
       <button
         className={`dropzone ${drag ? "dragging" : ""}`}
-        disabled={busy}
-        onClick={() => input.current?.click()}
+        disabled={busy || loading}
+        onClick={() => { if (user) input.current?.click(); else void login().catch(() => {}); }}
         onDragOver={(e) => {
           e.preventDefault();
           setDrag(true);
@@ -230,7 +272,7 @@ export function Upload() {
       >
         <span className="drop-symbol">+</span>
         <strong>
-          {busy ? "Reading your documents…" : "Drop your PDFs here"}
+          {busy ? "Reading your documents…" : user ? "Drop your PDFs here" : "Log in with Google to add PDFs"}
         </strong>
         <span>
           {busy

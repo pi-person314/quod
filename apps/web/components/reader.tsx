@@ -1,6 +1,8 @@
 "use client";
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useAuth } from "./auth-provider";
+import { AccountMenu } from "./account-menu";
 import type {
   Anchor,
   Card,
@@ -25,6 +27,7 @@ export function Reader({
   data: Dataset;
   initialDoc: string;
 }) {
+  const { user, loading: authLoading } = useAuth();
   const [docId, setDocId] = useState(initialDoc),
     [page, setPage] = useState(1),
     [zoom, setZoom] = useState(1),
@@ -495,6 +498,7 @@ export function Reader({
     a.click();
     URL.revokeObjectURL(url);
   };
+  if (!user || authLoading) return <main className="empty"><h1>Your private library</h1><p>Log in to read this document.</p><AccountMenu /></main>;
   if (map)
     return (
       <CorpusMap
@@ -532,6 +536,7 @@ export function Reader({
             ?
           </button>
         </nav>
+        <AccountMenu />
       </header>
       <div className="reader-body">
         {outline && (

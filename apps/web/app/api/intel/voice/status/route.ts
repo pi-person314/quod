@@ -1,10 +1,31 @@
+import { requireUser, authErrorResponse } from "@/lib/auth";
 import { requireLiveBudget } from "@cairn/intel";
-export async function GET() {
-  let available = false;
-  if (process.env.CAIRN_VOICE_RELAY === "1" && process.env.DEEPGRAM_API_KEY
-    && (process.env.USE_FIXTURES !== "0" || process.env.OPENAI_API_KEY)) {
-    try { await requireLiveBudget(); available = true; } catch { /* No secrets in status responses. */ }
+export async function GET(req: Request) {
+  try {
+    const user = await requireUser(req);
+    let available = false;
+    if (
+      process.env.CAIRN_VOICE_RELAY === "1" &&
+      process.env.DEEPGRAM_API_KEY &&
+      (process.env.USE_FIXTURES !== "0" || process.env.OPENAI_API_KEY)
+    ) {
+      try {
+        await requireLiveBudget();
+        available = true;
+      } catch {
+        /* No secrets in status responses. */
+      }
+    }
+    return Response.json(
+      {
+        available,
+        message: available
+          ? "Hold to ask about this page."
+          : "Voice is unavailable in this workspace.",
+      },
+      { headers: { "cache-control": "no-store" } },
+    );
+  } catch (error) {
+    return authErrorResponse(error);
   }
-  return Response.json({ available, message: available ? "Hold to ask about this page." : "Voice is unavailable in this workspace." },
-    { headers: { "cache-control": "no-store" } });
 }

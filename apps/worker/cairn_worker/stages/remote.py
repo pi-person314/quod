@@ -24,7 +24,8 @@ def _post(path: str, body: dict) -> dict | None:
     r = httpx.post(url, json=body, timeout=600)
     if r.is_error:
         try:
-            detail = r.json().get("message")
+            payload = r.json()
+            detail = payload.get("message") or payload.get("error")
         except (ValueError, AttributeError):
             detail = None
         if isinstance(detail, str) and detail:

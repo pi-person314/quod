@@ -21,6 +21,29 @@ export interface ResolutionSearch {
 export type ResolutionModel = Parameters<typeof adjudicatePairs>[1];
 type ResolveInput = z.infer<typeof ResolveRequest>;
 
+const stageMessages = {
+  load: "Resolution could not load the document graph; check the database.",
+  index: "Resolution could not index statements; check Elasticsearch and embedding configuration.",
+  retrieve: "Resolution could not retrieve related statements; check Elasticsearch and embedding configuration.",
+  compare: "Resolution could not compare statements; check model availability and spending protection.",
+  references: "Resolution could not match citations; check model availability and spending protection.",
+  save: "Resolution could not save result connections; check the database and retry.",
+  refresh: "Resolution saved connections but could not refresh search; check Elasticsearch and retry.",
+} as const;
+
+/** Only fixed application messages are safe to expose; provider details stay in cause. */
+export class ResolutionStageError extends Error {
+  constructor(readonly stage: keyof typeof stageMessages, cause: unknown) {
+    super(stageMessages[stage], { cause });
+    this.name = "ResolutionStageError";
+  }
+}
+
+async function atStage<T>(stage: keyof typeof stageMessages, run: () => Promise<T>): Promise<T> {
+  try { return await run(); }
+  catch (cause) { throw new ResolutionStageError(stage, cause); }
+}
+
 /** Retrieval and paid work happen outside a DB transaction; save checks for stale input. */
 export async function resolveCorpus(input: ResolveInput, deps: {
   repository: ResolutionRepository; search: ResolutionSearch; model: ResolutionModel;
@@ -28,20 +51,22 @@ export async function resolveCorpus(input: ResolveInput, deps: {
   referenceModel?: ReferenceModel;
 }): Promise<ResolveResponse> {
   const request = ResolveRequest.parse(input);
-  const snapshot = await deps.repository.load(request.corpus_id);
+  const snapshot = await atStage("load", () => deps.repository.load(request.corpus_id));
   const byId = new Map(snapshot.nodes.map((node) => [node.id, node]));
   const requested = [...new Set(request.node_ids)];
   if (requested.some((id) => !byId.has(id))) throw new Error("Requested node is outside the corpus");
   await deps.progress?.(`Indexing ${snapshot.nodes.length} results for search…`);
-  await deps.search.indexNodes(request.corpus_id, snapshot.nodes);
-  await deps.search.removeStaleNodes?.(request.corpus_id, snapshot.nodes.map(node => node.id));
+  await atStage("index", async () => {
+    await deps.search.indexNodes(request.corpus_id, snapshot.nodes);
+    await deps.search.removeStaleNodes?.(request.corpus_id, snapshot.nodes.map(node => node.id));
+  });
   await deps.progress?.(`Finding related results for ${requested.length} statements…`);
   let retrieved = 0, retrievalProgress = Promise.resolve();
   const groups = await mapConcurrent(requested, 4, async id => {
     const pairs: CandidatePair[] = [];
     const node = byId.get(id)!;
     const seen = new Set<string>();
-    for (const hit of await deps.search.resolutionCandidates(node, request.corpus_id)) {
+    for (const hit of await atStage("retrieve", () => deps.search.resolutionCandidates(node, request.corpus_id))) {
       const candidate = byId.get(hit.node.id);
       if (!candidate || candidate.id === node.id) throw new Error("Candidate is outside the corpus or is the source node");
       if (seen.has(candidate.id)) continue;
@@ -57,9 +82,9 @@ export async function resolveCorpus(input: ResolveInput, deps: {
   });
   const pairs = groups.flat();
   await deps.progress?.(`Comparing related results: 0 / ${pairs.length}`);
-  const decisions = await adjudicatePairs(pairs, deps.model, async (done, total) => {
+  const decisions = await atStage("compare", () => adjudicatePairs(pairs, deps.model, async (done, total) => {
     await deps.progress?.(`Comparing related results: ${done} / ${total}`);
-  });
+  }));
   await deps.progress?.("Saving result connections…");
   const plan = planResolution(request.corpus_id, snapshot.nodes, snapshot.entities, decisions);
   if (deps.referenceModel) {
@@ -67,16 +92,18 @@ export async function resolveCorpus(input: ResolveInput, deps: {
     const unresolved = snapshot.anchors.filter(anchor => !exact.has(anchor.id));
     if (unresolved.length) {
       await deps.progress?.(`Matching ${unresolved.length} citations to source results…`);
-      plan.anchorTargets = await matchReferences(unresolved, snapshot.nodes, async context =>
+      plan.anchorTargets = await atStage("references", () => matchReferences(unresolved, snapshot.nodes, async context =>
         (await deps.search.resolutionCandidates(context, request.corpus_id))
-          .flatMap(hit => byId.has(hit.node.id) ? [byId.get(hit.node.id)!] : []), deps.referenceModel,
-        (done, total) => deps.progress?.(`Matching citations: ${done} / ${total}`) ?? Promise.resolve());
+          .flatMap(hit => byId.has(hit.node.id) ? [byId.get(hit.node.id)!] : []), deps.referenceModel!,
+        (done, total) => deps.progress?.(`Matching citations: ${done} / ${total}`) ?? Promise.resolve()));
     }
   }
-  await deps.repository.save(request.corpus_id, snapshot, plan);
+  await atStage("save", () => deps.repository.save(request.corpus_id, snapshot, plan));
   await deps.progress?.("Refreshing the search index with resolved results…");
-  const refreshed = await deps.repository.load(request.corpus_id);
-  await deps.search.indexNodes(request.corpus_id, refreshed.nodes);
+  await atStage("refresh", async () => {
+    const refreshed = await deps.repository.load(request.corpus_id);
+    await deps.search.indexNodes(request.corpus_id, refreshed.nodes);
+  });
   return ResolveResponse.parse({ decisions: plan.decisions });
 }
 

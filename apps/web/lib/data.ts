@@ -12,6 +12,8 @@ import type {
   Entity,
 } from "@cairn/contracts";
 import { fixturesEnabled, loadGoldenCorpus } from "./fixtures";
+import { AuthError, type AuthUser } from "./auth";
+import { listUserCorpora, assertCorpusOwner } from "./firestore";
 export interface Dataset {
   docs: Doc[];
   nodes: Node[];
@@ -106,4 +108,27 @@ export async function pdfBytes(id: string) {
     id,
   ]);
   return row.rows[0]?.pdf_bytes as Buffer | undefined;
+}
+
+/** Only serialize records belonging to the authenticated user's Firestore library. */
+export async function userDataset(user: AuthUser): Promise<Dataset> {
+  const owned = new Set((await listUserCorpora(user)).map(c => c.id));
+  if (!owned.size) return { docs: [], nodes: [], edges: [], anchors: [], cards: [], entities: [], fixture: fixturesEnabled() };
+  const data = await dataset();
+  const docs = data.docs.filter(d => owned.has(d.corpus_id));
+  const docIds = new Set(docs.map(d => d.id));
+  const nodes = data.nodes.filter(n => docIds.has(n.doc_id));
+  const nodeIds = new Set(nodes.map(n => n.id));
+  return { ...data, docs, nodes,
+    edges: data.edges.filter(e => nodeIds.has(e.src) && nodeIds.has(e.dst)),
+    anchors: data.anchors.filter(a => docIds.has(a.doc_id)),
+    cards: data.cards.filter(c => docIds.has(c.source.doc_id)),
+    entities: data.entities.filter(e => owned.has(e.corpus_id)),
+  };
+}
+export async function requireDocumentOwner(user: AuthUser, docId: string): Promise<Doc> {
+  const doc = (await dataset()).docs.find(d => d.id === docId);
+  if (!doc) throw new AuthError(404, "Document not found.");
+  await assertCorpusOwner(user, doc.corpus_id);
+  return doc;
 }

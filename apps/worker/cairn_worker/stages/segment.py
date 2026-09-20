@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 from uuid import UUID, uuid5
 
@@ -190,7 +191,7 @@ def find_candidates(spans: list[Span]) -> list[dict]:
 
 
 def _luna_enrich(ctx: PipelineContext | None, cands: list[dict]) -> None:
-    if not cands or ctx is None:
+    if not cands or ctx is None or os.environ.get("CAIRN_INTELLIGENCE_MODE") == "deterministic":
         return
     batch_size = 20
     chapter_key = f"segment:{ctx.doc_id if ctx else 'eval'}"
@@ -215,9 +216,8 @@ def _luna_enrich(ctx: PipelineContext | None, cands: list[dict]) -> None:
             )
             parsed = json.loads(text)
             by_i = {int(n["index"]): n for n in parsed.get("nodes", [])}
-        except Exception as e:  # noqa: BLE001 — regex remains source of labels
-            log.warning("Luna segment batch failed (%s); using regex kinds", e)
-            return {}
+        except Exception as e:  # noqa: BLE001 — expose provider/configuration failures to ingestion
+            raise RuntimeError(f"Model segmentation failed: {e}") from e
         return by_i
 
     for off, by_i in run_batches(ctx, cands, batch_size, "segment", "Analyzing result details", enrich):
@@ -273,6 +273,8 @@ def nodes_from_spans(spans: list[Span], doc_id, ctx: PipelineContext | None = No
 
 def segment(ctx: PipelineContext, spans: list[Span]) -> list[Node]:
     nodes = nodes_from_spans(spans, ctx.doc_id, ctx)
+    if not nodes:
+        raise ValueError("No supported mathematical environments found. Expected numbered definitions, theorems, lemmas, or proofs; this document cannot produce a relation graph.")
     total = len(nodes)
     for i, n in enumerate(nodes, start=1):
         db.insert_node(ctx.conn, n)

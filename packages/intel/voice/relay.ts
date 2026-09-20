@@ -1,5 +1,5 @@
 import { WebSocket, WebSocketServer } from "ws";
-import type { Server } from "node:http";
+import type { Server, IncomingMessage } from "node:http";
 import { reserveApiSpend, settleApiSpend } from "../budget";
 import { logCall } from "../llm";
 import { VoiceQuestion, type VoiceQuestion as Viewport } from "./server";
@@ -89,7 +89,7 @@ export async function relaySpeech(browser: WebSocket, viewport: Viewport, deps: 
 }
 
 /** Attach before Next's upgrade handler; no provider token is ever sent to the browser. */
-export function attachVoiceRelay(server: Server, validateViewport: (input: Viewport) => Promise<{ corpusId: string; fixture: boolean }>) {
+export function attachVoiceRelay(server: Server, validateViewport: (input: Viewport, request: IncomingMessage) => Promise<{ corpusId: string; fixture: boolean }>) {
   const sockets = new WebSocketServer({ noServer: true, maxPayload: 32768, perMessageDeflate: false });
   server.on("upgrade", (request, socket, head) => {
     const path = request.url?.split("?")[0];
@@ -104,7 +104,7 @@ export function attachVoiceRelay(server: Server, validateViewport: (input: Viewp
     sockets.handleUpgrade(request, socket, head, browser => {
       void relaySpeech(browser, viewport, {
         async authorize(input) {
-          const source = await validateViewport(input);
+          const source = await validateViewport(input, request);
           if (!process.env.DEEPGRAM_API_KEY) throw new Error("Speech is not configured");
           const reservation = await reserveApiSpend(STT_RESERVATION_USD, "voice", "nova-3");
           const started = Date.now();

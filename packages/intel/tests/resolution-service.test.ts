@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { developmentCorpus, DEVELOPMENT_CORPUS_ID } from "../evals/development-corpus";
-import { resolveCorpus, resolvedAnchorEntities, type ResolutionSnapshot } from "../resolution-service";
+import { resolveCorpus, resolvedAnchorEntities, ResolutionStageError, type ResolutionSnapshot } from "../resolution-service";
 import { planResolution, type ResolutionPlan } from "../resolve";
 
 async function harness() {
@@ -53,10 +53,35 @@ test("index synchronization receives the entire authoritative corpus before cand
 test("malformed adjudication and failed persistence cannot return success", async () => {
   const h = await harness();
   const input = { corpus_id: DEVELOPMENT_CORPUS_ID, node_ids: [h.exercises.nodes[0].id] };
-  await assert.rejects(resolveCorpus(input, { ...h.deps, model: async () => ({ decisions: [] }) }), /Missing/);
+  await assert.rejects(resolveCorpus(input, { ...h.deps, model: async () => ({ decisions: [] }) }), error =>
+    error instanceof ResolutionStageError && error.stage === "compare" && error.cause instanceof Error && /Missing/.test(error.cause.message));
   assert.equal(h.plans.length, 0);
   await assert.rejects(resolveCorpus(input, { ...h.deps, repository: { ...h.deps.repository,
-    save: async () => { throw new Error("stale snapshot"); } } }), /stale/);
+    save: async () => { throw new Error("stale snapshot"); } } }), error =>
+    error instanceof ResolutionStageError && error.stage === "save" && error.cause instanceof Error && error.cause.message === "stale snapshot");
+});
+
+test("resolution service identifies the failing stage without exposing provider details", async () => {
+  const h = await harness();
+  const input = { corpus_id: DEVELOPMENT_CORPUS_ID, node_ids: [h.exercises.nodes[0].id] };
+  const privateError = new Error("private document text and Authorization credentials");
+  for (const stage of ["index", "retrieve", "compare", "save"] as const) {
+    const fail = async (): Promise<never> => { throw privateError; };
+    const deps = { ...h.deps,
+      search: { ...h.deps.search, ...(stage === "index" ? { indexNodes: fail } : {}),
+        ...(stage === "retrieve" ? { resolutionCandidates: fail } : {}) },
+      ...(stage === "compare" ? { model: fail } : {}),
+      repository: { ...h.deps.repository, ...(stage === "save" ? { save: fail } : {}) },
+    };
+    await assert.rejects(resolveCorpus(input, deps), error => {
+      assert(error instanceof ResolutionStageError);
+      assert.equal(error.stage, stage);
+      assert.equal(error.cause, privateError);
+      assert(!error.message.includes("private"));
+      assert(!error.message.includes("Authorization"));
+      return true;
+    });
+  }
 });
 test("named anchors resolve only unambiguous names with bounded labels", async () => {
   const h = await harness();

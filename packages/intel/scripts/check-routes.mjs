@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { BakeResponse, ForwardResponse, ResolveResponse, SearchResponse, TraceResponse } from "@cairn/contracts";
+import { BakeResponse, ResolveResponse } from "@cairn/contracts";
 import { POST as bake } from "../../../apps/web/app/api/intel/bake/route";
 import { POST as resolve } from "../../../apps/web/app/api/intel/resolve/route";
 import { POST as trace } from "../../../apps/web/app/api/intel/trace/route";
@@ -13,26 +13,22 @@ import { developmentCorpus, DEVELOPMENT_CORPUS_ID } from "../evals/development-c
 if (process.env.USE_FIXTURES !== "1" || !process.env.FIXTURES_DIR) throw new Error("Explicit fixture test environment required");
 const [chapter, exercises] = await developmentCorpus();
 const request = (body) => new Request("http://localhost/api/intel/test", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+delete process.env.CAIRN_WORKER_SECRET; // Neither processing endpoint needs an extra secret.
+assert.equal((await resolve(new Request("http://localhost/api/intel/resolve", { method: "POST", headers: { origin: "https://elsewhere.test" }, body: "{}" }))).status, 403);
 assert.equal(BakeResponse.parse(await (await bake(request({ doc_id: exercises.document.id }))).json()).cards_done, 20);
 assert.equal((await bake(request({ doc_id: "invalid" }))).status, 400);
 assert.equal((await bake(request({ doc_id: DEVELOPMENT_CORPUS_ID }))).status, 404);
 const decisions = ResolveResponse.parse(await (await resolve(request({ corpus_id: DEVELOPMENT_CORPUS_ID, node_ids: exercises.nodes.map((node) => node.id) }))).json());
 assert.equal(decisions.decisions.length, 3);
 assert.equal((await resolve(request({ corpus_id: chapter.document.id, node_ids: [chapter.nodes[0].id] }))).status, 404);
-const chain = TraceResponse.parse(await (await trace(request({ doc_id: chapter.document.id, selection: "by Toy 2", read_node_ids: [chapter.nodes[0].id] }))).json()).chain;
-assert.equal(chain[0].node.id, chapter.nodes[1].id);
-assert.equal(chain[1].read, true);
-const crossDocument = TraceResponse.parse(await (await trace(request({ doc_id: exercises.document.id, page: 2, selection: "We conclude by Toy 2." }))).json()).chain;
-assert.equal(crossDocument[0].node.id, chapter.nodes[1].id);
-const downstream = ForwardResponse.parse(await (await forward(new Request("http://localhost"), { params: Promise.resolve({ entity_id: chapter.entities[0].id }) })).json()).downstream;
-assert.ok(downstream.some((hit) => hit.node.id === chapter.nodes[1].id));
-assert.equal((await forward(new Request("http://localhost"), { params: Promise.resolve({ entity_id: "bad" }) })).status, 400);
-const hits = SearchResponse.parse(await (await search(new Request("http://localhost/api/search?q=absolute"))).json()).hits;
-assert.ok(hits.length > 0);
-const spoken = await voiceAnswer(request({ doc_id: chapter.document.id, page: 1, visible_node_ids: [chapter.nodes[0].id], question: "What is that theorem?" }));
-assert.equal(spoken.status, 200);
-assert.deepEqual((await spoken.json()).citations, [chapter.nodes[0].id]);
-assert.equal((await voiceToken(request({}))).status, 503);
-assert.equal((await voiceSpeak(request({ text: "test" }))).status, 503);
-assert.equal((await voiceToken(new Request("http://localhost/api/intel/voice/token", { method: "POST", headers: { origin: "http://elsewhere.test" } }))).status, 403);
+// User-facing routes require Firebase authentication even in fixture mode.
+// Their authenticated data behavior is covered by service-level tests.
+for (const response of await Promise.all([
+  trace(request({ doc_id: chapter.document.id, selection: "by Toy 2" })),
+  forward(new Request("http://localhost"), { params: Promise.resolve({ entity_id: chapter.entities[0].id }) }),
+  search(new Request("http://localhost/api/search?q=absolute")),
+  voiceAnswer(request({ doc_id: chapter.document.id, page: 1, question: "What is that theorem?" })),
+  voiceToken(request({})),
+  voiceSpeak(request({ text: "test" })),
+])) assert.equal(response.status, 401);
 console.log("fixture routes passed");

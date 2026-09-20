@@ -1271,3 +1271,26 @@ th {
   box-shadow: 0 8px 28px #0005; font-size: 13px; line-height: 1.5; z-index: 40; }
 .voice-feedback > .voice-dismiss { float: right; }
 .voice-feedback p { margin: 8px 0; }
+
+.header-actions { margin-left: auto; display: flex; align-items: center; gap: 18px; font-size: 12px; }
+.account-menu { display: flex; align-items: center; gap: 12px; font-size: 12px; }
+.account-name { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-2); }
+.account-button { border: 1px solid var(--line); padding: 8px 12px; white-space: nowrap; }
+.account-button:hover { border-color: var(--accent); background: var(--surface); }
+.library-empty { padding: 30px 0; color: var(--ink-2); font-size: 13px; }
+.library-empty button { margin-top: 12px; padding-left: 0; color: var(--accent); }
+.auth-notice { position: fixed; bottom: 22px; right: 22px; z-index: 100; max-width: min(460px, calc(100vw - 44px)); display: flex; gap: 14px; align-items: center; padding: 14px 18px; background: var(--surface); border: 1px solid var(--accent); border-radius: 6px; box-shadow: 0 8px 28px #0005; font-size: 13px; }
+.auth-notice button { flex-shrink: 0; font-size: 18px; }
+@media (max-width: 760px) {
+  .landing, .upload-page { padding-left: 20px; padding-right: 20px; }
+  .landing > header, .upload-page > header { gap: 12px; min-height: 94px; height: auto; padding: 18px 0; flex-wrap: wrap; }
+  .landing > header > .eyebrow { display: none; }
+  .header-actions { gap: 8px; }
+  .account-name { display: none; }
+  .landing h1 { font-size: 38px; }
+  .corpus-preview { flex-wrap: wrap; gap: 10px; }
+  .corpus-row { gap: 12px; }
+  .corpus-row > div:nth-child(2) { min-width: 0; }
+  .corpus-row p { overflow-wrap: anywhere; }
+  .corpus-stats { flex-shrink: 0; }
+}

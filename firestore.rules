@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /corpora/{corpusId} {
+      allow read: if request.auth != null && resource.data.owner_uid == request.auth.uid;
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['id', 'name', 'created_at', 'owner_uid'])
+        && request.resource.data.keys().hasAll(['id', 'name', 'created_at', 'owner_uid'])
+        && request.resource.data.owner_uid == request.auth.uid
+        && request.resource.data.id == corpusId
+        && corpusId.matches('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$')
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 200
+        && request.resource.data.created_at is string
+        && request.resource.data.created_at.size() <= 40;
+      // Ownership cannot be changed or reclaimed while processing data exists.
+      allow update, delete: if false;
+    }
+  }
+}

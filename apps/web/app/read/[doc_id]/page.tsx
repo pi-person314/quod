@@ -1,6 +1,7 @@
-import { dataset, scopeDataset } from "@/lib/data";
+import { userDataset, scopeDataset } from "@/lib/data";
 import { Reader } from "@/components/reader";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { requireUser, AuthError } from "@/lib/auth";
 export const dynamic = "force-dynamic";
 export default async function ReadPage({
   params,
@@ -8,7 +9,13 @@ export default async function ReadPage({
   params: Promise<{ doc_id: string }>;
 }) {
   const { doc_id } = await params;
-  const data = await dataset();
+  let user;
+  try { user = await requireUser(); }
+  catch (error) {
+    if (error instanceof AuthError && error.status === 401) redirect("/upload");
+    throw error;
+  }
+  const data = await userDataset(user);
   const doc = data.docs.find((d) => d.id === doc_id);
   if (!doc) notFound();
   return (
