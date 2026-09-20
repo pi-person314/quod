@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { BrowserVoiceCompanion } from "@quod/intel/voice/client";
 import type { Node } from "@quod/contracts";
 
-export function VoiceControl({ docId, page, nodes, onJump }: { docId: string; page: number; nodes: Node[]; onJump: (doc: string, page: number, node: string) => void }) {
+export function VoiceControl({ docId, page, nodes, sourceNodes = nodes, onJump }: { docId: string; page: number; nodes: Node[]; sourceNodes?: Node[]; onJump: (doc: string, page: number, node: string) => void }) {
   const [available, setAvailable] = useState(false);
   const [mode, setMode] = useState<"idle" | "starting" | "listening" | "answering">("idle");
   const [transcript, setTranscript] = useState("");
@@ -96,7 +96,7 @@ export function VoiceControl({ docId, page, nodes, onJump }: { docId: string; pa
       }}>×</button>
       {transcript && <p className="muted">{transcript}</p>}
       {answer && <p>{answer}</p>}
-      {citations.map(id => nodes.find(node => node.id === id)).filter(node => node !== undefined).map(node =>
+      {citations.map(id => sourceNodes.find(node => node.id === id)).filter(node => node !== undefined).map(node =>
         <button key={node.id} onClick={() => onJump(node.doc_id, node.page, node.id)}>{node.label ?? node.title ?? "View source"}</button>)}
       {error && <p className="voice-error">{error}</p>}
     </div>}

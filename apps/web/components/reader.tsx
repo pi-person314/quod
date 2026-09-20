@@ -21,6 +21,7 @@ import { MathText } from "./math-text";
 import { CostPanel } from "./cost-panel";
 import { VoiceControl } from "./voice-control";
 import { referenceOverlays } from "@/lib/reference-overlays";
+import { nodeLabel } from "@/lib/node-label";
 import { ankiCsv } from "@/lib/anki-export";
 const STATE_KEY = "quod.reader.v1";
 // Preserve reading progress from installations before the Quod rename.
@@ -274,6 +275,19 @@ export function Reader({
       flush();
     };
   }, [docId, page, ready, map, panel, update]);
+  useEffect(() => {
+    const clearSelection = () => {
+      const selected = window.getSelection();
+      const layer = document.querySelector(".pdf-page .textLayer");
+      if (!selected || selected.isCollapsed || !selected.toString().trim()
+          || !layer?.contains(selected.anchorNode) || !layer.contains(selected.focusNode)) {
+        if (panel !== "trace") setSelection(null);
+      }
+    };
+    document.addEventListener("selectionchange", clearSelection);
+    clearSelection();
+    return () => document.removeEventListener("selectionchange", clearSelection);
+  }, [panel, docId, page, map]);
   const jump = useCallback(
     (id: string, p: number, node?: string) => {
       setDocId(id);
@@ -693,7 +707,7 @@ export function Reader({
             />
           )}
           <footer className="reader-status">
-            <VoiceControl docId={docId} page={page} nodes={pageNodes} onJump={jump} />
+            <VoiceControl docId={docId} page={page} nodes={pageNodes} sourceNodes={data.nodes} onJump={jump} />
             <span>
               {doc.id.startsWith("b000")
                 ? "Demo documents"
@@ -821,9 +835,9 @@ export function Reader({
                           {String(i + 1).padStart(2, "0")}
                         </span>
                         <span>
-                          {hop.node.title ?? hop.node.label}
+                          {nodeLabel(hop.node, data.nodes)}
                           <small>
-                            {hop.node.label} {hop.read ? "· read" : ""}
+                            {`p. ${hop.node.page}`} {hop.read ? "· read" : ""}
                           </small>
                         </span>
                       </summary>
