@@ -52,6 +52,13 @@ export function Reader({
     [query, setQuery] = useState(""),
     [hits, setHits] = useState<Node[]>([]),
     [ready, setReady] = useState(false);
+  /** The node a jump asked for. The nonce replays scroll and flash on a repeat click. */
+  const [focus, setFocus] = useState<{ id: string; nonce: number } | null>(
+    null,
+  );
+  const [flash, setFlash] = useState<{ id: string; nonce: number } | null>(
+    null,
+  );
   const [activeResult, setActiveResult] = useState(0);
   const [retrying, setRetrying] = useState(false);
   const [retryError, setRetryError] = useState("");
@@ -133,6 +140,8 @@ export function Reader({
       );
       setDark(saved.dark ?? true);
       const url = new URL(location.href);
+      const deepLink = url.hash.slice(1);
+      if (deepLink) setFocus({ id: deepLink, nonce: 0 });
       setPage(
         Math.max(
           1,
@@ -250,16 +259,26 @@ export function Reader({
       flush();
     };
   }, [docId, page, ready, map, panel, update]);
-  const jump = useCallback((id: string, p: number, node?: string) => {
-    setDocId(id);
-    setPage(p);
-    setFloating(null);
-    setMap(false);
-    setPanel("");
-    setSelection(null);
-    setReady(false);
-    history.pushState({}, "", `/read/${id}?page=${p}${node ? `#${node}` : ""}`);
-  }, []);
+  const jump = useCallback(
+    (id: string, p: number, node?: string) => {
+      setDocId(id);
+      setPage(p);
+      setFloating(null);
+      setMap(false);
+      setPanel("");
+      setSelection(null);
+      setFocus(node ? { id: node, nonce: Date.now() } : null);
+      // Staying on the same page never re-renders the PDF, so onReady would
+      // never fire again and everything gated on `ready` would stall.
+      if (id !== docId || p !== page) setReady(false);
+      history.pushState(
+        {},
+        "",
+        `/read/${id}?page=${p}${node ? `#${node}` : ""}`,
+      );
+    },
+    [docId, page],
+  );
   useEffect(() => {
     const pop = () => {
       const id = location.pathname.split("/").pop();
@@ -274,17 +293,24 @@ export function Reader({
   }, [data]);
   useEffect(() => {
     if (!ready) return;
-    const id = location.hash.slice(1);
-    const target = data.nodes.find(
-      (n) => n.id === id && n.doc_id === docId && n.page === page,
-    );
+    const target = focus
+      ? data.nodes.find(
+          (n) => n.id === focus.id && n.doc_id === docId && n.page === page,
+        )
+      : undefined;
     const surface = document.querySelector<HTMLElement>(".pdf-scroll");
     const paper = document.querySelector<HTMLElement>(".pdf-page");
     if (target && surface && paper) {
       const pageWidth = Number(paper.dataset.pageWidth) || 612;
       surface.scrollTop = (target.bbox[1] * paper.offsetWidth) / pageWidth - 45;
     } else if (surface) surface.scrollTop = 0;
-  }, [ready, docId, page, data]);
+  }, [ready, focus, docId, page, data]);
+  useEffect(() => {
+    if (!focus || !ready) return;
+    setFlash(focus);
+    const timer = setTimeout(() => setFlash(null), 2400);
+    return () => clearTimeout(timer);
+  }, [focus, ready]);
   const cancelClose = () => {
     if (closeTimer.current) clearTimeout(closeTimer.current);
   };
@@ -329,6 +355,29 @@ export function Reader({
       const targetId = a.target_node_id ?? data.entities.find(e => e.id === a.target_entity_id)?.canonical_node_id;
       if (targetId)
         update(targetId, (s) => ({ hover_count: s.hover_count + 1 }));
+    }, 120);
+  };
+  /** A result stated on this page has no anchor pointing at it, so build its card here. */
+  const hoverNode = (n: Node, r: DOMRect) => {
+    setError("");
+    cancelClose();
+    if (openTimer.current) clearTimeout(openTimer.current);
+    openTimer.current = setTimeout(() => {
+      setFloating({
+        card: {
+          id: n.id,
+          anchor_id: n.id,
+          headline: n.title ?? n.label ?? "Result",
+          instantiated_md: n.statement_md,
+          full_md: n.statement_md,
+          substitutions: [],
+          clause_ids: n.clauses.map((c) => c.id),
+          gloss: `Stated here as ${n.label ?? `a ${n.kind}`}.`,
+          source: { doc_id: n.doc_id, page: n.page },
+        },
+        x: Math.max(12, Math.min(r.left, innerWidth - 432)),
+        y: Math.max(12, Math.min(r.bottom + 10, innerHeight - 570)),
+      });
     }, 120);
   };
   useEffect(
@@ -617,7 +666,9 @@ export function Reader({
               dark={dark}
               anchors={anchors}
               nodes={data.nodes}
+              highlight={flash}
               onAnchor={hover}
+              onNode={hoverNode}
               onLeave={leave}
               onSelect={(text, r) =>
                 setSelection({

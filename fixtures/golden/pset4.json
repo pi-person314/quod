@@ -17,9 +17,23 @@
       "kind": "theorem",
       "label": "Problem 1",
       "title": "the dimension theorem",
-      "statement_md": "Pset restatement of the dimension theorem.",
-      "clauses": [],
-      "symbols": [],
+      "statement_md": "State the dimension theorem for a linear map $T: V \\to W$: $\\dim V = \\dim \\ker T + \\dim \\operatorname{im} T$.",
+      "clauses": [
+        {
+          "id": "i",
+          "text": "State the dimension theorem for a linear map $T: V \\to W$: $\\dim V = \\dim \\ker T + \\dim \\operatorname{im} T$."
+        }
+      ],
+      "symbols": [
+        {
+          "sym": "T",
+          "role": "linear map"
+        },
+        {
+          "sym": "V",
+          "role": "finite-dimensional domain"
+        }
+      ],
       "page": 1,
       "bbox": [
         72.0,
@@ -36,9 +50,23 @@
       "kind": "theorem",
       "label": "Problem 2",
       "title": "Rank-Nullity",
-      "statement_md": "Pset restatement of Rank-Nullity.",
-      "clauses": [],
-      "symbols": [],
+      "statement_md": "Prove Rank-Nullity for a linear $T: \\mathbb{R}^n \\to \\mathbb{R}^m$: $\\dim \\ker T + \\dim \\operatorname{im} T = n$.",
+      "clauses": [
+        {
+          "id": "i",
+          "text": "Prove Rank-Nullity for a linear $T: \\mathbb{R}^n \\to \\mathbb{R}^m$: $\\dim \\ker T + \\dim \\operatorname{im} T = n$."
+        }
+      ],
+      "symbols": [
+        {
+          "sym": "T",
+          "role": "linear map"
+        },
+        {
+          "sym": "n",
+          "role": "dimension of the domain"
+        }
+      ],
       "page": 1,
       "bbox": [
         72.0,
@@ -55,9 +83,19 @@
       "kind": "theorem",
       "label": "Problem 3",
       "title": "spectral theorem",
-      "statement_md": "Pset restatement of spectral theorem.",
-      "clauses": [],
-      "symbols": [],
+      "statement_md": "Apply the spectral theorem to a symmetric $2 \\times 2$ matrix $A$ and exhibit an orthonormal eigenbasis.",
+      "clauses": [
+        {
+          "id": "i",
+          "text": "Apply the spectral theorem to a symmetric $2 \\times 2$ matrix $A$ and exhibit an orthonormal eigenbasis."
+        }
+      ],
+      "symbols": [
+        {
+          "sym": "A",
+          "role": "symmetric matrix"
+        }
+      ],
       "page": 1,
       "bbox": [
         72.0,
@@ -74,9 +112,19 @@
       "kind": "lemma",
       "label": "Problem 4",
       "title": null,
-      "statement_md": "Pset restatement of Problem 4.",
-      "clauses": [],
-      "symbols": [],
+      "statement_md": "Show $\\dim \\ker T + \\dim \\operatorname{im} T = \\dim V$ without citing a numbered result: extend a basis of $\\ker T$ to a basis of $V$.",
+      "clauses": [
+        {
+          "id": "i",
+          "text": "Show $\\dim \\ker T + \\dim \\operatorname{im} T = \\dim V$ without citing a numbered result: extend a basis of $\\ker T$ to a basis of $V$."
+        }
+      ],
+      "symbols": [
+        {
+          "sym": "T",
+          "role": "linear map"
+        }
+      ],
       "page": 1,
       "bbox": [
         72.0,
@@ -93,9 +141,19 @@
       "kind": "proposition",
       "label": "Problem 5",
       "title": null,
-      "statement_md": "Pset restatement of Problem 5.",
-      "clauses": [],
-      "symbols": [],
+      "statement_md": "Let $A$ be normal. Invoke the spectral theorem to diagonalise $A$ in an orthonormal basis.",
+      "clauses": [
+        {
+          "id": "i",
+          "text": "Let $A$ be normal. Invoke the spectral theorem to diagonalise $A$ in an orthonormal basis."
+        }
+      ],
+      "symbols": [
+        {
+          "sym": "A",
+          "role": "normal operator"
+        }
+      ],
       "page": 1,
       "bbox": [
         72.0,
@@ -112,9 +170,19 @@
       "kind": "example",
       "label": "Problem 6",
       "title": "Theorem 3.22",
-      "statement_md": "Pset restatement of Theorem 3.22.",
-      "clauses": [],
-      "symbols": [],
+      "statement_md": "Explain why Theorem 3.22 and Rank-Nullity name the same fact: both assert $\\dim \\ker T + \\dim \\operatorname{im} T = \\dim V$.",
+      "clauses": [
+        {
+          "id": "i",
+          "text": "Explain why Theorem 3.22 and Rank-Nullity name the same fact: both assert $\\dim \\ker T + \\dim \\operatorname{im} T = \\dim V$."
+        }
+      ],
+      "symbols": [
+        {
+          "sym": "T",
+          "role": "linear map"
+        }
+      ],
       "page": 1,
       "bbox": [
         72.0,
@@ -156,14 +224,336 @@
       "confidence": 0.8
     },
     {
+      "src": "00000000-0000-4000-8000-000000000504",
+      "dst": "00000000-0000-4000-8000-000000000202",
+      "kind": "uses_notation",
+      "extractor": "notation",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-000000000504",
+      "dst": "00000000-0000-4000-8000-000000000203",
+      "kind": "uses_notation",
+      "extractor": "notation",
+      "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-000000000505",
+      "dst": "00000000-0000-4000-8000-000000000211",
+      "kind": "depends_on",
+      "extractor": "heuristic",
+      "confidence": 0.8
+    },
+    {
       "src": "00000000-0000-4000-8000-000000000506",
       "dst": "00000000-0000-4000-8000-000000000204",
       "kind": "restates",
       "extractor": "deterministic",
       "confidence": 0.9
+    },
+    {
+      "src": "00000000-0000-4000-8000-000000000506",
+      "dst": "00000000-0000-4000-8000-00000000020d",
+      "kind": "restates",
+      "extractor": "deterministic",
+      "confidence": 0.9
     }
   ],
-  "anchors": [],
-  "cards": [],
+  "anchors": [
+    {
+      "id": "00000000-0000-4000-8000-000000000601",
+      "doc_id": "00000000-0000-4000-8000-000000000012",
+      "page": 1,
+      "bbox": [
+        156.98599243164062,
+        88.17500305175781,
+        268.866943359375,
+        103.28900146484375
+      ],
+      "surface": "the dimension theorem",
+      "target_node_id": "00000000-0000-4000-8000-000000000207",
+      "target_entity_id": "00000000-0000-4000-8000-000000000102",
+      "card_id": "00000000-0000-4000-8000-000000000701"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000602",
+      "doc_id": "00000000-0000-4000-8000-000000000012",
+      "page": 1,
+      "bbox": [
+        160.03298950195312,
+        116.17500305175781,
+        219.31198120117188,
+        131.28900146484375
+      ],
+      "surface": "Rank-Nullity",
+      "target_node_id": "00000000-0000-4000-8000-000000000204",
+      "target_entity_id": "00000000-0000-4000-8000-000000000101",
+      "card_id": "00000000-0000-4000-8000-000000000702"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000603",
+      "doc_id": "00000000-0000-4000-8000-000000000012",
+      "page": 1,
+      "bbox": [
+        150.85899353027344,
+        144.1750030517578,
+        251.1239471435547,
+        159.28900146484375
+      ],
+      "surface": "the spectral theorem",
+      "target_node_id": "00000000-0000-4000-8000-000000000211",
+      "target_entity_id": "00000000-0000-4000-8000-000000000103",
+      "card_id": "00000000-0000-4000-8000-000000000703"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000604",
+      "doc_id": "00000000-0000-4000-8000-000000000012",
+      "page": 1,
+      "bbox": [
+        188.76498413085938,
+        172.1750030517578,
+        216.88096618652344,
+        187.28900146484375
+      ],
+      "surface": "\\ker T",
+      "target_node_id": "00000000-0000-4000-8000-000000000202",
+      "target_entity_id": null,
+      "card_id": "00000000-0000-4000-8000-000000000704"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000605",
+      "doc_id": "00000000-0000-4000-8000-000000000012",
+      "page": 1,
+      "bbox": [
+        253.25794982910156,
+        172.1750030517578,
+        353.52294921875,
+        187.28900146484375
+      ],
+      "surface": "\\operatorname{im} T",
+      "target_node_id": "00000000-0000-4000-8000-000000000203",
+      "target_entity_id": null,
+      "card_id": "00000000-0000-4000-8000-000000000705"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000606",
+      "doc_id": "00000000-0000-4000-8000-000000000012",
+      "page": 1,
+      "bbox": [
+        259.7039794921875,
+        200.1750030517578,
+        359.968994140625,
+        215.28900146484375
+      ],
+      "surface": "the spectral theorem",
+      "target_node_id": "00000000-0000-4000-8000-000000000211",
+      "target_entity_id": "00000000-0000-4000-8000-000000000103",
+      "card_id": "00000000-0000-4000-8000-000000000706"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000607",
+      "doc_id": "00000000-0000-4000-8000-000000000012",
+      "page": 1,
+      "bbox": [
+        189.98599243164062,
+        228.1750030517578,
+        258.4609680175781,
+        243.28900146484375
+      ],
+      "surface": "Theorem 3.22",
+      "target_node_id": "00000000-0000-4000-8000-00000000020d",
+      "target_entity_id": "00000000-0000-4000-8000-000000000101",
+      "card_id": "00000000-0000-4000-8000-000000000707"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000608",
+      "doc_id": "00000000-0000-4000-8000-000000000012",
+      "page": 1,
+      "bbox": [
+        282.92498779296875,
+        228.1750030517578,
+        342.20391845703125,
+        243.28900146484375
+      ],
+      "surface": "Rank-Nullity",
+      "target_node_id": "00000000-0000-4000-8000-000000000204",
+      "target_entity_id": "00000000-0000-4000-8000-000000000101",
+      "card_id": "00000000-0000-4000-8000-000000000708"
+    }
+  ],
+  "cards": [
+    {
+      "id": "00000000-0000-4000-8000-000000000701",
+      "anchor_id": "00000000-0000-4000-8000-000000000601",
+      "headline": "Dimension Theorem",
+      "instantiated_md": "Theorem 3.7: standard statement for demo fixture.",
+      "full_md": "Theorem 3.7: standard statement for demo fixture.",
+      "substitutions": [
+        {
+          "from": "S: U \\to W",
+          "to": "T: V \\to W"
+        }
+      ],
+      "clause_ids": [
+        "i"
+      ],
+      "gloss": "The chapter calls this the dimension theorem: the same count you are asked to state.",
+      "source": {
+        "doc_id": "00000000-0000-4000-8000-000000000011",
+        "page": 2
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000702",
+      "anchor_id": "00000000-0000-4000-8000-000000000602",
+      "headline": "Rank-Nullity",
+      "instantiated_md": "Let $T: V \\to W$ be linear, $\\dim V$ finite. Then $\\dim \\ker T + \\dim \\operatorname{im} T = \\dim V$.",
+      "full_md": "Let $T: V \\to W$ be linear, $\\dim V$ finite. Then $\\dim \\ker T + \\dim \\operatorname{im} T = \\dim V$.",
+      "substitutions": [
+        {
+          "from": "V",
+          "to": "\\mathbb{R}^n"
+        },
+        {
+          "from": "W",
+          "to": "\\mathbb{R}^m"
+        }
+      ],
+      "clause_ids": [
+        "i"
+      ],
+      "gloss": "Kernel and image dimensions add up to the dimension of the domain.",
+      "source": {
+        "doc_id": "00000000-0000-4000-8000-000000000011",
+        "page": 1
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000703",
+      "anchor_id": "00000000-0000-4000-8000-000000000603",
+      "headline": "Spectral",
+      "instantiated_md": "Theorem 3.14: standard statement for demo fixture.",
+      "full_md": "Theorem 3.14: standard statement for demo fixture.",
+      "substitutions": [
+        {
+          "from": "T",
+          "to": "A"
+        }
+      ],
+      "clause_ids": [
+        "i"
+      ],
+      "gloss": "A normal operator has an orthonormal basis of eigenvectors.",
+      "source": {
+        "doc_id": "00000000-0000-4000-8000-000000000011",
+        "page": 3
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000704",
+      "anchor_id": "00000000-0000-4000-8000-000000000604",
+      "headline": "Kernel",
+      "instantiated_md": "Definition 3.2: standard statement for demo fixture.",
+      "full_md": "Definition 3.2: standard statement for demo fixture.",
+      "substitutions": [
+        {
+          "from": "V",
+          "to": "V"
+        }
+      ],
+      "clause_ids": [
+        "i"
+      ],
+      "gloss": "The kernel: the vectors T sends to zero.",
+      "source": {
+        "doc_id": "00000000-0000-4000-8000-000000000011",
+        "page": 1
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000705",
+      "anchor_id": "00000000-0000-4000-8000-000000000605",
+      "headline": "Image",
+      "instantiated_md": "Definition 3.3: standard statement for demo fixture.",
+      "full_md": "Definition 3.3: standard statement for demo fixture.",
+      "substitutions": [
+        {
+          "from": "V",
+          "to": "V"
+        }
+      ],
+      "clause_ids": [
+        "i"
+      ],
+      "gloss": "The image: everything T actually reaches.",
+      "source": {
+        "doc_id": "00000000-0000-4000-8000-000000000011",
+        "page": 1
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000706",
+      "anchor_id": "00000000-0000-4000-8000-000000000606",
+      "headline": "Spectral",
+      "instantiated_md": "Theorem 3.14: standard statement for demo fixture.",
+      "full_md": "Theorem 3.14: standard statement for demo fixture.",
+      "substitutions": [
+        {
+          "from": "T",
+          "to": "A"
+        }
+      ],
+      "clause_ids": [
+        "i"
+      ],
+      "gloss": "A normal operator has an orthonormal basis of eigenvectors.",
+      "source": {
+        "doc_id": "00000000-0000-4000-8000-000000000011",
+        "page": 3
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000707",
+      "anchor_id": "00000000-0000-4000-8000-000000000607",
+      "headline": "Rank-Nullity",
+      "instantiated_md": "Theorem 3.22: standard statement for demo fixture.",
+      "full_md": "Theorem 3.22: standard statement for demo fixture.",
+      "substitutions": [
+        {
+          "from": "V",
+          "to": "V"
+        }
+      ],
+      "clause_ids": [
+        "i"
+      ],
+      "gloss": "The chapter's second statement of rank plus nullity.",
+      "source": {
+        "doc_id": "00000000-0000-4000-8000-000000000011",
+        "page": 3
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000708",
+      "anchor_id": "00000000-0000-4000-8000-000000000608",
+      "headline": "Rank-Nullity",
+      "instantiated_md": "Let $T: V \\to W$ be linear, $\\dim V$ finite. Then $\\dim \\ker T + \\dim \\operatorname{im} T = \\dim V$.",
+      "full_md": "Let $T: V \\to W$ be linear, $\\dim V$ finite. Then $\\dim \\ker T + \\dim \\operatorname{im} T = \\dim V$.",
+      "substitutions": [
+        {
+          "from": "V",
+          "to": "V"
+        }
+      ],
+      "clause_ids": [
+        "i"
+      ],
+      "gloss": "Kernel and image dimensions add up to the dimension of the domain.",
+      "source": {
+        "doc_id": "00000000-0000-4000-8000-000000000011",
+        "page": 1
+      }
+    }
+  ],
   "entities": []
 }

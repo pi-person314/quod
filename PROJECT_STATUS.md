@@ -40,7 +40,7 @@ the phase-by-phase results below show what is actually done.
 
 | Phase | Completed and verified | Remaining |
 |---|---|---|
-| A0 contracts/fixtures | Two valid envelopes: 26 nodes, 35 edges, 15 anchors/cards, 3 entities. | Most chapter statement fields are placeholders; this is not a vetted real-book benchmark. |
+| A0 contracts/fixtures | Two valid envelopes: 26 nodes, 39 edges, 23 anchors/cards, 3 entities. The pset's eight anchors all resolve cross-document into chapter 3. | Chapter 3 statement fields are still placeholders; this is not a vetted real-book benchmark. |
 | A1 parsing | Three PDFs: 0% span-count discrepancy, no empty pages, quality 0.994–0.996. | Five real source candidates have not been vetted. |
 | A2 segmentation | Golden chapter: 20/20 nodes, precision/recall 1.000 offline. Numbered problems now segment (6/6 in the sample pset); remarks no longer leak into the preceding result, and cross-page boxes use only the starting page. | Broader real-book quality remains unmeasured. |
 | A3 anchors | Finds 15/15 annotated anchors; explicit resolution 28/29 = 0.966. Actual PDF text geometry now gives reference-sized boxes: 41/41 detected references across both sample PDFs match text rectangles with 0px discrepancy. | Detection recall does not establish precision; broader documents remain untested. |

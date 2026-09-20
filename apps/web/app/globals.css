@@ -541,6 +541,27 @@ kbd {
 .anchor.cross:hover {
   background: rgba(143, 184, 255, 0.12);
 }
+.anchor.result-marker {
+  border-bottom-color: var(--ink-3);
+  border-bottom-style: dotted;
+}
+.anchor.result-marker:hover,
+.anchor.result-marker:focus-visible {
+  border-bottom-color: var(--accent);
+  background: rgba(226, 178, 90, 0.1);
+}
+.node-flash {
+  position: absolute;
+  z-index: 2;
+  margin: -3px -5px;
+  padding: 3px 5px;
+  border-radius: 2px;
+  background: rgba(226, 178, 90, 0.28);
+  box-shadow: 0 0 0 1px rgba(226, 178, 90, 0.55);
+  pointer-events: none;
+  /* Reduced motion drops the fade; React still unmounts this after 2.4s. */
+  animation: node-flash 2.4s ease-out forwards;
+}
 .pdf-loading {
   position: absolute;
   top: 0;
@@ -1140,6 +1161,15 @@ th {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+@keyframes node-flash {
+  0%,
+  55% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
   }
 }
 @media (prefers-reduced-motion: reduce) {

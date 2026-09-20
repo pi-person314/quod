@@ -1,10 +1,13 @@
 ﻿import Link from "next/link";
+import type { Doc } from "@cairn/contracts";
 import { corpora, dataset } from "@/lib/data";
 export const dynamic = "force-dynamic";
+/** Open on the source text, not the problem set that references it. */
+const entryDoc = (docs: Doc[]) =>
+  docs.find((d) => !/problem|pset/i.test(d.title)) ?? docs[0];
 export default async function Home() {
   const [data, courses] = await Promise.all([dataset(), corpora()]);
-  const demo =
-    data.docs.find((d) => /problem|pset/i.test(d.title)) ?? data.docs[0];
+  const demo = entryDoc(data.docs);
   return (
     <main className="landing">
       <header>
@@ -46,8 +49,7 @@ export default async function Home() {
         </div>
         {courses.map((c, i) => {
           const docs = data.docs.filter((d) => d.corpus_id === c.id);
-          const first =
-            docs.find((d) => /problem|pset/i.test(d.title)) ?? docs[0];
+          const first = entryDoc(docs);
           return (
             <Link
               className="corpus-row"

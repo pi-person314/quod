@@ -13,7 +13,9 @@ export function PdfPage({
   dark,
   anchors,
   nodes,
+  highlight,
   onAnchor,
+  onNode,
   onLeave,
   onSelect,
   onReady,
@@ -24,7 +26,10 @@ export function PdfPage({
   dark: boolean;
   anchors: Anchor[];
   nodes: Node[];
+  /** Node to flash briefly after a jump. The nonce replays the animation. */
+  highlight?: { id: string; nonce: number } | null;
   onAnchor: (a: Anchor, r: DOMRect) => void;
+  onNode: (n: Node, r: DOMRect) => void;
   onLeave: () => void;
   onSelect: (text: string, r: DOMRect) => void;
   onReady: () => void;
@@ -32,6 +37,21 @@ export function PdfPage({
   const wrap = useRef<HTMLDivElement>(null),
     canvas = useRef<HTMLCanvasElement>(null),
     text = useRef<HTMLDivElement>(null);
+  const pageNodes = nodes.filter((n) => n.doc_id === docId && n.page === page);
+  const flashed = highlight
+    ? pageNodes.find((n) => n.id === highlight.id)
+    : undefined;
+  // Some fixtures already put an anchor on a heading; don't underline it twice.
+  const unanchored = pageNodes.filter(
+    (n) =>
+      !anchors.some(
+        (a) =>
+          a.bbox[0] < n.bbox[2] &&
+          n.bbox[0] < a.bbox[2] &&
+          a.bbox[1] < n.bbox[3] &&
+          n.bbox[1] < a.bbox[3],
+      ),
+  );
   const [width, setWidth] = useState(700),
     [size, setSize] = useState({ width: 612, height: 792 }),
     [points, setPoints] = useState({ width: 612, height: 792 }),
@@ -136,6 +156,18 @@ export function PdfPage({
         >
           <canvas ref={canvas} aria-label={`PDF page ${page}`} />
           <div className="textLayer" ref={text} />
+          {flashed && (
+            <div
+              key={`${flashed.id}-${highlight!.nonce}`}
+              className="node-flash"
+              style={{
+                left: `${(flashed.bbox[0] / points.width) * 100}%`,
+                top: `${(flashed.bbox[1] / points.height) * 100}%`,
+                width: `${((flashed.bbox[2] - flashed.bbox[0]) / points.width) * 100}%`,
+                height: `${((flashed.bbox[3] - flashed.bbox[1]) / points.height) * 100}%`,
+              }}
+            />
+          )}
           <div className="anchors">
             {anchors.map((a) => {
               const target = nodes.find((n) => n.id === a.target_node_id);
@@ -164,6 +196,29 @@ export function PdfPage({
                 />
               );
             })}
+            {unanchored.map((n) => (
+              <button
+                key={n.id}
+                aria-label={`Result: ${n.title ?? n.label ?? n.kind}`}
+                className="anchor result-marker"
+                style={{
+                  left: `${(n.bbox[0] / points.width) * 100}%`,
+                  top: `${(n.bbox[1] / points.height) * 100}%`,
+                  width: `${((n.bbox[2] - n.bbox[0]) / points.width) * 100}%`,
+                  height: `${((n.bbox[3] - n.bbox[1]) / points.height) * 100}%`,
+                }}
+                onMouseEnter={(e) =>
+                  onNode(n, e.currentTarget.getBoundingClientRect())
+                }
+                onFocus={(e) =>
+                  onNode(n, e.currentTarget.getBoundingClientRect())
+                }
+                onMouseLeave={onLeave}
+                onClick={(e) =>
+                  onNode(n, e.currentTarget.getBoundingClientRect())
+                }
+              />
+            ))}
           </div>
           {loading && <div className="pdf-loading">Setting the page…</div>}
         </div>
