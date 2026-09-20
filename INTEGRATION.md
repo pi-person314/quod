@@ -173,3 +173,21 @@ The reader now supports stored-PDF retry and SSE progress; concurrent retry
 database checks and real browser/native-worker retry pass without provider calls.
 Final production build and typechecks pass. See PROJECT_STATUS.md for remaining
 quality benchmarks. No push, deployment or external submission in this audit.
+
+### [done] Dependency and live-quality improvement pass
+Original dependency F1 is now 0.627 (was 0.390); its >0.75 gate still fails.
+A separate source-evidence development manifest scores 21/24 with no extras and
+keeps unsupported original annotations documented rather than silently replacing
+the original benchmark. Added generic operator/term dependencies, named-theorem
+matching, explicit restatement relations, document scoping and remark boundaries.
+Numbered problems now segment, multipage nodes use starting-page boxes, and
+anchors use PDF substring geometry (41/41 exact rectangle checks on two samples).
+
+Real bake outputs pass 20/20 clauses and rewrites. Real resolution merges 3/3
+restatements with zero false merges among 21 source statements and creates graph
+edges that the HTTP cross-document trace follows. Four-document live semantic
+search passes both tested paraphrases; bounded expansion improves short unmatched
+queries but adds cold latency (5.65s here). Authored-case scope remains explicit.
+An actual sample proof traces in 41–298ms. Duplicate PDF upload preserves the
+graph/cards and costs zero additional calls; this does not establish ≥60% cold
+pipeline savings. See packages/intel/artifacts/QUALITY-RESULTS.md.

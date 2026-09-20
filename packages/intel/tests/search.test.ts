@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createSearchClient, lexicalSearch, reciprocalRankFusion } from "../search";
+import { createSearchClient, lexicalSearch, reciprocalRankFusion, nodeSearchText } from "../search";
 import { developmentCorpus, DEVELOPMENT_CORPUS_ID } from "../evals/development-corpus";
 
 test("RRF uses rank not incomparable scores, and deduplicates per ranking", async () => {
@@ -18,6 +18,17 @@ test("missing index makes no paid query embedding", async () => {
     embed: async () => { assert.fail("must not embed for absent index"); } });
   assert.deepEqual(await client.search("rank nullity"), []);
 });
+
+test("search expands mathematical operators without inventing a theorem name", async () => {
+  const [chapter] = await developmentCorpus();
+  const statement = String.raw`For T, dim(ker T) + \\dim \\operatorname{im} T = dim V. The image is not a determinant.`;
+  const text = nodeSearchText({ ...chapter.nodes[0], title: null, label: null, statement_md: statement, symbols: [] });
+  assert(text.startsWith(statement));
+  assert(text.includes("dimension(kernel T)"));
+  assert(text.includes("image T"));
+  assert(!text.includes("rank"));
+  assert(text.includes("determinant."));
+});
 test("hybrid requests apply corpus filters and exclude self in both rankings", async () => {
   const [chapter] = await developmentCorpus();
   const [source, candidate] = chapter.nodes;
@@ -29,6 +40,23 @@ test("hybrid requests apply corpus filters and exclude self in both rankings", a
   assert.equal((await client.resolutionCandidates(source, DEVELOPMENT_CORPUS_ID))[0].node.id, candidate.id);
   assert.deepEqual(requests[0].query.bool.filter, [{ term: { corpus_id: DEVELOPMENT_CORPUS_ID } }]);
   assert.deepEqual(requests[1].knn.filter.bool.must_not, [{ term: { id: source.id } }]);
+});
+
+test("short unmatched queries use a bounded paraphrase while candidate queries do not", async () => {
+  const [chapter] = await developmentCorpus();
+  const requests: any[] = [], embedded: string[][] = [];
+  let expansions = 0;
+  const client = createSearchClient({ dimensions: 2, expandQuery: async () => { expansions++; return "finite subcover for every open cover"; },
+    embed: async texts => { embedded.push(texts); return [[1, 0]]; }, fetch: async (_url, init) => {
+      const request = JSON.parse(String(init?.body)); requests.push(request);
+      return Response.json({ timed_out: false, _shards: { failed: 0 }, hits: { hits: [] } });
+    } });
+  await client.search("compactness", { corpusId: DEVELOPMENT_CORPUS_ID });
+  assert.equal(expansions, 1);
+  assert.deepEqual(embedded[0], ["finite subcover for every open cover"]);
+  assert.deepEqual(requests[1].query.bool.filter, [{ term: { corpus_id: DEVELOPMENT_CORPUS_ID } }]);
+  await client.search("compactness", { corpusId: DEVELOPMENT_CORPUS_ID, excludeNodeId: chapter.nodes[0].id });
+  assert.equal(expansions, 1);
 });
 test("partial search failures and cross-corpus results reject", async () => {
   const [chapter] = await developmentCorpus();

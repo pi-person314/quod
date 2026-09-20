@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "source": "fixtures/golden/analysis-ch3.pdf",
+  "scope": "Manually reviewed authored chapter, not a held-out textbook benchmark. Direct textual references, defined-operator uses, and explicit equivalent claims. No proximity-only or unstated-proof dependencies.",
+  "edges": [
+    [
+      "Theorem 3.4",
+      "Definition 3.1",
+      "depends_on",
+      "be linear"
+    ],
+    [
+      "Theorem 3.4",
+      "Definition 3.2",
+      "depends_on",
+      "\\ker T"
+    ],
+    [
+      "Theorem 3.4",
+      "Definition 3.3",
+      "depends_on",
+      "\\operatorname{im} T"
+    ],
+    [
+      "Lemma 3.5",
+      "Definition 3.1",
+      "depends_on",
+      "linear"
+    ],
+    [
+      "Lemma 3.5",
+      "Definition 3.2",
+      "depends_on",
+      "\\ker T"
+    ],
+    [
+      "Lemma 3.5",
+      "Definition 3.3",
+      "depends_on",
+      "\\operatorname{im} T"
+    ],
+    [
+      "Proposition 3.6",
+      "Definition 3.2",
+      "depends_on",
+      "\\ker T"
+    ],
+    [
+      "Theorem 3.7",
+      "Definition 3.2",
+      "depends_on",
+      "\\ker S"
+    ],
+    [
+      "Lemma 3.8",
+      "Theorem 3.4",
+      "depends_on",
+      "Rank-nullity applies"
+    ],
+    [
+      "Corollary 3.9",
+      "Theorem 3.4",
+      "depends_on",
+      "By Theorem 3.4"
+    ],
+    [
+      "Corollary 3.9",
+      "Definition 3.2",
+      "depends_on",
+      "\\ker T"
+    ],
+    [
+      "Definition 3.11",
+      "Definition 3.3",
+      "uses_notation",
+      "\\operatorname{im} T"
+    ],
+    [
+      "Lemma 3.12",
+      "Lemma 3.8",
+      "depends_on",
+      "the previous lemma"
+    ],
+    [
+      "Theorem 3.22",
+      "Definition 3.11",
+      "depends_on",
+      "rank plus nullity"
+    ],
+    [
+      "Theorem 3.22",
+      "Theorem 3.4",
+      "restates",
+      "For linear $T$ on finite-dimensional $V$, rank plus nullity equals"
+    ],
+    [
+      "Example 3.13",
+      "Theorem 3.4",
+      "depends_on",
+      "apply Theorem 3.4"
+    ],
+    [
+      "proof",
+      "Theorem 3.4",
+      "depends_on",
+      "Of Theorem 3.4"
+    ],
+    [
+      "proof",
+      "Definition 3.2",
+      "depends_on",
+      "\\ker T"
+    ],
+    [
+      "Notation 3.1",
+      "Definition 3.1",
+      "uses_notation",
+      "linear maps"
+    ],
+    [
+      "Lemma 3.15",
+      "Theorem 3.14",
+      "depends_on",
+      "spectral theorem implies"
+    ],
+    [
+      "Corollary 3.16",
+      "Lemma 3.5",
+      "depends_on",
+      "By Lemma 3.5"
+    ],
+    [
+      "Corollary 3.16",
+      "Theorem 3.7",
+      "depends_on",
+      "Theorem 3.7"
+    ],
+    [
+      "Proposition 3.17",
+      "Theorem 3.22",
+      "restates",
+      "equivalent to Theorem 3.22"
+    ],
+    [
+      "Proposition 3.17",
+      "Theorem 3.4",
+      "depends_on",
+      "Rank-Nullity theorem"
+    ]
+  ],
+  "unsupported_original_annotations": [
+    "Definition 3.1 does not use kernel or image; those are defined later.",
+    "Lemma 3.5 omits finite-dimensionality; do not assume equivalence with Theorem 3.4.",
+    "Theorem 3.10 has no proof or citation specifying Theorem 3.7 or Lemma 3.8 as a dependency.",
+    "The previous lemma in Lemma 3.12 is Lemma 3.8, not Lemma 3.5.",
+    "Lemma 3.15 is a consequence of the spectral theorem, not a specialisation of rank-nullity.",
+    "No proof in this source justifies forcing every theorem to have a dependency edge."
+  ],
+  "source_sha256": "80765986ac7d45f3fb1d326e8db0aa198b3d180215f2167b5d63c9781f970d7d"
+}

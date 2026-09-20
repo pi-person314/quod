@@ -22,6 +22,7 @@ export type Stage =
   | "instantiate"
   | "trace"
   | "embed"
+  | "search"
   | "voice"
   | "eval";
 

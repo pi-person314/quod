@@ -23,16 +23,18 @@ KIND_WORD: dict[str, NodeKind] = {
     "example": "example",
     "notation": "notation",
     "proof": "proof",
+    "problem": "example",
 }
 
 HEADER_RE = re.compile(
-    r"(?P<kind>Definition|Theorem|Lemma|Proposition|Corollary|Example|Notation)\s+"
+    r"(?P<kind>Definition|Theorem|Lemma|Proposition|Corollary|Example|Notation|Problem)\s+"
     r"(?P<num>\d+(?:\.\d+)*)\b"
     r"(?:\s*\((?P<title>[^)]+)\))?",
     re.IGNORECASE,
 )
 PROOF_RE = re.compile(r"^\s*Proof\b\.?", re.IGNORECASE)
 QED_RE = re.compile(r"\b(QED|□|∎|qed)\b", re.IGNORECASE)
+SECTION_BREAK_RE = re.compile(r"^\s*(?:Remark|Remarks|Exercise pointer|Exercises|References|Chapter|Section)\b", re.IGNORECASE)
 
 SEGMENT_INSTRUCTIONS = (
     "You classify mathematical environments from a textbook chapter. "
@@ -155,6 +157,12 @@ def find_candidates(spans: list[Span]) -> list[dict]:
     cands: list[dict] = []
     for j, (i, meta) in enumerate(starts):
         end = starts[j + 1][0] if j + 1 < len(starts) else len(lines)
+        # Unnumbered surrounding prose must not become part of the preceding
+        # theorem. Otherwise a later 'See Theorem ...' invents a dependency.
+        for stop in range(i + 1, end):
+            if SECTION_BREAK_RE.match(lines[stop][1]):
+                end = stop
+                break
         block_lines = lines[i:end]
         # Trim trailing QED-only line from next env, keep it on this block
         texts = [t for _, t, _ in block_lines]
@@ -167,7 +175,9 @@ def find_candidates(spans: list[Span]) -> list[dict]:
                 **meta,
                 "statement": statement,
                 "spans": body_spans,
-                "bbox": _union_bbox(body_spans) if body_spans else _union_bbox(meta["header_spans"]),
+                # The frozen Node bbox belongs to its starting page. Continuation
+                # text may span pages, but those coordinates cannot be unioned.
+                "bbox": _union_bbox([s for s in body_spans if s.page == meta["page"]]) if body_spans else _union_bbox(meta["header_spans"]),
             }
         )
     return cands

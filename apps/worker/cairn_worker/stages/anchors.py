@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from pathlib import Path
 from uuid import uuid4
 
 from cairn_worker import db
@@ -64,7 +65,7 @@ def _bbox_for_match(text: str, start: int, end: int, ssp: list[Span]) -> tuple[f
     )
 
 
-def find_anchors(spans: list[Span], nodes: list[Node], doc_id) -> list[Anchor]:
+def find_anchors(spans: list[Span], nodes: list[Node], doc_id, pdf_path: Path | None = None) -> list[Anchor]:
     by_label = {n.label.lower(): n for n in nodes if n.label}
 
     found: list[Anchor] = []
@@ -108,11 +109,22 @@ def find_anchors(spans: list[Span], nodes: list[Node], doc_id) -> list[Anchor]:
         for cre, surface in SOFT + NAMED:
             for m in cre.finditer(text):
                 add(page, surface, _bbox_for_match(text, m.start(), m.end(), ssp), False)
+    if pdf_path is not None:
+        import pymupdf
+        # Span boxes cover entire text runs. Use the PDF's character geometry for
+        # each matched reference so an underline does not cover the whole line.
+        with pymupdf.open(pdf_path) as pdf:
+            for anchor in found:
+                candidates = pdf[anchor.page - 1].search_for(anchor.surface)
+                inside = [r for r in candidates if r.x0 >= anchor.bbox[0] - 2 and r.y0 >= anchor.bbox[1] - 2
+                          and r.x1 <= anchor.bbox[2] + 2 and r.y1 <= anchor.bbox[3] + 2]
+                if len(inside) == 1:
+                    anchor.bbox = tuple(inside[0])
     return found
 
 
 def detect_anchors(ctx: PipelineContext, spans: list[Span], nodes: list[Node]) -> list[Anchor]:
-    found = find_anchors(spans, nodes, ctx.doc_id)
+    found = find_anchors(spans, nodes, ctx.doc_id, ctx.pdf_path)
     for a in found:
         db.insert_anchor(ctx.conn, a)
     return found

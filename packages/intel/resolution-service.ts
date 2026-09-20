@@ -133,7 +133,7 @@ export function postgresResolutionRepository(): ResolutionRepository {
 export function resolveWithDefaults(input: ResolveInput): Promise<ResolveResponse> {
   return resolveCorpus(input, { repository: postgresResolutionRepository(), search: createSearchClient(),
     model: async (request) => (await callModel({ ...request, stage: "resolve", model: MODELS.quality,
-      corpusId: input.corpus_id, maxOutputTokens: 16384, cache: "content", promptCacheKey: `resolve:${input.corpus_id}`, meta: { prompt_version: "adjudicate-v2" } })).text });
+      corpusId: input.corpus_id, maxOutputTokens: 16384, cache: "content", promptCacheKey: `resolve:${input.corpus_id}`, meta: { prompt_version: "adjudicate-v3" } })).text });
 }
 
 /** Explicit offline mode: merge only byte-identical statements of the same kind.
@@ -150,6 +150,7 @@ export async function resolveDeterministically(input: ResolveInput): Promise<Res
       && other.statement_md === node.statement_md)
     .map(other => ({ node_id: node.id, candidate_id: other.id, verdict: "same" as const, confidence: 1 })) : []);
   const plan = planResolution(request.corpus_id, snapshot.nodes, snapshot.entities, decisions);
+  plan.edges = plan.edges.map(edge => ({ ...edge, extractor: "deterministic" as const }));
   await repository.save(request.corpus_id, snapshot, plan);
   return ResolveResponse.parse({ decisions: plan.decisions });
 }

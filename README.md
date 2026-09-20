@@ -18,19 +18,36 @@ live model quality, edge quality, measured savings and voice are not fully accep
 
 ## Run
 
-```bash
-# Configure runtime variables explicitly in your shell.
-pnpm install
-pnpm infra:up            # Postgres + Elasticsearch
-pnpm dev                 # reader on http://127.0.0.1:3003, fixture-backed by default
+Fresh Windows setup: install Node.js 22, Python 3.11+, Git and Docker Desktop.
+Run these commands from the project root, with Docker Desktop running:
+
+```powershell
+npm install -g pnpm@10.15.1
+pnpm install --frozen-lockfile
+py -3 -m venv .session-tools/worker-venv
+.\.session-tools\worker-venv\Scripts\python.exe -m pip install -e "apps/worker[dev]"
+docker compose up -d --wait
 ```
 
-Worker (ingest):
+Create a private root `.env` containing `OPENAI_API_KEY` and `DEEPGRAM_API_KEY`.
+The user-run launcher below supplies the local database/search/worker settings.
+Enable the existing spending guard, then build and launch:
 
-```bash
-cd apps/worker && pip install -e ".[dev]"
-cairn-worker ingest path/to/pdfs
+```powershell
+docker compose exec -T postgres psql -U cairn -d cairn -c "UPDATE api_budget SET enabled=true WHERE id='cairn-total';"
+node apps/web/scripts/isolated-verification.mjs build
+node --env-file=.env apps/web/scripts/start-local.mjs
 ```
+
+Open **http://127.0.0.1:3003** and upload a selectable-text PDF. Keep the terminal
+running. The launcher reloads successful builds and keeps private configuration
+in its process. The guard defaults to a $500 ceiling; enabling it does not reset
+the existing balance. A fresh database has no other machine's spending history;
+restore the existing database to retain that accounting.
+
+Subsequent starts only need `docker compose up -d --wait` and the launcher command.
+Run the build command again after frontend changes. `pnpm dev` instead starts the
+fixture demonstration; it does not configure the complete live stack.
 
 ## Layout
 

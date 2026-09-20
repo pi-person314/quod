@@ -13,6 +13,14 @@ clause sets against expected `clause_ids`, accepted rewrites and fallback count
 separately. Do not count a fallback as a correct model answer. Replace/extend
 these examples using A's golden corpus before claiming the 17/20 acceptance bar.
 
+The live runner `apps/web/scripts/live-quality-acceptance.ts --live` has now
+evaluated these cases through the actual bake route: 20/20 clause sets and
+20/20 notation rewrites, at $0.072484. A warm repeat preserved all cards with
+zero additional cost. This proves live performance on these authored cases;
+it does not turn the answer-replay unit tests into model evaluations or satisfy
+source-PDF coverage. Stored JSONB substitution objects are compared structurally,
+not by property serialization order.
+
 The first version accepts only exact simultaneous renamings of the complete
 statement. Clause IDs annotate relevant portions while preserving hypotheses.
 Single-letter and LaTeX-command symbols are supported; composite expressions

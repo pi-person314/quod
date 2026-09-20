@@ -84,6 +84,7 @@ def _body(n: Node) -> str:
     text = n.statement_md
     if n.label:
         text = re.sub(rf"^{re.escape(n.label)}\s*", "", text, flags=re.I)
+        text = re.sub(r"^\([^)]*\)\s*", "", text)
     return text
 
 
@@ -109,8 +110,39 @@ def _would_cycle(edges: list[Edge], src: UUID, dst: UUID, kind: str) -> bool:
     return False
 
 
+def _named_pattern(title: str) -> re.Pattern | None:
+    words = re.findall(r"\w+", title.casefold())
+    if words and words[-1] in {"theorem", "lemma", "proposition"}:
+        words.pop()
+    if not words:
+        return None
+    suffix = r"\s+(?:theorem|lemma|proposition)" if len(words) == 1 else r"(?:\s+theorem)?"
+    return re.compile(r"\b" + r"[\s\-–]+".join(map(re.escape, words)) + suffix + r"\b", re.I)
+
+
+def _defined_operators(node: Node) -> set[str]:
+    if node.kind not in {"definition", "notation"}:
+        return set()
+    # Only distinctive operator names explicitly introduced on the LHS of a
+    # definition. A shared variable such as T or x is not a dependency.
+    matches = re.findall(r"\$([^$]+)\$", _body(node))
+    left = [part.split("=", 1)[0] for part in matches if "=" in part]
+    if node.kind == "notation" and re.search(r"\b(?:write|denote)\b", _body(node), re.I):
+        left += matches[:1]
+    return set(re.findall(r"\\(?:operatorname|mathcal|mathrm)\{[^}]+\}|\\(?:ker|coker|Hom|End|Spec)\b", " ".join(left)))
+
+
+def _defined_terms(node: Node) -> set[str]:
+    if node.kind != "definition":
+        return set()
+    # Explicit introduction syntax only; never infer a concept from a label.
+    text = _body(node).lstrip(". ")
+    found = re.match(r"(?:A|An|The)\s+([A-Za-z][A-Za-z -]{1,45}?)\s+(?:of\s+)?\$", text, re.I)
+    return {found.group(1).casefold()} if found else set()
+
+
 def extract_edges_offline(nodes: list[Node], anchors: list[Anchor], ctx: PipelineContext | None = None) -> list[Edge]:
-    by_label = {n.label.lower(): n for n in nodes if n.label and sum(1 for other in nodes if other.doc_id == n.doc_id and other.label == n.label) == 1}
+    by_label = {(n.doc_id, n.label.lower()): n for n in nodes if n.label and sum(1 for other in nodes if other.doc_id == n.doc_id and other.label and other.label.lower() == n.label.lower()) == 1}
     ordered = sorted(nodes, key=_order_key)
     claimed: set[tuple[UUID, UUID, str]] = set()
     claimed_anchors: set[UUID] = set()
@@ -127,9 +159,11 @@ def extract_edges_offline(nodes: list[Node], anchors: list[Anchor], ctx: Pipelin
     # 1. deterministic — explicit labels in the body (not the node's own header)
     for src in nodes:
         for m in EXPLICIT_RE.finditer(_body(src)):
-            dst = by_label.get(_norm_label(m.group(1), m.group(2)).lower())
+            dst = by_label.get((src.doc_id, _norm_label(m.group(1), m.group(2)).lower()))
             if dst:
-                add(src, dst, "depends_on", "deterministic", 0.95)
+                prefix = _body(src)[:m.start()]
+                kind = "restates" if re.search(r"(?:equivalent\s+to|restates?)\s*$", prefix, re.I) else "depends_on"
+                add(src, dst, kind, "deterministic", 0.95)
 
     # resolved anchors that sit in a later/same node
     for a in anchors:
@@ -137,7 +171,7 @@ def extract_edges_offline(nodes: list[Node], anchors: list[Anchor], ctx: Pipelin
             continue
         src = _node_containing(ordered, a)
         dst = next((n for n in nodes if n.id == a.target_node_id), None)
-        if src and dst and src.id != dst.id:
+        if src and dst and src.id != dst.id and not any(e.src == src.id and e.dst == dst.id for e in edges):
             add(src, dst, "depends_on", "deterministic", 0.92)
             claimed_anchors.add(a.id)
 
@@ -157,16 +191,46 @@ def extract_edges_offline(nodes: list[Node], anchors: list[Anchor], ctx: Pipelin
             if prev:
                 add(src, prev, "depends_on", "heuristic", 0.7)
                 claimed_anchors.add(a.id)
-        elif "rank" in surf and "null" in surf:
-            rn = next((n for n in theorems if n.title and "rank" in n.title.lower()), None)
-            if rn:
-                add(src, rn, "depends_on", "heuristic", 0.8)
-                claimed_anchors.add(a.id)
-        elif "spectral" in surf:
-            sp = next((n for n in theorems if n.title and "spectral" in n.title.lower()), None)
-            if sp:
-                add(src, sp, "depends_on", "heuristic", 0.8)
-                claimed_anchors.add(a.id)
+
+    # Resolve names from actual theorem titles, including names outside the demo.
+    # An ambiguous repeated title never silently selects the first result.
+    titled = [(n, _named_pattern(n.title)) for n in nodes if n.title and n.kind in {"theorem", "lemma", "proposition"}]
+    for src in ordered:
+        matches = [(dst, pattern) for dst, pattern in titled if pattern and dst.doc_id == src.doc_id
+                   and dst.id != src.id and pattern.search(_body(src))]
+        for dst, pattern in matches:
+            if sum(1 for other, p in matches if p.pattern == pattern.pattern) == 1:
+                add(src, dst, "depends_on", "heuristic", 0.85)
+                for anchor in anchors:
+                    if _node_containing(ordered, anchor) == src and pattern.search(anchor.surface):
+                        claimed_anchors.add(anchor.id)
+        # A theorem's own parenthetical name is a heading, not an unresolved
+        # invocation requiring another model call.
+        own_name = _named_pattern(src.title) if src.title else None
+        if own_name and not own_name.search(_body(src)):
+            for anchor in anchors:
+                if _node_containing(ordered, anchor) == src and own_name.search(anchor.surface):
+                    claimed_anchors.add(anchor.id)
+
+    # Attach uses of defined operators to the nearest preceding definition.
+    for src in ordered:
+        operators = {}
+        terms = {}
+        for dst in ordered:
+            if dst.doc_id == src.doc_id and _order_key(dst) < _order_key(src):
+                for operator in _defined_operators(dst):
+                    operators[operator] = dst
+                for term in _defined_terms(dst):
+                    terms[term] = dst
+        for operator, dst in operators.items():
+            if re.search(re.escape(operator) + (r"(?![A-Za-z])" if operator[-1].isalpha() else ""), _body(src)):
+                if not any(e.src == src.id and e.dst == dst.id for e in edges):
+                    add(src, dst, "uses_notation" if src.kind in {"definition", "notation"} else "depends_on", "notation", 0.9)
+        for term, dst in terms.items():
+            # Exclude compound theorem names (e.g. a term inside X-Y theorem).
+            if re.search(r"(?<![\w-])" + re.escape(term) + r"s?(?![\w-])", _body(src), re.I):
+                if not any(e.src == src.id and e.dst == dst.id for e in edges):
+                    add(src, dst, "uses_notation" if src.kind in {"definition", "notation"} else "depends_on", "notation", 0.85)
 
     # Notation requires an actual shared symbol and matching role. Numerical
     # labels and proximity alone are not evidence of mathematical dependence.
@@ -197,7 +261,7 @@ def _previous_of_kind(ordered: list[Node], src: Node, kind: str) -> Node | None:
     for n in ordered:
         if n.id == src.id:
             return prev
-        if n.kind == kind:
+        if n.doc_id == src.doc_id and n.kind == kind:
             prev = n
     return prev
 
@@ -207,7 +271,8 @@ def _previous_any(ordered: list[Node], src: Node) -> Node | None:
     for n in ordered:
         if n.id == src.id:
             return prev
-        prev = n
+        if n.doc_id == src.doc_id:
+            prev = n
     return prev
 
 

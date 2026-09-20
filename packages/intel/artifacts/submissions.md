@@ -18,11 +18,13 @@ persistence, bounded prerequisite traversal, and per-stage model-cost accounting
 Unsafe notation rewrites fall back to the original statement. Uncertain matches
 remain separate entities, with confidence preserved for presentation.
 
-We tested the database and search protocols with synthetic documents and local
-vectors. Live model accuracy, complete ingestion-to-reader behavior, user-time
-savings, voice latency, and end-to-end cost reduction are not yet measured.
-The final submission should describe the integrated demo that actually runs,
-including any fixture fallback, rather than presenting these as finished results.
+The integrated local upload-to-reader path now passes with real providers. Live
+authored-case evaluations pass 20/20 clause selections and notation rewrites,
+and three cross-document restatements with no false merges among 21 source
+statements. A parsed sample proof traces in at most 298ms; a live voice turn
+starts speaking at 3.192s, accepted by the user. See [measured results](QUALITY-RESULTS.md)
+for scopes and limits. These are not broad real-book correctness or user-time
+savings studies. The original dependency benchmark still fails its threshold.
 
 ## How Codex changed the process
 
@@ -54,8 +56,8 @@ show: a problem-set reference can name a theorem differently from the textbook.
 Cairn's intended experience brings those documents together around shared results
 and prerequisites, so students can follow the connection while reading.
 
-Evidence needed: reader screenshot showing a pset reference linked to a textbook
-card, plus the corpus map if B completes it. Do not imply a Dropbox API integration;
+Evidence needed: final selected reader screenshot showing a pset reference linked
+to a textbook card, plus the implemented corpus map. Do not imply a Dropbox API integration;
 none has been implemented in C.
 
 ## Elastic framing
@@ -65,9 +67,11 @@ combining keyword and embedding rankings. The same retrieval surface powers
 search. C keeps corpus filters in both retrieval branches, detects partial search
 failures, and reuses stored embeddings when the statement and model are unchanged.
 
-Evidence available: real ES protocol integration check. Evidence still needed:
-four-document semantic-search evaluation and reader search screenshot. Deterministic
-test vectors establish protocol correctness, not semantic retrieval quality.
+Evidence available: real ES protocol checks and live four-document semantic
+retrieval. Both “rank nullity” and its kernel/image paraphrase return the intended
+statement first even without that theorem name in the source. Short unmatched
+queries may need a bounded model paraphrase (5.65s cold in this check). Select a
+final reader search screenshot and disclose the small authored-corpus scope.
 
 ## Token Company framing
 
@@ -77,9 +81,11 @@ are separate. Content-keyed embedding reuse avoids repeated embedding calls for
 unchanged statements. The comparison tool rejects changed corpora, changed model
 settings, quality regressions, and synthetic evidence.
 
-Evidence needed: actual baseline and optimized cold-pipeline runs with A's stages,
-unchanged C1/C3 evaluations, and a stage-by-stage cost table. No percentage savings
-claim is ready. Repeat-ingestion results must be reported separately.
+Measured warm reuse: C1 baking costs $0.072484 initially and $0 on repeat with
+identical cards. A full sample PDF ingest costs $0.427567 initially; duplicate
+upload makes zero additional paid calls and preserves graph/cards. These are
+repeat-ingestion results, not evidence for the ≥60% cold-optimization target.
+Still needed: comparable cold baseline/optimized runs with unchanged C1/C3 quality.
 
 ## OpenAI framing
 
@@ -89,21 +95,22 @@ statements express the same mathematical result. Structured output is only the
 first check; code validates IDs, substitutions, source references, and merge rules.
 The original statement remains available when generation cannot be validated.
 
-Use the concrete Codex process paragraph above. Evidence still needed: actual
-OpenAI-generated card and adjudication examples, model/evaluation results, and
-integrated reader screenshots. Model names must match the final measured run.
+Use the concrete Codex process paragraph above. Actual Sol-generated card and
+adjudication results are now recorded in the live quality reports. Select final
+integrated reader screenshots and retain the authored-case evaluation limits.
+Model names must match the final measured run.
 
 ## Deepgram framing
 
 The voice module is designed to transcribe a push-to-talk question, answer using
-only the visible page's results, and speak the response. Temporary browser tokens
-keep the server API key out of the reader; a new turn cancels old playback and
+only the visible page's results, and speak the response. A bounded server relay
+keeps provider credentials out of the reader; a new turn cancels old playback and
 prevents late responses from speaking after interruption.
 
-Evidence needed: B's viewport/button wiring, real microphone/STT/TTS run, a
-correct spoken answer, measured latency under three seconds, and a barge-in clip.
-Mocked-provider tests are not a functioning live voice demo. Do not submit this
-track as complete unless those checks pass.
+Reader wiring and live STT/answer/TTS now pass. First speech measured 3.192s from
+recording release, accepted by the user; do not claim the strict <3s gate. Capture
+the final demo/barge-in clip and complete broader spoken correctness checks before
+submission. Controlled-provider tests remain distinct from live evidence.
 
 ## Long Lake framing
 

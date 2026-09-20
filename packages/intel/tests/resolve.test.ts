@@ -10,6 +10,8 @@ test("three same decisions merge restatements without merging twenty source resu
     verdict: "same" as const, confidence: 0.95 }));
   const result = planResolution(DEVELOPMENT_CORPUS_ID, nodes, chapter.entities, decisions);
   assert.equal(result.entities.length, 20);
+  assert.equal(result.edges.length, 3);
+  assert(result.edges.every(edge => edge.kind === "restates" && edge.extractor === "llm"));
   for (const decision of decisions) {
     const assignments = new Map(result.assignments.map((item) => [item.node_id, item.entity_id]));
     assert.equal(assignments.get(decision.node_id), assignments.get(decision.candidate_id));
@@ -41,6 +43,7 @@ test("conflicting transitive evidence stays separate with zero accepted equivale
   ]);
   assert.equal(result.entities.length, 3);
   assert(result.decisions.filter(decision => decision.verdict === "same").every(decision => decision.confidence === 0));
+  assert.equal(result.edges.length, 0, "contradictory equivalence must not create trace edges");
   assert.equal(new Set(result.assignments.map(assignment => assignment.entity_id)).size, 3);
 });
 
