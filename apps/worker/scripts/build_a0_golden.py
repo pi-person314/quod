@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import uuid
 from pathlib import Path
@@ -323,29 +324,73 @@ def build_ch3_fixture() -> dict:
     }
 
 
+def _nth_bbox(page: fitz.Page, needle: str, index: int = 0) -> list[float]:
+    rects = page.search_for(needle, quads=False)
+    if len(rects) <= index:
+        raise RuntimeError(f"occurrence {index} of {needle!r} not found")
+    r = rects[index]
+    return [r.x0, r.y0, r.x1, r.y1]
+
+
 def build_pset_fixture(ch3: dict) -> dict:
+    """Enrich the existing pset4.pdf. The PDF is rewritten only when it is missing."""
     pdf_path = GOLDEN / "pset4.pdf"
-    _write_pset_pdf(pdf_path)
+    if not pdf_path.exists():
+        _write_pset_pdf(pdf_path)
     doc = fitz.open(pdf_path)
     page = doc[0]
 
-    ch3_by_ent = {e["id"]: e for e in ch3["entities"]}
-    rn_node = ch3["nodes"][3]["id"]
-    dim_node = ch3["nodes"][6]["id"]
-    spec_node = ch3["nodes"][16]["id"]
+    by_label = {n["label"]: n for n in ch3["nodes"] if n.get("label")}
+    rn = by_label["Theorem 3.4"]
+    dim = by_label["Theorem 3.7"]
+    spec = by_label["Theorem 3.14"]
+    restated_rn = by_label["Theorem 3.22"]
+    kernel = by_label["Definition 3.2"]
+    image = by_label["Definition 3.3"]
+    rn_node, dim_node, spec_node = rn["id"], dim["id"], spec["id"]
 
+    tsym = {"sym": "T", "role": "linear map"}
     pset_nodes = [
-        (_uid(0x501), "Problem 1", "theorem", "the dimension theorem", ENT_DIM, "Problem 1."),
-        (_uid(0x502), "Problem 2", "theorem", "Rank-Nullity", ENT_RANK, "Problem 2."),
-        (_uid(0x503), "Problem 3", "theorem", "spectral theorem", ENT_SPEC, "Problem 3."),
-        (_uid(0x504), "Problem 4", "lemma", None, ENT_RANK, "Problem 4."),
-        (_uid(0x505), "Problem 5", "proposition", None, ENT_SPEC, "Problem 5."),
-        (_uid(0x506), "Problem 6", "example", "Theorem 3.22", ENT_RANK, "Problem 6."),
+        (
+            _uid(0x501), "Problem 1", "theorem", "the dimension theorem", ENT_DIM, "Problem 1.",
+            "State the dimension theorem for a linear map $T: V \\to W$: "
+            "$\\dim V = \\dim \\ker T + \\dim \\operatorname{im} T$.",
+            [tsym, {"sym": "V", "role": "finite-dimensional domain"}],
+        ),
+        (
+            _uid(0x502), "Problem 2", "theorem", "Rank-Nullity", ENT_RANK, "Problem 2.",
+            "Prove Rank-Nullity for a linear $T: \\mathbb{R}^n \\to \\mathbb{R}^m$: "
+            "$\\dim \\ker T + \\dim \\operatorname{im} T = n$.",
+            [tsym, {"sym": "n", "role": "dimension of the domain"}],
+        ),
+        (
+            _uid(0x503), "Problem 3", "theorem", "spectral theorem", ENT_SPEC, "Problem 3.",
+            "Apply the spectral theorem to a symmetric $2 \\times 2$ matrix $A$ and exhibit an "
+            "orthonormal eigenbasis.",
+            [{"sym": "A", "role": "symmetric matrix"}],
+        ),
+        (
+            _uid(0x504), "Problem 4", "lemma", None, ENT_RANK, "Problem 4.",
+            "Show $\\dim \\ker T + \\dim \\operatorname{im} T = \\dim V$ without citing a numbered "
+            "result: extend a basis of $\\ker T$ to a basis of $V$.",
+            [tsym],
+        ),
+        (
+            _uid(0x505), "Problem 5", "proposition", None, ENT_SPEC, "Problem 5.",
+            "Let $A$ be normal. Invoke the spectral theorem to diagonalise $A$ in an orthonormal "
+            "basis.",
+            [{"sym": "A", "role": "normal operator"}],
+        ),
+        (
+            _uid(0x506), "Problem 6", "example", "Theorem 3.22", ENT_RANK, "Problem 6.",
+            "Explain why Theorem 3.22 and Rank-Nullity name the same fact: both assert "
+            "$\\dim \\ker T + \\dim \\operatorname{im} T = \\dim V$.",
+            [tsym],
+        ),
     ]
 
     nodes = []
-    for nid, label, kind, title, ent, search in pset_nodes:
-        bb = _bbox_for(page, search)
+    for nid, label, kind, title, ent, search, stmt, syms in pset_nodes:
         nodes.append(
             {
                 "id": nid,
@@ -353,11 +398,11 @@ def build_pset_fixture(ch3: dict) -> dict:
                 "kind": kind,
                 "label": label,
                 "title": title if title else None,
-                "statement_md": f"Pset restatement of {title or label}.",
-                "clauses": [],
-                "symbols": [],
+                "statement_md": stmt,
+                "clauses": [{"id": "i", "text": stmt}],
+                "symbols": syms,
                 "page": 1,
-                "bbox": bb,
+                "bbox": _bbox_for(page, search),
                 "entity_id": ent,
                 "confidence": 0.9,
             }
@@ -368,8 +413,86 @@ def build_pset_fixture(ch3: dict) -> dict:
         {"src": nodes[1]["id"], "dst": rn_node, "kind": "restates", "extractor": "llm", "confidence": 0.85},
         {"src": nodes[2]["id"], "dst": spec_node, "kind": "restates", "extractor": "llm", "confidence": 0.85},
         {"src": nodes[3]["id"], "dst": rn_node, "kind": "depends_on", "extractor": "heuristic", "confidence": 0.8},
+        {"src": nodes[3]["id"], "dst": kernel["id"], "kind": "uses_notation", "extractor": "notation", "confidence": 0.9},
+        {"src": nodes[3]["id"], "dst": image["id"], "kind": "uses_notation", "extractor": "notation", "confidence": 0.9},
+        {"src": nodes[4]["id"], "dst": spec_node, "kind": "depends_on", "extractor": "heuristic", "confidence": 0.8},
         {"src": nodes[5]["id"], "dst": rn_node, "kind": "restates", "extractor": "deterministic", "confidence": 0.9},
+        {"src": nodes[5]["id"], "dst": restated_rn["id"], "kind": "restates", "extractor": "deterministic", "confidence": 0.9},
     ]
+
+    # Every reference phrase the pset text actually contains, resolved into chapter 3.
+    anchor_specs = [
+        (
+            "the dimension theorem", 0, dim, ENT_DIM,
+            [{"from": "S: U \\to W", "to": "T: V \\to W"}],
+            "The chapter calls this the dimension theorem: the same count you are asked to state.",
+        ),
+        (
+            "Rank-Nullity", 0, rn, ENT_RANK,
+            [{"from": "V", "to": "\\mathbb{R}^n"}, {"from": "W", "to": "\\mathbb{R}^m"}],
+            "Kernel and image dimensions add up to the dimension of the domain.",
+        ),
+        (
+            "the spectral theorem", 0, spec, ENT_SPEC,
+            [{"from": "T", "to": "A"}],
+            "A normal operator has an orthonormal basis of eigenvectors.",
+        ),
+        (
+            "\\ker T", 0, kernel, None,
+            [{"from": "V", "to": "V"}],
+            "The kernel: the vectors T sends to zero.",
+        ),
+        (
+            "\\operatorname{im} T", 0, image, None,
+            [{"from": "V", "to": "V"}],
+            "The image: everything T actually reaches.",
+        ),
+        (
+            "the spectral theorem", 1, spec, ENT_SPEC,
+            [{"from": "T", "to": "A"}],
+            "A normal operator has an orthonormal basis of eigenvectors.",
+        ),
+        (
+            "Theorem 3.22", 0, restated_rn, ENT_RANK,
+            [{"from": "V", "to": "V"}],
+            "The chapter's second statement of rank plus nullity.",
+        ),
+        (
+            "Rank-Nullity", 1, rn, ENT_RANK,
+            [{"from": "V", "to": "V"}],
+            "Kernel and image dimensions add up to the dimension of the domain.",
+        ),
+    ]
+
+    anchors = []
+    cards = []
+    for i, (surface, occurrence, target, ent, subs, gloss) in enumerate(anchor_specs):
+        aid, cid = _uid(0x601 + i), _uid(0x701 + i)
+        anchors.append(
+            {
+                "id": aid,
+                "doc_id": DOC_PSET,
+                "page": 1,
+                "bbox": _nth_bbox(page, surface, occurrence),
+                "surface": surface,
+                "target_node_id": target["id"],
+                "target_entity_id": ent,
+                "card_id": cid,
+            }
+        )
+        cards.append(
+            {
+                "id": cid,
+                "anchor_id": aid,
+                "headline": target.get("title") or target["label"],
+                "instantiated_md": target["statement_md"],
+                "full_md": target["statement_md"],
+                "substitutions": subs,
+                "clause_ids": ["i"],
+                "gloss": gloss,
+                "source": {"doc_id": DOC_CH3, "page": target["page"]},
+            }
+        )
 
     doc.close()
     return {
@@ -386,20 +509,31 @@ def build_pset_fixture(ch3: dict) -> dict:
         "pdf": "pset4.pdf",
         "nodes": nodes,
         "edges": edges,
-        "anchors": [],
-        "cards": [],
+        "anchors": anchors,
+        "cards": cards,
+        # The three entities are declared once, in analysis-ch3.json. The fixture
+        # loader concatenates files, so repeating them here would duplicate them.
         "entities": [],
     }
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--only", choices=["all", "ch3", "pset"], default="all")
+    args = parser.parse_args()
     GOLDEN.mkdir(parents=True, exist_ok=True)
-    ch3 = build_ch3_fixture()
-    pset = build_pset_fixture(ch3)
-    (GOLDEN / "analysis-ch3.json").write_text(json.dumps(ch3, indent=2) + "\n", encoding="utf-8")
-    (GOLDEN / "pset4.json").write_text(json.dumps(pset, indent=2) + "\n", encoding="utf-8")
-    print(f"Wrote {GOLDEN}/analysis-ch3.json: {len(ch3['nodes'])} nodes, {len(ch3['edges'])} edges")
-    print(f"Wrote {GOLDEN}/pset4.json: {len(pset['nodes'])} nodes")
+    if args.only in ("all", "ch3"):
+        ch3 = build_ch3_fixture()
+        (GOLDEN / "analysis-ch3.json").write_text(json.dumps(ch3, indent=2) + "\n", encoding="utf-8")
+        print(f"Wrote {GOLDEN}/analysis-ch3.json: {len(ch3['nodes'])} nodes, {len(ch3['edges'])} edges")
+    if args.only in ("all", "pset"):
+        ch3 = json.loads((GOLDEN / "analysis-ch3.json").read_text(encoding="utf-8"))
+        pset = build_pset_fixture(ch3)
+        (GOLDEN / "pset4.json").write_text(json.dumps(pset, indent=2) + "\n", encoding="utf-8")
+        print(
+            f"Wrote {GOLDEN}/pset4.json: {len(pset['nodes'])} nodes, "
+            f"{len(pset['edges'])} edges, {len(pset['anchors'])} anchors, {len(pset['cards'])} cards"
+        )
 
 
 if __name__ == "__main__":
